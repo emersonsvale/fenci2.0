@@ -7,7 +7,7 @@ import type {
   CreditCard,
   Account,
   RecurringTransaction,
-} from '../../shared/types/database.types'
+} from 'shared/types/database.types'
 
 /**
  * Tipos para a página de Contas

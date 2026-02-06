@@ -6,7 +6,7 @@ import { useProfile } from '../../composables/useProfile'
 import PageHeader from '../../components/PageHeader.vue'
 import PlanejamentoCard from '../../components/PlanejamentoCard.vue'
 import PlanejamentoFormModal from '../../components/PlanejamentoFormModal.vue'
-import type { Planning } from '../../shared/types/database.types'
+import type { Planning } from 'shared/types/database.types'
 
 /**
  * Planejamentos - Lista de planejamentos financeiros

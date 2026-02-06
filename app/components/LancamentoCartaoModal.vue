@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import type { Category, CreditCard } from '../../shared/types/database.types'
+import type { Category, CreditCard } from 'shared/types/database.types'
 import type { LancamentoFormData } from '../composables/useLancamento'
 import BaseModal from './BaseModal.vue'
 import AppDateInput from './AppDateInput.vue'

@@ -1,6 +1,6 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useSupabaseClient, useSupabaseUser } from '#imports'
-import type { Database, Transaction } from '../../shared/types/database.types'
+import type { Database, Transaction } from 'shared/types/database.types'
 
 /**
  * useCalendario - Composable para gerenciar o calendário financeiro

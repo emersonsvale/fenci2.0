@@ -8,7 +8,7 @@ import PlanejamentoEntryList from '../../components/PlanejamentoEntryList.vue'
 import PlanejamentoInstallmentList from '../../components/PlanejamentoInstallmentList.vue'
 import PlanejamentoInstallmentModal from '../../components/PlanejamentoInstallmentModal.vue'
 import PlanejamentoSavingModal from '../../components/PlanejamentoSavingModal.vue'
-import type { PlanningSaving } from '../../shared/types/database.types'
+import type { PlanningSaving } from 'shared/types/database.types'
 import type { SavingFormData } from '../../composables/usePlanejamento'
 
 /**

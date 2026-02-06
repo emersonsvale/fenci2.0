@@ -7,7 +7,7 @@ import type {
   PlanningEntry,
   PlanningInstallment,
   PlanningSaving,
-} from '../../shared/types/database.types'
+} from 'shared/types/database.types'
 
 export type PlanningPhase = 'before' | 'during' | 'after'
 

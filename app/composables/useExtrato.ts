@@ -1,6 +1,6 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useSupabaseClient, useSupabaseUser, useState } from '#imports'
-import type { Database, Transaction, Category, CreditCard, Account, RecurringTransaction, CreditCardInvoice } from '../../shared/types/database.types'
+import type { Database, Transaction, Category, CreditCard, Account, RecurringTransaction, CreditCardInvoice } from 'shared/types/database.types'
 
 /**
  * useExtrato - Composable para a página de extratos

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import type { Account, Category } from '../../shared/types/database.types'
+import type { Account, Category } from 'shared/types/database.types'
 import AppDateInput from './AppDateInput.vue'
 
 /**

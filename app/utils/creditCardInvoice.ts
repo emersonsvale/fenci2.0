@@ -1,4 +1,4 @@
-import type { Database, CreditCardInvoiceInsert } from '../../shared/types/database.types'
+import type { Database, CreditCardInvoiceInsert } from 'shared/types/database.types'
 
 type SupabaseClient = import('@supabase/supabase-js').SupabaseClient<Database>
 

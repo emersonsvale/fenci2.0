@@ -4,7 +4,7 @@ import BaseModal from './BaseModal.vue'
 import AppButton from './AppButton.vue'
 import AppInput from './AppInput.vue'
 import AppDateInput from './AppDateInput.vue'
-import type { PlanningSaving } from '../../shared/types/database.types'
+import type { PlanningSaving } from 'shared/types/database.types'
 import type { SavingFormData } from '../composables/usePlanejamento'
 
 const props = defineProps<{

@@ -4,8 +4,8 @@ import BaseModal from './BaseModal.vue'
 import AppButton from './AppButton.vue'
 import AppInput from './AppInput.vue'
 import AppDateInput from './AppDateInput.vue'
-import type { PlanningCategory } from '../../shared/types/database.types'
-import type { PlanningEntry } from '../../shared/types/database.types'
+import type { PlanningCategory } from 'shared/types/database.types'
+import type { PlanningEntry } from 'shared/types/database.types'
 import type { EntryFormData, PlanningPhase } from '../composables/usePlanejamento'
 
 const props = defineProps<{

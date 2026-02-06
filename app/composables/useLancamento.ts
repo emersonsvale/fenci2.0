@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { useSupabaseClient, useSupabaseUser, useState } from '#imports'
-import type { Database, TransactionInsert, RecurringTransactionInsert, Account, Category, CreditCard } from '../../shared/types/database.types'
-import { getInstallmentDate, type RepetitionFrequency } from '../../shared/constants/repetition'
+import type { Database, TransactionInsert, RecurringTransactionInsert, Account, Category, CreditCard } from 'shared/types/database.types'
+import { getInstallmentDate, type RepetitionFrequency } from 'shared/constants/repetition'
 import { getReferenceMonth, getOrCreateInvoice } from '../utils/creditCardInvoice'
 
 export type LancamentoType = 'entrada' | 'saida' | 'cartao' | null

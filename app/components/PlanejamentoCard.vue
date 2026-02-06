@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { Planning } from '../../shared/types/database.types'
+import type { Planning } from 'shared/types/database.types'
 
 /**
  * PlanejamentoCard - Card de um planejamento na listagem

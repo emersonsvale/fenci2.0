@@ -3,7 +3,7 @@ import { ref, watch, computed } from 'vue'
 import BaseModal from './BaseModal.vue'
 import AppButton from './AppButton.vue'
 import AppInput from './AppInput.vue'
-import type { PlanningCategory } from '../../shared/types/database.types'
+import type { PlanningCategory } from 'shared/types/database.types'
 import type { PlanningCategoryFormData } from '../composables/usePlanejamento'
 
 const DEFAULT_HEX = '#22C55E'

@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { useSupabaseClient } from '#imports'
-import type { Database } from '../../shared/types/database.types'
+import type { Database } from 'shared/types/database.types'
 
 /**
  * useCreditCardInvoice - Pagamento de faturas de cartão de crédito

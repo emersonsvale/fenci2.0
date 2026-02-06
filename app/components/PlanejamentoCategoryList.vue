@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import type { PlanningCategory } from '../../shared/types/database.types'
+import type { PlanningCategory } from 'shared/types/database.types'
 import PlanejamentoCategoryModal from './PlanejamentoCategoryModal.vue'
 import ConfirmDeleteModal from './ConfirmDeleteModal.vue'
 import type { PlanningCategoryFormData } from '../composables/usePlanejamento'

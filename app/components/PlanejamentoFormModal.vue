@@ -4,7 +4,7 @@ import BaseModal from './BaseModal.vue'
 import AppButton from './AppButton.vue'
 import AppInput from './AppInput.vue'
 import AppDateInput from './AppDateInput.vue'
-import type { Planning } from '../../shared/types/database.types'
+import type { Planning } from 'shared/types/database.types'
 import type { PlanningFormData } from '../composables/usePlanejamentos'
 
 /**

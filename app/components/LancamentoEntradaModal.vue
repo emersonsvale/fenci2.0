@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import type { Account, Category } from '../../shared/types/database.types'
+import type { Account, Category } from 'shared/types/database.types'
 import type { LancamentoFormData } from '../composables/useLancamento'
-import { REPETITION_FREQUENCIES, type RepetitionFrequency } from '../../shared/constants/repetition'
+import { REPETITION_FREQUENCIES, type RepetitionFrequency } from 'shared/constants/repetition'
 import BaseModal from './BaseModal.vue'
 import AppDateInput from './AppDateInput.vue'
 

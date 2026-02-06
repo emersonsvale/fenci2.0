@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import type { PlanningInstallment } from '../../shared/types/database.types'
+import type { PlanningInstallment } from 'shared/types/database.types'
 import ConfirmDeleteModal from './ConfirmDeleteModal.vue'
 
 const props = defineProps<{

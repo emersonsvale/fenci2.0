@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import type { Account } from '../../shared/types/database.types'
+import type { Account } from 'shared/types/database.types'
 import BaseModal from './BaseModal.vue'
 import AppDateInput from './AppDateInput.vue'
 

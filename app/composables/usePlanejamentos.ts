@@ -1,5 +1,5 @@
 import { useSupabaseClient } from '#imports'
-import type { Database, Planning } from '../../shared/types/database.types'
+import type { Database, Planning } from 'shared/types/database.types'
 
 export type PlanningFormData = {
   name: string

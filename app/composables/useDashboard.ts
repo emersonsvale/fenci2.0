@@ -1,6 +1,6 @@
 import { ref, computed, watch } from 'vue'
 import { useSupabaseClient, useSupabaseUser } from '#imports'
-import type { Database, Transaction, Category, CreditCard, Account, Budget, Investment, RecurringTransaction, CreditCardInvoice } from '../../shared/types/database.types'
+import type { Database, Transaction, Category, CreditCard, Account, Budget, Investment, RecurringTransaction, CreditCardInvoice } from 'shared/types/database.types'
 
 interface DashboardPeriod {
   month: number
