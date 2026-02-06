@@ -100,6 +100,15 @@
     @apply text-content-tertiary dark:text-content-tertiary-dark;
   }
 
+  /* Backgrounds semânticos (mesma lógica do texto, para indicadores etc.) */
+  .bg-content-subtle {
+    @apply bg-content-tertiary dark:bg-content-tertiary-dark;
+  }
+
+  .bg-content-muted {
+    @apply bg-content-secondary dark:bg-content-secondary-dark;
+  }
+
   /* Bordas */
   .border-default {
     @apply border-border-light dark:border-border-dark;

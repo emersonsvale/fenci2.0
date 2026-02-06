@@ -1,0 +1,32 @@
+---
+alwaysApply: true
+---
+
+---
+description: Força o uso do MCP do Supabase para todas as operações de banco de dados, queries e schema.
+globs: **/*.{ts,tsx,js,jsx,sql,py,go}
+---
+
+# Supabase MCP Integration Rule
+
+## Contexto
+Você está operando em um ambiente onde um servidor MCP (Model Context Protocol) do Supabase está conectado e ativo.
+
+## Requisitos
+Sempre que o usuário solicitar código, queries ou explicações relacionadas ao Supabase (Database, Auth, Storage, Edge Functions):
+
+1.  **NUNCA adivinhe** nomes de tabelas, colunas ou relacionamentos.
+2.  **SEMPRE utilize as ferramentas (tools) do MCP** para buscar a estrutura real do banco de dados antes de gerar código.
+    - Utilize ferramentas como `get_schema`, `list_tables` ou equivalentes fornecidas pelo MCP para ler o schema atual.
+3.  Ao escrever queries SQL ou código cliente (Supabase JS Client):
+    - Valide se as colunas existem consultando o schema via MCP.
+    - Verifique os tipos de dados (ex: não tratar um UUID como string simples se não for necessário).
+4.  Se houver ambiguidade sobre qual tabela usar, use o MCP para listar as tabelas disponíveis e peça confirmação ou escolha a mais lógica baseada na estrutura real.
+
+## Exceções
+- Se o servidor MCP retornar erro ou estiver desconectado, avise o usuário explicitamente: "Não consegui conectar ao MCP do Supabase para verificar o schema. Vou gerar um código baseado em suposições padrão. Por favor, verifique os nomes das tabelas."
+
+## Exemplos de Comportamento
+- **Usuário:** "Crie uma query para buscar usuários ativos."
+- **Assistente (Correto):** Chama a tool do MCP -> Lê a tabela `auth.users` ou `public.profiles` -> Gera a query com os campos reais retornados pela tool.
+- **Assistente (Errado):** Gera `SELECT * FROM users WHERE status = 'active'` sem verificar se a tabela `users` ou a coluna `status` realmente existem.

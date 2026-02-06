@@ -15,6 +15,7 @@ import LancamentoEntradaModal from '../components/LancamentoEntradaModal.vue'
 import LancamentoSaidaModal from '../components/LancamentoSaidaModal.vue'
 import LancamentoCartaoModal from '../components/LancamentoCartaoModal.vue'
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal.vue'
+import InstallmentScopeModal from '../components/InstallmentScopeModal.vue'
 import PayInvoiceModal from '../components/PayInvoiceModal.vue'
 import ExtratoCardLancamentosDrawer from '../components/ExtratoCardLancamentosDrawer.vue'
 import { useCreditCardInvoice } from '../composables/useCreditCardInvoice'
@@ -101,6 +102,7 @@ async function handlePayInvoiceSubmit(submitPayload: { accountId: string; amount
     isPayInvoiceModalOpen.value = false
     payInvoicePayload.value = null
     await fetchExtratoData()
+    listRefreshKey.value += 1
   }
 }
 
@@ -178,6 +180,7 @@ const {
   createQuickAccount,
   createQuickCategory,
   updateTransaction,
+  updateCreditCardTransaction,
 } = useLancamento()
 
 // Handlers
@@ -250,14 +253,43 @@ async function handleSubmitSaida(data: LancamentoFormData, createAnother: boolea
   }
 }
 
+const isInstallmentScopeModalOpen = ref(false)
+const pendingCartaoSubmit = ref<{
+  data: LancamentoFormData
+  createAnother: boolean
+  editId: string
+  raw: { installmentGroupId: string | null; installmentNumber: number | null; totalInstallments: number }
+} | null>(null)
+
 async function handleSubmitCartao(data: LancamentoFormData, createAnother: boolean, editId?: string) {
-  let success: boolean
   if (editId) {
-    success = await updateTransaction(editId, data, 'expense')
+    const raw = getRawTransactionById(editId)
+    const isParcelado = raw?.installmentGroupId && (raw.totalInstallments ?? 1) > 1
+    if (isParcelado && raw) {
+      pendingCartaoSubmit.value = {
+        data,
+        createAnother,
+        editId,
+        raw: {
+          installmentGroupId: raw.installmentGroupId ?? null,
+          installmentNumber: raw.installmentNumber ?? null,
+          totalInstallments: raw.totalInstallments ?? 1,
+        },
+      }
+      isInstallmentScopeModalOpen.value = true
+      return
+    }
+    const success = await updateCreditCardTransaction(editId, data, {
+      applyToAllInstallments: false,
+      installmentGroupId: raw?.installmentGroupId ?? null,
+      currentInstallmentNumber: raw?.installmentNumber ?? null,
+      currentTotalInstallments: raw?.totalInstallments ?? 1,
+    })
     if (success) {
       const transactionDateIso = `${data.transactionDate}T12:00:00.000Z`
+      const rawEdit = getRawTransactionById(editId)
       updateTransactionLocal(editId, {
-        account_id: data.accountId,
+        ...(data.accountId ? { account_id: data.accountId } : rawEdit?.accountId ? { account_id: rawEdit.accountId } : {}),
         category_id: data.categoryId || null,
         description: data.description,
         amount: -Math.abs(data.amount),
@@ -268,16 +300,39 @@ async function handleSubmitCartao(data: LancamentoFormData, createAnother: boole
         tags: data.tags?.length ? data.tags : null,
       })
       setPeriodToTransactionDate(data.transactionDate)
+      if (!createAnother) handleCloseModal()
+      fetchExtratoData()
     }
-  } else {
-    success = await createCartao(data)
+    return
   }
+  const success = await createCartao(data)
   if (success) {
-    if (!createAnother) {
-      handleCloseModal()
-    }
+    if (!createAnother) handleCloseModal()
     fetchExtratoData()
   }
+}
+
+async function applyCartaoSubmitScope(applyToAllInstallments: boolean) {
+  const pending = pendingCartaoSubmit.value
+  if (!pending) return
+  const { data, createAnother, editId, raw } = pending
+  const success = await updateCreditCardTransaction(editId, data, {
+    applyToAllInstallments,
+    installmentGroupId: raw.installmentGroupId,
+    currentInstallmentNumber: raw.installmentNumber,
+    currentTotalInstallments: raw.totalInstallments,
+  })
+  isInstallmentScopeModalOpen.value = false
+  pendingCartaoSubmit.value = null
+  if (success) {
+    handleCloseModal()
+    fetchExtratoData()
+  }
+}
+
+function cancelInstallmentScopeModal() {
+  isInstallmentScopeModalOpen.value = false
+  pendingCartaoSubmit.value = null
 }
 
 async function handleCreateAccount(name: string) {
@@ -708,6 +763,14 @@ async function handleMarkUnpaid(id: string) {
       :is-submitting="isPayInvoiceSubmitting"
       @close="handleClosePayInvoiceModal"
       @submit="handlePayInvoiceSubmit"
+    />
+
+    <InstallmentScopeModal
+      :is-open="isInstallmentScopeModalOpen"
+      :is-submitting="isSubmitting"
+      @only-this="applyCartaoSubmitScope(false)"
+      @all-installments="applyCartaoSubmitScope(true)"
+      @cancel="cancelInstallmentScopeModal"
     />
 
     <!-- Painel de sumário dos selecionados (sobreposto) -->

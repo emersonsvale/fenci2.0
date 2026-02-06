@@ -1072,6 +1072,8 @@ export function useExtrato() {
       totalInstallments: transaction.total_installments || 1,
       type: transaction.type,
       tags: transaction.tags ? [...transaction.tags] : [],
+      installmentGroupId: transaction.installment_group_id || null,
+      installmentNumber: transaction.installment_number ?? null,
     }
   }
 

@@ -492,15 +492,29 @@ export function useLancamento() {
     error.value = null
 
     try {
+      let accountId = data.accountId
+      if (!accountId || accountId.trim() === '') {
+        const { data: current } = await supabase
+          .from('transactions')
+          .select('account_id')
+          .eq('id', transactionId)
+          .eq('user_id', userId)
+          .single()
+        accountId = current?.account_id ?? accounts.value[0]?.id ?? ''
+        if (!accountId) {
+          error.value = 'Nenhuma conta disponível para esta transação'
+          return false
+        }
+      }
+
       const amount = type === 'income' ? Math.abs(data.amount) : -Math.abs(data.amount)
       const isPaid = data.isPaid !== false
-      // Usar meio-dia UTC para preservar o dia civil em qualquer fuso (evita lançamento "sumir" do mês)
       const transactionDateIso = `${data.transactionDate}T12:00:00.000Z`
 
       const { error: updateError } = await supabase
         .from('transactions')
         .update({
-          account_id: data.accountId,
+          account_id: accountId,
           category_id: data.categoryId || null,
           description: data.description,
           amount: amount,
@@ -518,6 +532,122 @@ export function useLancamento() {
       return true
     } catch (err) {
       console.error('Erro ao atualizar transação:', err)
+      error.value = 'Erro ao atualizar lançamento'
+      return false
+    } finally {
+      isSubmitting.value = false
+    }
+  }
+
+  /**
+   * Atualiza lançamento(s) de cartão de crédito.
+   * Se applyToAllInstallments for true e a transação fizer parte de um grupo parcelado,
+   * atualiza todas as parcelas do grupo (recalculando valores). Caso contrário, atualiza só a transação atual.
+   */
+  async function updateCreditCardTransaction(
+    transactionId: string,
+    data: LancamentoFormData,
+    options: { applyToAllInstallments: boolean; installmentGroupId: string | null; currentInstallmentNumber: number | null; currentTotalInstallments: number }
+  ): Promise<boolean> {
+    const { data: authData } = await supabase.auth.getUser()
+    const userId = authData?.user?.id
+    if (!userId) return false
+
+    isSubmitting.value = true
+    error.value = null
+
+    try {
+      let accountId = data.accountId
+      if (!accountId || accountId.trim() === '') {
+        const { data: current } = await supabase
+          .from('transactions')
+          .select('account_id')
+          .eq('id', transactionId)
+          .eq('user_id', userId)
+          .single()
+        accountId = current?.account_id ?? accounts.value[0]?.id ?? ''
+        if (!accountId) {
+          error.value = 'Nenhuma conta disponível para esta transação'
+          return false
+        }
+      }
+
+      const isPaid = data.isPaid !== false
+      const totalAmount = Math.abs(data.amount)
+      const n = Math.max(1, data.totalInstallments || 1)
+
+      if (options.applyToAllInstallments && options.installmentGroupId && n > 1) {
+        const { data: groupRows } = await supabase
+          .from('transactions')
+          .select('id, installment_number')
+          .eq('installment_group_id', options.installmentGroupId)
+          .eq('user_id', userId)
+          .order('installment_number')
+
+        if (!groupRows?.length) {
+          error.value = 'Parcelas do grupo não encontradas'
+          return false
+        }
+
+        const numParcelas = groupRows.length
+        const amountPerParcel = Math.round((totalAmount / numParcelas) * 100) / 100
+        const frequency = data.repetitionFrequency ?? 'monthly'
+        for (let i = 0; i < groupRows.length; i++) {
+          const row = groupRows[i]
+          const isLast = i === groupRows.length - 1
+          const thisAmount = isLast
+            ? Math.round((totalAmount - amountPerParcel * (numParcelas - 1)) * 100) / 100
+            : amountPerParcel
+          const parcelDate = getInstallmentDate(data.transactionDate, (row.installment_number ?? i + 1) - 1, frequency)
+          const transactionDateIso = `${parcelDate}T12:00:00.000Z`
+
+          const { error: updateError } = await supabase
+            .from('transactions')
+            .update({
+              account_id: accountId,
+              credit_card_id: data.creditCardId || null,
+              category_id: data.categoryId || null,
+              description: data.description,
+              amount: -thisAmount,
+              transaction_date: transactionDateIso,
+              is_paid: isPaid,
+              status: isPaid ? 'confirmed' : 'pending',
+              is_recurring: data.isFixedRecurring !== undefined ? data.isFixedRecurring === true : data.isRecurring,
+              total_installments: numParcelas,
+              tags: data.tags?.length ? data.tags : null,
+            })
+            .eq('id', row.id)
+            .eq('user_id', userId)
+
+          if (updateError) throw updateError
+        }
+        return true
+      }
+
+      const transactionDateIso = `${data.transactionDate}T12:00:00.000Z`
+      const amountThis = n > 1 ? -Math.round((totalAmount / n) * 100) / 100 : -totalAmount
+
+      const { error: updateError } = await supabase
+        .from('transactions')
+        .update({
+          account_id: accountId,
+          credit_card_id: data.creditCardId || null,
+          category_id: data.categoryId || null,
+          description: data.description,
+          amount: amountThis,
+          transaction_date: transactionDateIso,
+          is_paid: isPaid,
+          status: isPaid ? 'confirmed' : 'pending',
+          is_recurring: data.isFixedRecurring !== undefined ? data.isFixedRecurring === true : data.isRecurring,
+          tags: data.tags?.length ? data.tags : null,
+        })
+        .eq('id', transactionId)
+        .eq('user_id', userId)
+
+      if (updateError) throw updateError
+      return true
+    } catch (err) {
+      console.error('Erro ao atualizar lançamento cartão:', err)
       error.value = 'Erro ao atualizar lançamento'
       return false
     } finally {
@@ -551,6 +681,7 @@ export function useLancamento() {
     createQuickAccount,
     createQuickCategory,
     updateTransaction,
+    updateCreditCardTransaction,
 
     // Helpers
     getCategoriesByType,

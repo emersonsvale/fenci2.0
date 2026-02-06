@@ -298,8 +298,16 @@ function handlePayInvoice() {
       </p>
     </div>
 
-    <!-- Installment Progress (if applicable) -->
-    <div v-if="transaction.installmentInfo" class="flex flex-shrink-0 w-24 flex-col items-center justify-center">
+    <!-- Installment Progress: percentual já pago do lançamento parcelado (current/total parcelas) -->
+    <div
+      v-if="transaction.installmentInfo"
+      class="flex flex-shrink-0 w-24 flex-col items-center justify-center"
+      role="progressbar"
+      :aria-valuenow="transaction.installmentInfo.current"
+      :aria-valuemin="0"
+      :aria-valuemax="transaction.installmentInfo.total"
+      :aria-label="`Parcelado: ${transaction.installmentInfo.percentage}% pago (${transaction.installmentInfo.current} de ${transaction.installmentInfo.total} parcelas)`"
+    >
       <div class="text-center mb-1">
         <span class="text-caption font-medium text-content-muted">
           {{ transaction.installmentInfo.percentage }}%
@@ -368,7 +376,7 @@ function handlePayInvoice() {
           class="absolute right-0 top-full mt-1 w-48 bg-surface-elevated rounded-lg shadow-lg border border-default z-popover py-1"
         >
           <button
-            v-if="isFaturaSummary"
+            v-if="isFaturaSummary && !transaction.isPaid"
             type="button"
             class="w-full px-3 py-2 text-left text-body-sm text-content-main hover:bg-surface-overlay flex items-center gap-2"
             @click="handlePayInvoice"

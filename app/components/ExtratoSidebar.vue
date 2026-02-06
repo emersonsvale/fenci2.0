@@ -284,7 +284,7 @@ function onCarouselMouseLeave() {
           <!-- Indicadores (dots) -->
           <div
             v-if="totalSlides > 1"
-            class="flex justify-center gap-1.5 mt-3"
+            class="flex justify-center items-center gap-2 mt-3 min-h-10 py-1"
             role="tablist"
             aria-label="Slides do carrossel"
           >
@@ -295,8 +295,8 @@ function onCarouselMouseLeave() {
               role="tab"
               :aria-selected="currentIndex === i"
               :aria-label="`Ir para cartão ${Number(i) + 1}`"
-              class="extrato-carousel-dot h-2 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface-elevated"
-              :class="currentIndex === i ? 'extrato-carousel-dot--active w-5' : 'w-2 bg-content-subtle/50 hover:bg-content-subtle'"
+              class="extrato-carousel-dot h-3 w-3 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface-elevated flex-shrink-0"
+              :class="currentIndex === i ? 'extrato-carousel-dot--active w-7' : 'bg-content-tertiary dark:bg-content-tertiary-dark hover:bg-content-secondary dark:hover:bg-content-secondary-dark'"
               @click="goTo(Number(i))"
             />
           </div>
