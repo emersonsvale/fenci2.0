@@ -1,0 +1,126 @@
+---
+alwaysApply: true
+---
+
+---
+description: Regra obrigatória para verificar e gerar configurações de deploy de projetos Nuxt 3 para o Coolify (Docker).
+globs: Dockerfile, .dockerignore, package.json, nuxt.config.ts, .cursor/rules/*.mdc
+---
+
+# Deploy Nuxt 3 no Coolify - Checklist Anti-Erro
+
+Sempre que o usuário solicitar ajuda com "deploy", "coolify", "docker" ou "produção" em um projeto Nuxt, siga estritamente este protocolo para evitar erros de `npm ci` e `package-lock`.
+
+## 1. Verificação de Integridade (Pré-requisitos)
+
+Antes de gerar qualquer código, verifique e alerte o usuário sobre os seguintes itens:
+
+1.  **Existência do Lockfile:**
+    - O arquivo `package-lock.json` EXISTE na raiz?
+    - Se não, pare e peça para rodar `npm install`.
+
+2.  **Sincronia de Versões:**
+    - Se o usuário mencionou erros de "integrity" ou "lockfile version", instrua a deletar o `node_modules` e `package-lock.json` e rodar `npm install` novamente para regenerar um arquivo limpo.
+
+3.  **Check do `.dockerignore` (CRÍTICO):**
+    - Leia o arquivo `.dockerignore`.
+    - Garanta que `package-lock.json` e `package.json` **NÃO** estejam listados nele.
+    - Garanta que `node_modules` **ESTEJA** listado (o Docker deve instalar suas próprias dependências).
+
+## 2. Padrão Ouro para Dockerfile (Nuxt + Coolify)
+
+Use este template base que corrige os erros de `COPY` e `npm ci`. Adapte apenas se necessário, mas mantenha a estrutura de *multi-stage build*.
+
+```dockerfile
+# Stage 1: Build
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Passo Crítico: Copiar AMBOS os arquivos de dependência EXPLICITAMENTE
+COPY package.json package-lock.json ./
+
+# Instalação rigorosa (falha se o lockfile estiver errado)
+RUN npm ci
+
+# Copia o resto do código fonte
+COPY . .
+
+# Build do Nuxt
+RUN npm run build
+
+# Stage 2: Production
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+# Cria usuário não-root para segurança
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nuxtjs
+
+# Copia apenas os arquivos necessários do build anterior
+COPY --from=builder /app/.output ./.output
+COPY --from=builder /app/package.json ./package.json
+
+# Define variáveis de ambiente padrão
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOST=0.0.0.0
+
+# Define o usuário correto
+USER nuxtjs
+
+EXPOSE 3000
+
+CMD ["node", ".output/server/index.mjs"]
+3. Padrão Ouro para .dockerignore
+Gere ou corrija o .dockerignore para conter exatamente isto:
+
+Plaintext
+.git
+.gitignore
+.nuxt
+.output
+dist
+node_modules
+*.log
+npm-debug.log
+.env
+README.md
+.cursor
+4. Instruções Finais ao Usuário
+Ao terminar de gerar os arquivos, instrua o usuário a executar o seguinte fluxo no terminal local para garantir que o Git envie os arquivos corretos:
+
+npm install (Garante que o lockfile local está atualizado com o package.json).
+
+git add .
+
+git commit -m "chore: prepare for coolify deployment"
+
+git push
+
+5. Resolução de Problemas Comuns (Knowledge Base)
+Se o usuário reportar erro no log do Coolify:
+
+Erro: npm ci can only install packages when your package.json and package-lock.json are in sync
+
+Solução: O usuário alterou o package.json manualmente. Ele deve rodar npm install localmente e subir o novo package-lock.json.
+
+Erro: COPY failed: file not found in build context or excluded by .dockerignore: package-lock.json
+
+Solução: Remover package-lock.json do arquivo .dockerignore.
+
+Erro: [rejected] ... (fetch first)
+
+Solução: Rodar git pull antes de git push.
+
+
+---
+
+### O que essa regra faz por você:
+
+1.  **Auditoria Automática:** O Cursor vai ler seu `.dockerignore` e te avisar se você estiver escondendo o arquivo `package-lock.json` sem querer.
+2.  **Dockerfile Blindado:** O template incluído usa *Multi-Stage Build* (deixa a imagem leve) e faz o `COPY` explícito dos arquivos de dependência antes de tudo, garantindo que o cache do Docker funcione bem.
+3.  **Fluxo Git:** Ele te lembra de dar `git push` nas mudanças, evitando aquele erro de "commit diferente" que tivemos.
+
+Agora, da próxima vez, basta digitar no chat: *"Prepare este projeto para o Coolify"* e o Cursor vai seguir esse roteiro.

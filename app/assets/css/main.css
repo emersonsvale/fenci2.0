@@ -1,0 +1,536 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   MATERIAL SYMBOLS CONFIG
+   ============================================ */
+.material-symbols-outlined {
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-surface-light text-content-primary antialiased;
+  }
+
+  .dark body {
+    @apply bg-surface-dark text-content-primary-dark;
+  }
+
+  /* Seleção de texto */
+  ::selection {
+    @apply bg-primary/20 text-primary-900;
+  }
+
+  .dark ::selection {
+    @apply bg-primary/30 text-white;
+  }
+
+  /* Scrollbar customizada */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded-full;
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    @apply bg-gray-600;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400;
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-500;
+  }
+}
+
+/* ============================================
+   TOKENS SEMÂNTICOS - TEMA CLARO/ESCURO
+   Use estas classes para superfícies e texto que
+   devem alternar automaticamente com o tema.
+   ============================================ */
+@layer utilities {
+  /* Superfícies */
+  .bg-surface {
+    @apply bg-surface-light dark:bg-surface-dark;
+  }
+
+  .bg-surface-elevated {
+    @apply bg-surface-light-secondary dark:bg-surface-dark-secondary;
+  }
+
+  .bg-surface-overlay {
+    @apply bg-surface-light-tertiary dark:bg-surface-dark-tertiary;
+  }
+
+  /* Texto */
+  .text-content-main {
+    @apply text-content-primary dark:text-content-primary-dark;
+  }
+
+  .text-content-muted {
+    @apply text-content-secondary dark:text-content-secondary-dark;
+  }
+
+  .text-content-subtle {
+    @apply text-content-tertiary dark:text-content-tertiary-dark;
+  }
+
+  /* Bordas */
+  .border-default {
+    @apply border-border-light dark:border-border-dark;
+  }
+
+  .border-default-subtle {
+    @apply border-border-light/80 dark:border-border-dark/50;
+  }
+}
+
+/* ============================================
+   COMPONENTES - BOTÕES
+   ============================================ */
+@layer components {
+  /* Botão Base */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-semibold rounded-full 
+           transition-all duration-200 ease-smooth
+           focus:outline-none focus:ring-2 focus:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none;
+  }
+
+  /* Tamanhos de botão */
+  .btn-sm {
+    @apply px-4 py-2 text-body-sm;
+  }
+
+  .btn-md {
+    @apply px-6 py-3 text-body-md;
+  }
+
+  .btn-lg {
+    @apply px-8 py-4 text-body-lg;
+  }
+
+  /* Variantes de botão */
+  .btn-primary {
+    @apply btn btn-md w-full bg-primary text-white
+           hover:brightness-110 hover:shadow-primary
+           focus:ring-primary;
+  }
+
+  .btn-secondary {
+    @apply btn btn-md w-full bg-surface-light-tertiary text-content-primary
+           hover:bg-gray-200
+           focus:ring-gray-300;
+  }
+
+  .dark .btn-secondary {
+    @apply bg-surface-dark-secondary text-content-primary-dark
+           hover:bg-surface-dark-tertiary;
+  }
+
+  .btn-outline {
+    @apply btn btn-md w-full bg-transparent border-2 border-primary text-primary
+           hover:bg-primary/10
+           focus:ring-primary;
+  }
+
+  .btn-ghost {
+    @apply btn btn-md w-full bg-transparent text-content-primary
+           hover:bg-gray-100
+           focus:ring-gray-300;
+  }
+
+  .dark .btn-ghost {
+    @apply text-content-primary-dark hover:bg-white/10;
+  }
+
+  .btn-danger {
+    @apply btn btn-md w-full bg-error text-white
+           hover:brightness-110 hover:shadow-lg
+           focus:ring-error;
+  }
+
+  /* Botão apenas ícone */
+  .btn-icon {
+    @apply btn p-2.5 rounded-full;
+  }
+
+  .btn-icon-sm {
+    @apply btn p-2 rounded-full;
+  }
+
+  .btn-icon-lg {
+    @apply btn p-3.5 rounded-full;
+  }
+}
+
+/* ============================================
+   COMPONENTES - INPUTS
+   ============================================ */
+@layer components {
+  /* Input Base */
+  .input {
+    @apply w-full bg-transparent text-content-primary placeholder-content-tertiary
+           transition-all duration-200 ease-smooth
+           focus:outline-none;
+  }
+
+  .dark .input {
+    @apply text-content-primary-dark placeholder-content-tertiary-dark;
+  }
+
+  /* Input Field (com borda) - Light Mode */
+  .input-field {
+    @apply input px-5 py-3 rounded-full border border-border-light bg-white
+           focus:ring-2 focus:ring-primary focus:border-transparent;
+  }
+
+  /* Input Field - Dark Mode */
+  .dark .input-field {
+    @apply border-border-dark bg-surface-dark-secondary text-content-primary-dark 
+           placeholder-content-tertiary-dark;
+  }
+
+  /* Select Field (com borda) - Light Mode */
+  .select-field {
+    @apply input px-5 py-3 rounded-full border border-border-light bg-white
+           focus:ring-2 focus:ring-primary focus:border-transparent
+           appearance-none cursor-pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 16px;
+    padding-right: 48px;
+  }
+
+  /* Select Field - Dark Mode */
+  .dark .select-field {
+    @apply border-border-dark bg-surface-dark-secondary text-content-primary-dark;
+  }
+
+  /* Input com erro */
+  .input-error {
+    @apply border-error focus:ring-error;
+  }
+
+  /* Input com sucesso */
+  .input-success {
+    @apply border-success focus:ring-success;
+  }
+
+  /* Label */
+  .label {
+    @apply block text-label text-content-primary mb-2;
+  }
+
+  .dark .label {
+    @apply text-content-primary-dark;
+  }
+
+  /* Label para dark mode em modais */
+  .label-dark {
+    @apply block text-body-sm font-medium text-content-tertiary-dark mb-2;
+  }
+
+  /* Helper text */
+  .helper-text {
+    @apply text-caption text-content-tertiary mt-1.5;
+  }
+
+  .dark .helper-text {
+    @apply text-content-tertiary-dark;
+  }
+
+  .helper-text-error {
+    @apply text-caption text-error mt-1.5;
+  }
+}
+
+/* ============================================
+   COMPONENTES - CARDS
+   ============================================ */
+@layer components {
+  .card {
+    @apply bg-surface-light rounded-2xl shadow-card
+           transition-all duration-200 ease-smooth;
+  }
+
+  .dark .card {
+    @apply bg-surface-dark-secondary shadow-none border border-border-dark;
+  }
+
+  .card-hover {
+    @apply card hover:shadow-card-hover hover:-translate-y-0.5;
+  }
+
+  .dark .card-hover {
+    @apply hover:border-border-dark-secondary;
+  }
+
+  .card-interactive {
+    @apply card-hover cursor-pointer active:scale-[0.98];
+  }
+}
+
+/* ============================================
+   COMPONENTES - BADGES
+   ============================================ */
+@layer components {
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full 
+           text-caption font-medium;
+  }
+
+  .badge-primary {
+    @apply badge bg-primary/10 text-primary;
+  }
+
+  .badge-success {
+    @apply badge bg-success-light text-success-dark;
+  }
+
+  .badge-warning {
+    @apply badge bg-warning-light text-warning-dark;
+  }
+
+  .badge-error {
+    @apply badge bg-error-light text-error-dark;
+  }
+
+  .badge-info {
+    @apply badge bg-info-light text-info-dark;
+  }
+
+  .badge-neutral {
+    @apply badge bg-gray-100 text-gray-700;
+  }
+
+  .dark .badge-neutral {
+    @apply bg-gray-800 text-gray-300;
+  }
+}
+
+/* ============================================
+   COMPONENTES - LINKS
+   ============================================ */
+@layer components {
+  .link {
+    @apply text-primary font-medium transition-colors duration-200
+           hover:text-primary-600 focus:outline-none focus:underline;
+  }
+
+  .link-subtle {
+    @apply text-content-secondary transition-colors duration-200
+           hover:text-primary focus:outline-none focus:underline;
+  }
+
+  .dark .link-subtle {
+    @apply text-content-secondary-dark hover:text-primary;
+  }
+
+  .link-underline {
+    @apply link underline underline-offset-2;
+  }
+}
+
+/* ============================================
+   COMPONENTES - DIVIDERS
+   ============================================ */
+@layer components {
+  .divider {
+    @apply h-px w-full bg-border-light;
+  }
+
+  .dark .divider {
+    @apply bg-border-dark;
+  }
+
+  .divider-vertical {
+    @apply w-px h-full bg-border-light;
+  }
+
+  .dark .divider-vertical {
+    @apply bg-border-dark;
+  }
+
+  .divider-text {
+    @apply flex items-center gap-4 text-caption text-content-tertiary;
+  }
+
+  .divider-text::before,
+  .divider-text::after {
+    content: '';
+    @apply flex-1 h-px bg-border-light;
+  }
+
+  .dark .divider-text::before,
+  .dark .divider-text::after {
+    @apply bg-border-dark;
+  }
+}
+
+/* ============================================
+   COMPONENTES - AVATARS
+   ============================================ */
+@layer components {
+  .avatar {
+    @apply relative inline-flex items-center justify-center 
+           rounded-full bg-primary/10 text-primary font-semibold
+           overflow-hidden;
+  }
+
+  .avatar-xs {
+    @apply avatar w-6 h-6 text-caption;
+  }
+
+  .avatar-sm {
+    @apply avatar w-8 h-8 text-body-sm;
+  }
+
+  .avatar-md {
+    @apply avatar w-10 h-10 text-body-md;
+  }
+
+  .avatar-lg {
+    @apply avatar w-12 h-12 text-body-lg;
+  }
+
+  .avatar-xl {
+    @apply avatar w-16 h-16 text-heading-md;
+  }
+
+  .avatar img {
+    @apply w-full h-full object-cover;
+  }
+}
+
+/* ============================================
+   COMPONENTES - SKELETON LOADING
+   ============================================ */
+@layer components {
+  .skeleton {
+    @apply bg-gray-200 rounded-lg animate-pulse;
+  }
+
+  .dark .skeleton {
+    @apply bg-gray-700;
+  }
+
+  .skeleton-text {
+    @apply skeleton h-4 w-full;
+  }
+
+  .skeleton-title {
+    @apply skeleton h-6 w-3/4;
+  }
+
+  .skeleton-avatar {
+    @apply skeleton rounded-full;
+  }
+
+  .skeleton-button {
+    @apply skeleton h-12 rounded-full;
+  }
+}
+
+/* ============================================
+   UTILITÁRIOS
+   ============================================ */
+@layer utilities {
+  /* Gradientes */
+  .gradient-primary {
+    @apply bg-gradient-to-r from-primary to-primary-400;
+  }
+
+  .gradient-brand {
+    @apply bg-gradient-to-br from-brand-teal to-brand-teal-dark;
+  }
+
+  /* Texto com gradiente */
+  .text-gradient-primary {
+    @apply bg-gradient-to-r from-primary to-primary-400 bg-clip-text text-transparent;
+  }
+
+  /* Glass effect */
+  .glass {
+    @apply bg-white/80 backdrop-blur-lg;
+  }
+
+  .dark .glass {
+    @apply bg-black/50;
+  }
+
+  /* Truncate com múltiplas linhas */
+  .line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Hide scrollbar */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Safe area insets (mobile) */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-left {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .safe-right {
+    padding-right: env(safe-area-inset-right);
+  }
+}
