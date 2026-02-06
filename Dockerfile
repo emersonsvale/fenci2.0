@@ -31,7 +31,7 @@ COPY --from=builder /app/package.json ./package.json
 # Define variáveis de ambiente padrão
 ENV NODE_ENV=production
 ENV PORT=3000
-ENV HOST=0.0.0
+ENV HOST=0.0.0.0
 
 # Define o usuário correto
 USER nuxtjs
