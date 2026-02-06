@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { DayData } from '../composables/useCalendario'
+import { useCurrency } from '~/composables/useCurrency'
 
 /**
  * CalendarioDayCell - Célula de um dia no calendário
@@ -16,14 +17,7 @@ const emit = defineEmits<{
   select: [date: Date]
 }>()
 
-// Formatar valor em BRL
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    minimumFractionDigits: 2,
-  }).format(value)
-}
+const { formatCurrency } = useCurrency()
 
 // Formatar valor compacto (sem símbolo, só número)
 function formatCompact(value: number): string {

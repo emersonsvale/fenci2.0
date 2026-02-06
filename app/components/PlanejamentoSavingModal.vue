@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useCurrency } from '~/composables/useCurrency'
 import BaseModal from './BaseModal.vue'
 import AppButton from './AppButton.vue'
 import AppInput from './AppInput.vue'
 import AppDateInput from './AppDateInput.vue'
 import type { PlanningSaving } from 'shared/types/database.types'
 import type { SavingFormData } from '../composables/usePlanejamento'
+
+const { formatCurrency } = useCurrency()
 
 const props = defineProps<{
   isOpen: boolean
@@ -28,7 +31,7 @@ watch(
     if (props.isOpen) {
       if (props.editingSaving) {
         amount.value = Number(props.editingSaving.amount)
-        amountDisplay.value = formatCurrency(amount.value)
+        amountDisplay.value = formatCurrencyDisplay(amount.value)
         savedAt.value = props.editingSaving.saved_at
         description.value = props.editingSaving.description ?? ''
       } else {
@@ -41,9 +44,9 @@ watch(
   }
 )
 
-function formatCurrency(value: number): string {
+function formatCurrencyDisplay(value: number): string {
   if (value === 0) return ''
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
+  return formatCurrency(value)
 }
 
 function handleAmountInput(event: Event) {
@@ -51,7 +54,7 @@ function handleAmountInput(event: Event) {
   const numbers = input.value.replace(/\D/g, '')
   const numValue = parseInt(numbers || '0', 10) / 100
   amount.value = numValue
-  amountDisplay.value = numValue > 0 ? formatCurrency(numValue) : ''
+  amountDisplay.value = numValue > 0 ? formatCurrencyDisplay(numValue) : ''
 }
 
 function handleSubmit() {

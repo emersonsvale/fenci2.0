@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useCurrency } from '~/composables/useCurrency'
 
 /**
  * CategoryList - Lista de gastos por categoria
  * Exibe as categorias com maior gasto do mês
  */
+
+const { formatCurrency } = useCurrency()
 
 export interface CategoryItem {
   id: string
@@ -37,13 +40,6 @@ const displayedCategories = computed(() => {
 /** Material Symbols usa nomes como "directions_car"; emojis são outros caracteres. */
 function isMaterialIcon(icon: string): boolean {
   return /^[a-z0-9_]+$/i.test(icon.trim())
-}
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value)
 }
 </script>
 

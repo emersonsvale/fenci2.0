@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { DaySummary, CalendarioTransaction } from '../composables/useCalendario'
+import { useCurrency } from '~/composables/useCurrency'
 
 /**
  * CalendarioSidebar - Sidebar lateral com detalhes do dia selecionado
@@ -13,20 +14,13 @@ export interface CalendarioSidebarProps {
 
 defineProps<CalendarioSidebarProps>()
 
+const { formatCurrency } = useCurrency()
+
 // Formatar data para exibição
 function formatDate(date: Date): string {
   const day = date.getDate().toString().padStart(2, '0')
   const month = date.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')
   return `${day} de ${month}.`
-}
-
-// Formatar valor em BRL
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    minimumFractionDigits: 2,
-  }).format(value)
 }
 
 // Obter ícone baseado no tipo

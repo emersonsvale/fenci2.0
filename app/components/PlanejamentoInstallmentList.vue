@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { PlanningInstallment } from 'shared/types/database.types'
+import { useCurrency } from '~/composables/useCurrency'
 import ConfirmDeleteModal from './ConfirmDeleteModal.vue'
+
+const { formatCurrency } = useCurrency()
 
 const props = defineProps<{
   installments: PlanningInstallment[]
@@ -16,9 +19,6 @@ const emit = defineEmits<{
 const isDeleteModalOpen = ref(false)
 const installmentToDelete = ref<PlanningInstallment | null>(null)
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
-}
 
 function formatDate(dateStr: string) {
   return new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR', {

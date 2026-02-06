@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { ExtratoTransaction } from '../composables/useExtrato'
+import { useCurrency } from '~/composables/useCurrency'
 import ProgressBar from './ProgressBar.vue'
+
+const { formatCurrency } = useCurrency()
 
 /**
  * ExtratoItem - Item individual da lista de extratos
@@ -55,12 +58,9 @@ function closeMenu() {
   isMenuOpen.value = false
 }
 
-// Formatação
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(Math.abs(value))
+// Formatação (valor exibido em valor absoluto)
+function formatAmount(value: number): string {
+  return formatCurrency(Math.abs(value))
 }
 
 function formatDate(date: Date): string {
@@ -144,7 +144,7 @@ const iconBgColor = computed(() => {
 // Valor com sinal
 const displayAmount = computed(() => {
   const isIncome = props.transaction.type === 'income'
-  const value = formatCurrency(props.transaction.amount)
+  const value = formatAmount(props.transaction.amount)
   return isIncome ? `+ ${value}` : value
 })
 

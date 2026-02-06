@@ -17,6 +17,7 @@ import LancamentoCartaoModal from '../components/LancamentoCartaoModal.vue'
 import type { CategoryDisplay, CreditCardFormData, AccountFormData } from '../composables/useContas'
 import type { RendaFormData as RendaModalFormData } from '../components/RendaModal.vue'
 import type { CategoryFormData as CategoryModalFormData } from '../components/CategoryModal.vue'
+import { useCurrency } from '../composables/useCurrency'
 
 /**
  * Contas - Página de gerenciamento de contas
@@ -26,6 +27,8 @@ import type { CategoryFormData as CategoryModalFormData } from '../components/Ca
 definePageMeta({
   layout: 'dashboard',
 })
+
+const { formatCurrency } = useCurrency()
 
 // Composable de contas
 const {
@@ -167,6 +170,12 @@ function handleCreditCardsDrawerEdit(item: { id: string; name: string; identifie
   handleCreditCardEdit(item)
 }
 
+async function handleCreditCardsDrawerDelete(item: { id: string; name: string; identifier: string }) {
+  if (!confirm(`Excluir o cartão ${item.name} (**** ${item.identifier})? Esta ação não pode ser desfeita.`)) return
+  const ok = await deleteCreditCard(item.id)
+  if (ok) isCreditCardsDrawerOpen.value = false
+}
+
 function handleAccountsDrawerItemClick(item: { id: string; name: string; identifier: string; icon?: string | null; color?: string }) {
   isAccountsDrawerOpen.value = false
   handleAccountClick(item)
@@ -282,13 +291,6 @@ function handleInitialBalanceInput(event: Event) {
   })
 }
 
-// Formatação de moeda
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value)
-}
 
 // === Handlers de Lançamento ===
 function handleOpenLancamento(type: LancamentoType) {
@@ -811,6 +813,7 @@ const accountsListItems = computed(() => {
       @add="handleCreditCardsDrawerAdd"
       @item-click="handleCreditCardsDrawerItemClick"
       @edit="handleCreditCardsDrawerEdit"
+      @delete="handleCreditCardsDrawerDelete"
     />
 
     <!-- Drawer: lista completa de contas bancárias -->

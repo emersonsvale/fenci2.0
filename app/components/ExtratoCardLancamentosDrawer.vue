@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, watch } from 'vue'
 import type { ExtratoCreditCard } from '../composables/useExtrato'
+import { useCurrency } from '~/composables/useCurrency'
 
 /**
  * ExtratoCardLancamentosDrawer - Drawer que exibe os lançamentos de um cartão de crédito
  * Abre ao clicar em um cartão na sidebar da página de extratos.
  */
+
+const { formatCurrency } = useCurrency()
 
 interface TransactionWithDate {
   id: string
@@ -39,12 +42,6 @@ const emit = defineEmits<{
   delete: [transactionId: string]
 }>()
 
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value)
-}
 
 /** Formata YYYY-MM-DD para exibição no item (ex: "15 jan.") */
 function formatTransactionDate(isoDate: string): string {

@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useCurrency } from '~/composables/useCurrency'
 
 /**
  * CreditCardWidget - Widget de cartões de crédito
  * Exibe os cartões do usuário com carrossel
  */
+
+const { formatCurrency } = useCurrency()
 
 export interface CreditCard {
   id: string
@@ -48,12 +51,6 @@ function prevCard() {
   }
 }
 
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value)
-}
 
 const currentCard = computed(() => props.cards[currentIndex.value])
 

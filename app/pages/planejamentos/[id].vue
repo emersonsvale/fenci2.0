@@ -10,6 +10,7 @@ import PlanejamentoInstallmentModal from '../../components/PlanejamentoInstallme
 import PlanejamentoSavingModal from '../../components/PlanejamentoSavingModal.vue'
 import type { PlanningSaving } from 'shared/types/database.types'
 import type { SavingFormData } from '../../composables/usePlanejamento'
+import { useCurrency } from '../../composables/useCurrency'
 
 /**
  * Planejamento detalhe - Dashboard, categorias, lançamentos e parcelas do planejamento
@@ -19,6 +20,7 @@ definePageMeta({
   layout: 'dashboard',
 })
 
+const { formatCurrency } = useCurrency()
 const route = useRoute()
 const planningId = computed(() => (route.params.id as string) ?? null)
 
@@ -80,9 +82,6 @@ function formatDate(dateStr: string | null) {
   })
 }
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
-}
 
 const statusLabel: Record<string, string> = {
   rascunho: 'Rascunho',

@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useCurrency } from '~/composables/useCurrency'
+
+const { formatCurrency } = useCurrency()
 
 /**
  * LimitCard - Card de limite mensal
@@ -25,12 +28,6 @@ const percentage = computed(() => {
   return Math.round((props.gasto / props.limite) * 100)
 })
 
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value)
-}
 
 const progressColor = computed(() => {
   if (percentage.value >= 100) return 'bg-error'

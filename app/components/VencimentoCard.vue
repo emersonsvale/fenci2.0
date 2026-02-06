@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useCurrency } from '~/composables/useCurrency'
 
 /**
  * VencimentoCard - Card de próximos vencimentos
  * Exibe lista de contas a vencer com opção de pagar
  */
+
+const { formatCurrency } = useCurrency()
 
 export interface Vencimento {
   id: string
@@ -35,12 +38,6 @@ const displayedVencimentos = computed(() => {
   return props.vencimentos.slice(0, props.maxItems)
 })
 
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value)
-}
 
 function formatDate(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date

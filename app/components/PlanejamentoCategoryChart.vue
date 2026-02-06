@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { Chart, registerables, type ChartConfiguration } from 'chart.js'
+import { useCurrency } from '~/composables/useCurrency'
 
 /**
  * PlanejamentoCategoryChart - Gráfico de barras por categoria (previsto x realizado)
  */
+
+const { formatCurrency } = useCurrency()
 
 export interface CategoryTotal {
   name: string
@@ -71,7 +74,7 @@ function buildChartConfig(): ChartConfiguration<'bar'> | null {
           callbacks: {
             label(context) {
               const value = context.raw as number
-              return `${context.dataset.label}: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)}`
+              return `${context.dataset.label}: ${formatCurrency(value)}`
             },
           },
         },

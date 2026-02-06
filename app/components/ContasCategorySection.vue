@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useCurrency } from '~/composables/useCurrency'
 
 /**
  * ContasCategorySection - Seção de categorias (entrada ou saída)
@@ -75,13 +76,7 @@ function getMaterialIcon(category: CategoryItem): string {
   return iconMap[nameLower] || 'category'
 }
 
-// Formatação de moeda
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value)
-}
+const { formatCurrency } = useCurrency()
 </script>
 
 <template>

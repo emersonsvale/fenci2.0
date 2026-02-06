@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useCurrency } from '~/composables/useCurrency'
 import BaseModal from './BaseModal.vue'
 import AppButton from './AppButton.vue'
 import AppInput from './AppInput.vue'
@@ -10,6 +11,8 @@ import type { PlanningFormData } from '../composables/usePlanejamentos'
 /**
  * PlanejamentoFormModal - Modal para criar ou editar planejamento
  */
+
+const { formatCurrency } = useCurrency()
 
 const props = defineProps<{
   isOpen: boolean
@@ -60,7 +63,7 @@ watch(
         dateStart.value = props.editingPlanning.date_start ?? ''
         dateEnd.value = props.editingPlanning.date_end ?? ''
         budgetTotal.value = props.editingPlanning.budget_total ?? 0
-        budgetDisplay.value = formatCurrency(props.editingPlanning.budget_total ?? 0)
+        budgetDisplay.value = formatCurrencyDisplay(props.editingPlanning.budget_total ?? 0)
         notes.value = props.editingPlanning.notes ?? ''
       } else {
         resetForm()
@@ -80,9 +83,9 @@ function resetForm() {
   notes.value = ''
 }
 
-function formatCurrency(value: number): string {
+function formatCurrencyDisplay(value: number): string {
   if (value === 0) return ''
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
+  return formatCurrency(value)
 }
 
 function handleBudgetInput(event: Event) {
@@ -90,7 +93,7 @@ function handleBudgetInput(event: Event) {
   const numbers = input.value.replace(/\D/g, '')
   const numValue = parseInt(numbers || '0', 10) / 100
   budgetTotal.value = numValue
-  budgetDisplay.value = numValue > 0 ? formatCurrency(numValue) : ''
+  budgetDisplay.value = numValue > 0 ? formatCurrencyDisplay(numValue) : ''
 }
 
 function handleSubmit() {

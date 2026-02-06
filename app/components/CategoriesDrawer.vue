@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, watch } from 'vue'
+import { useCurrency } from '~/composables/useCurrency'
 
 /**
  * CategoriesDrawer - Drawer que exibe a lista completa de categorias (entradas ou saídas)
  * Abre ao clicar em "Ver mais" nas seções de categorias da página Contas.
  */
+
+const { formatCurrency } = useCurrency()
 
 export interface CategoryItemDrawer {
   id: string
@@ -60,12 +63,6 @@ function getMaterialIcon(category: CategoryItemDrawer): string {
   return iconMap[nameLower] || 'category'
 }
 
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value)
-}
 
 function handleKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape') emit('close')

@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useCurrency } from '~/composables/useCurrency'
 
 /**
  * InvestmentList - Lista de investimentos
  * Exibe resumo dos investimentos com status e valores
  */
+
+const { formatCurrency } = useCurrency()
 
 export interface Investment {
   id: string
@@ -33,12 +36,6 @@ const displayedInvestments = computed(() => {
   return props.investments.slice(0, props.maxItems)
 })
 
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value)
-}
 </script>
 
 <template>

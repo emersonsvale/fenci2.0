@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { TransactionDateGroup } from '../composables/useExtrato'
+import { useCurrency } from '~/composables/useCurrency'
 import ExtratoItem from './ExtratoItem.vue'
 
 /**
  * ExtratoListByDate - Lista de transações agrupadas por data
  * Exibe as transações organizadas por dia com saldo diário
  */
+
+const { formatCurrency: formatCurrencyBase } = useCurrency()
 
 export interface ExtratoListByDateProps {
   groups: TransactionDateGroup[]
@@ -39,14 +42,10 @@ function isSelected(id: string): boolean {
   return selectedSet.value.has(id)
 }
 
-// Formatação de moeda
+// Formatação de moeda (com sinal para saldo do dia)
 function formatCurrency(value: number): string {
-  const formatted = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(Math.abs(value))
-  
-  return value >= 0 ? formatted : `-${formatted.replace('R$', 'R$ ')}`
+  const formatted = formatCurrencyBase(Math.abs(value))
+  return value >= 0 ? formatted : `- ${formatted}`
 }
 
 // Verificar se é um novo mês (para exibir o header do mês)

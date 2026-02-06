@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useCurrency } from '~/composables/useCurrency'
 import BaseModal from './BaseModal.vue'
 import AppButton from './AppButton.vue'
 import AppInput from './AppInput.vue'
@@ -7,6 +8,8 @@ import AppDateInput from './AppDateInput.vue'
 import type { PlanningCategory } from 'shared/types/database.types'
 import type { PlanningEntry } from 'shared/types/database.types'
 import type { EntryFormData, PlanningPhase } from '../composables/usePlanejamento'
+
+const { formatCurrency } = useCurrency()
 
 const props = defineProps<{
   isOpen: boolean
@@ -43,9 +46,9 @@ watch(
         phase.value = props.editingEntry.phase as PlanningPhase
         description.value = props.editingEntry.description ?? ''
         amountPlanned.value = Number(props.editingEntry.amount_planned)
-        amountPlannedDisplay.value = formatCurrency(amountPlanned.value)
+        amountPlannedDisplay.value = formatCurrencyDisplay(amountPlanned.value)
         amountActual.value = props.editingEntry.amount_actual != null ? Number(props.editingEntry.amount_actual) : null
-        amountActualDisplay.value = amountActual.value != null ? formatCurrency(amountActual.value) : ''
+        amountActualDisplay.value = amountActual.value != null ? formatCurrencyDisplay(amountActual.value) : ''
         entryDate.value = props.editingEntry.entry_date
       } else {
         resetForm()
@@ -65,9 +68,9 @@ function resetForm() {
   entryDate.value = new Date().toISOString().slice(0, 10)
 }
 
-function formatCurrency(value: number): string {
+function formatCurrencyDisplay(value: number): string {
   if (value === 0) return ''
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
+  return formatCurrency(value)
 }
 
 function handlePlannedInput(event: Event) {
@@ -75,7 +78,7 @@ function handlePlannedInput(event: Event) {
   const numbers = input.value.replace(/\D/g, '')
   const numValue = parseInt(numbers || '0', 10) / 100
   amountPlanned.value = numValue
-  amountPlannedDisplay.value = numValue > 0 ? formatCurrency(numValue) : ''
+  amountPlannedDisplay.value = numValue > 0 ? formatCurrencyDisplay(numValue) : ''
 }
 
 function handleActualInput(event: Event) {
@@ -83,7 +86,7 @@ function handleActualInput(event: Event) {
   const numbers = input.value.replace(/\D/g, '')
   const numValue = parseInt(numbers || '0', 10) / 100
   amountActual.value = numValue > 0 ? numValue : null
-  amountActualDisplay.value = numValue > 0 ? formatCurrency(numValue) : ''
+  amountActualDisplay.value = numValue > 0 ? formatCurrencyDisplay(numValue) : ''
 }
 
 function handleSubmit() {

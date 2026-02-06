@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useCurrency } from '~/composables/useCurrency'
 
 /**
  * BalanceCard - Card de balanço financeiro
@@ -17,14 +18,12 @@ const props = withDefaults(defineProps<BalanceCardProps>(), {
   loading: false,
 })
 
+const { formatCurrency: formatCurrencyBase } = useCurrency()
 const showValues = ref(true)
 
 function formatCurrency(value: number): string {
   if (!showValues.value) return '••••••'
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value)
+  return formatCurrencyBase(value)
 }
 
 function toggleVisibility() {

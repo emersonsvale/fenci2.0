@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import type { ExtratoCreditCard } from '../composables/useExtrato'
+import { useCurrency } from '~/composables/useCurrency'
 import ContasPagasCard from './ContasPagasCard.vue'
+
+const { formatCurrency } = useCurrency()
 
 /** Quantidade de transações exibidas por cartão antes do "Ver mais" */
 const TRANSACTIONS_PER_CARD = 5
@@ -41,12 +44,6 @@ const emit = defineEmits<{
   'card-click': [cardId: string]
 }>()
 
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value)
-}
 
 function getDisplayedTransactions(card: ExtratoCreditCard) {
   return card.transactions.slice(0, TRANSACTIONS_PER_CARD)

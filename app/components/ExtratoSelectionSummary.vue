@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useCurrency } from '~/composables/useCurrency'
 
 /**
  * ExtratoSelectionSummary - Painel sobreposto com soma e valor líquido dos lançamentos selecionados
  * Exibe botão "Mais" para ações em massa (marcar pago, não pago, excluir)
  */
+
+const { formatCurrency } = useCurrency()
 
 export interface ExtratoSelectionSummaryProps {
   soma: number
@@ -23,12 +26,6 @@ const emit = defineEmits<{
 
 const isMoreOpen = ref(false)
 
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value)
-}
 
 function closeMore() {
   isMoreOpen.value = false

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useCurrency } from '~/composables/useCurrency'
 import SummaryCard from './SummaryCard.vue'
 import PlanejamentoCategoryChart from './PlanejamentoCategoryChart.vue'
 import type { PlanningPhase } from '../composables/usePlanejamento'
@@ -7,6 +8,8 @@ import type { PlanningPhase } from '../composables/usePlanejamento'
 /**
  * PlanejamentoDashboard - Resumo do planejamento: por fase, por categoria, previsto x realizado
  */
+
+const { formatCurrency } = useCurrency()
 
 const props = defineProps<{
   totalsByPhase: Record<PlanningPhase, { planned: number; actual: number }>
@@ -23,9 +26,6 @@ const phaseLabels: Record<PlanningPhase, string> = {
   after: 'Depois',
 }
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
-}
 
 const hasBudget = computed(() => props.budgetTotal != null && props.budgetTotal > 0)
 const budgetDiff = computed(() => {

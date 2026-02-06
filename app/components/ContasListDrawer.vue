@@ -30,6 +30,7 @@ const emit = defineEmits<{
   add: []
   'item-click': [item: ListItemDrawer]
   edit: [item: ListItemDrawer]
+  delete: [item: ListItemDrawer]
 }>()
 
 function getItemIcon(item: ListItemDrawer): string {
@@ -223,6 +224,14 @@ watch(
                   @click.stop="emit('edit', item)"
                 >
                   <span class="material-symbols-outlined text-xl">edit</span>
+                </button>
+                <button
+                  type="button"
+                  class="p-2 rounded-lg hover:bg-surface-overlay transition-colors text-content-subtle hover:text-error"
+                  :aria-label="variant === 'card' ? 'Excluir cartão' : 'Excluir conta'"
+                  @click.stop="emit('delete', item)"
+                >
+                  <span class="material-symbols-outlined text-xl">delete</span>
                 </button>
                 <span class="material-symbols-outlined text-content-tertiary text-lg">
                   chevron_right

@@ -2,9 +2,12 @@
 import { ref, computed } from 'vue'
 import type { PlanningCategory } from 'shared/types/database.types'
 import type { PlanningEntry } from 'shared/types/database.types'
+import { useCurrency } from '~/composables/useCurrency'
 import PlanejamentoEntryModal from './PlanejamentoEntryModal.vue'
 import ConfirmDeleteModal from './ConfirmDeleteModal.vue'
 import type { EntryFormData, PlanningPhase } from '../composables/usePlanejamento'
+
+const { formatCurrency } = useCurrency()
 
 const props = defineProps<{
   entries: PlanningEntry[]
@@ -39,9 +42,6 @@ function getCategoryName(categoryId: string) {
   return props.categories.find((c) => c.id === categoryId)?.name ?? '—'
 }
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
-}
 
 function formatDate(dateStr: string) {
   return new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR', {

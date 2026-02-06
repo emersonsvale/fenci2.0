@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useCurrency } from '~/composables/useCurrency'
+
+const { formatCurrency } = useCurrency()
 
 /**
  * ProviderCard - Card de provedor/fornecedor
@@ -37,12 +40,6 @@ const displayedProviders = computed(() => {
 
 const hasMore = computed(() => props.providers.length > props.maxItems)
 
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value)
-}
 </script>
 
 <template>

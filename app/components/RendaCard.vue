@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useCurrency } from '~/composables/useCurrency'
 
 /**
  * RendaCard - Card individual de renda recorrente
  * Exibe informações de uma fonte de renda com menu de opções
  */
+
+const { formatCurrency } = useCurrency()
 
 export interface RendaCardProps {
   id: string
@@ -25,12 +28,6 @@ const emit = defineEmits<{
 
 const isMenuOpen = ref(false)
 
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value)
-}
 
 function formatDiaRecebimento(dia: number): string {
   if (dia === 1) return '1 de todo mês'

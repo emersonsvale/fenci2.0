@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import type { Account, Category } from 'shared/types/database.types'
+import { useCurrency } from '~/composables/useCurrency'
 import AppDateInput from './AppDateInput.vue'
 
 /**
  * RendaModal - Modal para criar/editar rendas recorrentes
  * Segue o design system Fenci com campos organizados em grid
  */
+
+const { formatCurrency } = useCurrency()
 
 export interface RendaModalProps {
   isOpen: boolean
@@ -104,13 +107,9 @@ function resetForm() {
   newCategoryName.value = ''
 }
 
-// Formatação de moeda
 function formatCurrencyInput(value: number): string {
   if (value === 0) return ''
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value)
+  return formatCurrency(value)
 }
 
 function handleValorInput(event: Event) {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useCurrency } from '~/composables/useCurrency'
 import BaseModal from './BaseModal.vue'
 import AppButton from './AppButton.vue'
 import AppInput from './AppInput.vue'
@@ -7,6 +8,8 @@ import AppInput from './AppInput.vue'
 /**
  * LimitModal - Modal para definir/editar limite mensal de gastos
  */
+
+const { formatCurrency } = useCurrency()
 
 const props = defineProps<{
   isOpen: boolean
@@ -27,10 +30,7 @@ const amountDisplay = ref('')
 
 function formatCurrencyInput(value: number): string {
   if (value === 0) return ''
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value)
+  return formatCurrency(value)
 }
 
 function handleAmountInput(event: Event) {

@@ -1,11 +1,19 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Planning } from 'shared/types/database.types'
+import { useCurrency } from '~/composables/useCurrency'
 
 /**
  * PlanejamentoCard - Card de um planejamento na listagem
  * Exibe nome, tipo, status, datas e link para o detalhe
  */
+
+const { formatCurrency: formatCurrencyBase } = useCurrency()
+
+function formatCurrency(value: number | null): string {
+  if (value == null) return '—'
+  return formatCurrencyBase(value)
+}
 
 const props = defineProps<{
   planning: Planning
@@ -40,10 +48,6 @@ function formatDate(dateStr: string | null) {
   })
 }
 
-function formatCurrency(value: number | null) {
-  if (value == null) return '—'
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
-}
 </script>
 
 <template>

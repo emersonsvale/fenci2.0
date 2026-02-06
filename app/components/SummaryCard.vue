@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useCurrency } from '~/composables/useCurrency'
 
 /**
  * SummaryCard - Card de resumo financeiro
  * Usado para exibir valores de resumo como "A pagar", "A receber", etc.
  */
+
+const { formatCurrency } = useCurrency()
 
 export interface SummaryCardProps {
   label: string
@@ -32,10 +35,7 @@ function toggleVisibility() {
 
 const formattedValue = computed(() => {
   if (props.showCurrency) {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(props.value)
+    return formatCurrency(props.value)
   }
   return props.value.toLocaleString('pt-BR')
 })
