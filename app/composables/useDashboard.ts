@@ -197,9 +197,9 @@ export function useDashboard() {
     const periodo = periodTransactions.value
     const toNum = (v: unknown) => (typeof v === 'number' ? v : Number(v) || 0)
 
-    // Entradas = total das rendas do período (recebidas + a receber) — valores das rendas
+    // Entradas = apenas o que já foi recebido (pago); aguardando e atrasado não entram
     const entradas = periodo
-      .filter((t) => t.type === 'income')
+      .filter((t) => t.type === 'income' && t.is_paid)
       .reduce((sum, t) => sum + toNum(t.amount), 0)
 
     // Saídas: despesas pagas do período
@@ -207,7 +207,7 @@ export function useDashboard() {
       .filter((t) => t.type === 'expense' && t.is_paid)
       .reduce((sum, t) => sum + Math.abs(toNum(t.amount)), 0)
 
-    // Saldo = entradas - saídas (projeção do mês quando entradas inclui a receber)
+    // Saldo = entradas recebidas - saídas pagas
     const saldo = entradas - saidas
 
     return {
@@ -242,9 +242,9 @@ export function useDashboard() {
         return transactionDate.getMonth() === month && transactionDate.getFullYear() === year
       })
 
-      // Entradas = todas as rendas do mês (recebidas + a receber)
+      // Entradas = apenas rendas já recebidas no mês (aguardando/atrasado não entram)
       const entradas = monthTransactions
-        .filter((t) => t.type === 'income')
+        .filter((t) => t.type === 'income' && t.is_paid)
         .reduce((sum, t) => sum + toNum(t.amount), 0)
 
       // Saídas = despesas pagas do mês

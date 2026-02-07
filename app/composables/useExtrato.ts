@@ -354,9 +354,7 @@ export function useExtrato() {
         const isPaid =
           inv &&
           (inv.status === 'paid' ||
-            (inv.paid_amount != null &&
-              inv.total_amount != null &&
-              inv.paid_amount >= inv.total_amount))
+            (inv.paid_amount != null && inv.paid_amount >= totalCard))
         if (!isPaid) total += totalCard
       }
       return total
@@ -534,15 +532,15 @@ export function useExtrato() {
       const cardName = card?.name ?? 'Cartão'
       const inv = invoices.value.find((i) => {
         if (i.credit_card_id !== creditCardId) return false
-        const ref = i.reference_month ?? ''
-        return ref.slice(0, 7) === monthKey
+        const ref = i.reference_month
+        const refStr = typeof ref === 'string' ? ref : ref ? String(ref).slice(0, 10) : ''
+        return refStr.slice(0, 7) === monthKey
       })
+      // Linha mostra "Pago" quando a fatura está quitada OU quando o valor pago já cobre o valor exibido na linha (total do mês anterior)
       const faturaPaga = !!(
         inv &&
         (inv.status === 'paid' ||
-          (inv.paid_amount != null &&
-            inv.total_amount != null &&
-            inv.paid_amount >= inv.total_amount))
+          (inv.paid_amount != null && inv.paid_amount >= total))
       )
       // Data exibida = dia de vencimento (não fechamento)
       let dueDateStr: string | undefined
@@ -558,6 +556,12 @@ export function useExtrato() {
       const faturaDate = dueDateStr
         ? new Date(dueDateStr + 'T12:00:00')
         : new Date(year, month + 1, 1, 12, 0, 0)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const dueDateOnly = dueDateStr ? new Date(dueDateStr + 'T12:00:00') : null
+      dueDateOnly?.setHours(0, 0, 0, 0)
+      const faturaAtrasada = !faturaPaga && dueDateOnly && dueDateOnly.getTime() < today.getTime()
+      const faturaStatus: 'pago' | 'atrasado' | 'aguardando' = faturaPaga ? 'pago' : faturaAtrasada ? 'atrasado' : 'aguardando'
       faturaRows.push({
         id: `fatura-${creditCardId}-${year}-${month + 1}`,
         description: `Fatura ${cardName} - ${monthLabel}`,
@@ -566,7 +570,7 @@ export function useExtrato() {
         date: faturaDate,
         time: '12:00',
         amount: -total,
-        status: faturaPaga ? 'pago' : 'aguardando',
+        status: faturaStatus,
         isPaid: faturaPaga,
         isRecurring: false,
         installmentInfo: null,
@@ -633,28 +637,23 @@ export function useExtrato() {
       )
     }
 
-    // Filtrar por status
+    // Filtrar por status: quando há filtros de tipo (entrada/saída) E de status (pago/atrasado/aguardando),
+    // o item deve satisfazer AMBOS (ex.: Saídas + Atrasado = só despesas atrasadas)
     if (activeStatusFilters.value.length > 0) {
       result = result.filter((t) => {
         const filters = activeStatusFilters.value
-        
-        // Entrada/Saída
-        if (filters.includes('entrada') && t.type === 'income') return true
-        if (filters.includes('saida') && t.type === 'expense') return true
-        
-        // Status
-        if (filters.includes('pago') && t.status === 'pago') return true
-        if (filters.includes('atrasado') && t.status === 'atrasado') return true
-        if (filters.includes('aguardando') && t.status === 'aguardando') return true
-        
-        // Se nenhum filtro de tipo/status bater, verificar se só tem filtros de tipo
         const hasTypeFilter = filters.includes('entrada') || filters.includes('saida')
         const hasStatusFilter = filters.includes('pago') || filters.includes('atrasado') || filters.includes('aguardando')
-        
-        if (hasTypeFilter && !hasStatusFilter) return false
-        if (!hasTypeFilter && hasStatusFilter) return false
-        
-        return false
+
+        const matchesType = !hasTypeFilter ||
+          (filters.includes('entrada') && t.type === 'income') ||
+          (filters.includes('saida') && t.type === 'expense')
+        const matchesStatus = !hasStatusFilter ||
+          (filters.includes('pago') && t.status === 'pago') ||
+          (filters.includes('atrasado') && t.status === 'atrasado') ||
+          (filters.includes('aguardando') && t.status === 'aguardando')
+
+        return matchesType && matchesStatus
       })
     }
 

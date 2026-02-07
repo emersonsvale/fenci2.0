@@ -5,6 +5,7 @@ import { useSupabaseClient, useSupabaseUser } from '#imports'
 import { useTheme } from '~/composables/useTheme'
 import { useProfile } from '~/composables/useProfile'
 import { useSidebar } from '~/composables/useSidebar'
+import NotificationBell from '~/components/NotificationBell.vue'
 
 /**
  * AppSidebar - Sidebar de navegação principal
@@ -150,6 +151,7 @@ const { isCollapsed, toggle: toggleSidebar, width: sidebarWidth } = useSidebar()
           </span>
           <span class="truncate" :class="{ 'sr-only': isCollapsed }">{{ isDark ? 'Modo Claro' : 'Modo Escuro' }}</span>
         </button>
+        <NotificationBell :collapsed="isCollapsed" />
         <button class="sidebar-action" title="Novo Aqui?">
           <span class="material-symbols-outlined text-lg shrink-0">help</span>
           <span class="truncate" :class="{ 'sr-only': isCollapsed }">Novo Aqui?</span>

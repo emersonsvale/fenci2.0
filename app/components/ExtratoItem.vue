@@ -193,7 +193,6 @@ function handleToggleSelect() {
 }
 
 function handlePayInvoice() {
-  closeMenu()
   if (!props.transaction.creditCardId) return
   emit('pay-invoice', {
     creditCardId: props.transaction.creditCardId,
@@ -202,6 +201,7 @@ function handlePayInvoice() {
     amount: Math.abs(props.transaction.amount),
     dueDate: props.transaction.dueDate,
   })
+  closeMenu()
 }
 </script>
 
@@ -376,10 +376,11 @@ function handlePayInvoice() {
           class="absolute right-0 top-full mt-1 w-48 bg-surface-elevated rounded-lg shadow-lg border border-default z-popover py-1"
         >
           <button
+            :id="`btn-pagar-fatura-${transaction.id}`"
             v-if="isFaturaSummary && !transaction.isPaid"
             type="button"
             class="w-full px-3 py-2 text-left text-body-sm text-content-main hover:bg-surface-overlay flex items-center gap-2"
-            @click="handlePayInvoice"
+            @click.stop="handlePayInvoice"
           >
             <span class="material-symbols-outlined text-lg text-primary">credit_card</span>
             Pagar fatura

@@ -700,6 +700,50 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          type: string
+          title: string
+          body: string
+          read_at: string | null
+          reference_id: string | null
+          reference_type: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          type: string
+          title: string
+          body: string
+          read_at?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          type?: string
+          title?: string
+          body?: string
+          read_at?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       planning_categories: {
         Row: {
           color: string | null
@@ -1413,6 +1457,10 @@ export type PlanningSavingUpdate = TablesUpdate<'planning_savings'>
 export type NotificationPreferences = Tables<'notification_preferences'>
 export type NotificationPreferencesInsert = TablesInsert<'notification_preferences'>
 export type NotificationPreferencesUpdate = TablesUpdate<'notification_preferences'>
+
+export type Notification = Tables<'notifications'>
+export type NotificationInsert = TablesInsert<'notifications'>
+export type NotificationUpdate = TablesUpdate<'notifications'>
 
 // ============================================
 // ENUMS PARA USO NO APP

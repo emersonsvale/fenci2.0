@@ -21,6 +21,7 @@ export function useCreditCardInvoice() {
     paymentDate: string,
     referenceMonth?: string
   ): Promise<boolean> {
+    console.log('[useCreditCardInvoice] payInvoice chamado:', { invoiceId, creditCardId, accountId, amount, paymentDate, referenceMonth })
     const { data: authData } = await supabase.auth.getUser()
     const userId = authData?.user?.id
     if (!userId) {
@@ -33,14 +34,37 @@ export function useCreditCardInvoice() {
 
     try {
       const referenceMonthDate = referenceMonth ? `${referenceMonth}-01` : null
-      let inv = invoiceId
-        ? (await supabase.from('credit_card_invoices').select('id, credit_card_id, total_amount, paid_amount').eq('id', invoiceId).single()).data
-        : referenceMonthDate
-          ? (await supabase.from('credit_card_invoices').select('id, credit_card_id, total_amount, paid_amount').eq('credit_card_id', creditCardId).eq('reference_month', referenceMonthDate).maybeSingle()).data
-          : null
+      const invById = invoiceId
+        ? await supabase.from('credit_card_invoices').select('id, credit_card_id, total_amount, paid_amount, status').eq('id', invoiceId).single()
+        : { data: null, error: null }
+      const invByRef =
+        !invoiceId && referenceMonthDate
+          ? await supabase
+              .from('credit_card_invoices')
+              .select('id, credit_card_id, total_amount, paid_amount, status')
+              .eq('credit_card_id', creditCardId)
+              .eq('reference_month', referenceMonthDate)
+              .maybeSingle()
+          : { data: null, error: null }
 
+      const inv = invoiceId ? invById.data : invByRef.data
+      if (invById.error) {
+        console.error('Erro ao buscar fatura por id:', invById.error)
+        error.value = 'Fatura não encontrada'
+        return false
+      }
+      if (!invoiceId && invByRef.error) {
+        console.error('Erro ao buscar fatura por mês:', invByRef.error)
+        error.value = 'Fatura não encontrada'
+        return false
+      }
       if (!inv) {
         error.value = 'Fatura não encontrada'
+        return false
+      }
+
+      if (inv.status === 'paid') {
+        error.value = 'Esta fatura já está paga.'
         return false
       }
 
@@ -59,16 +83,37 @@ export function useCreditCardInvoice() {
         invoice_id: inv.id,
       })
 
-      if (txError) throw txError
+      if (txError) {
+        console.error('Erro ao inserir transação de pagamento:', txError)
+        throw txError
+      }
 
-      await supabase
+      const { error: updateInvError } = await supabase
         .from('credit_card_invoices')
         .update({ paid_amount: newPaidAmount, status })
         .eq('id', inv.id)
 
-      const { data: card } = await supabase.from('credit_cards').select('available_limit').eq('id', inv.credit_card_id).single()
+      if (updateInvError) {
+        console.error('Erro ao atualizar fatura:', updateInvError)
+        error.value = 'Erro ao atualizar status da fatura. Tente novamente.'
+        return false
+      }
+
+      const { data: card, error: cardError } = await supabase.from('credit_cards').select('available_limit').eq('id', inv.credit_card_id).single()
+      if (cardError) {
+        console.error('Erro ao buscar limite do cartão:', cardError)
+        // Pagamento e fatura já foram registrados; só o limite não atualizou
+        return true
+      }
       const currentLimit = card?.available_limit ?? 0
-      await supabase.from('credit_cards').update({ available_limit: currentLimit + amount }).eq('id', inv.credit_card_id)
+      const { error: updateCardError } = await supabase
+        .from('credit_cards')
+        .update({ available_limit: currentLimit + amount })
+        .eq('id', inv.credit_card_id)
+      if (updateCardError) {
+        console.error('Erro ao atualizar limite do cartão:', updateCardError)
+      }
+      // Pagamento e fatura já foram atualizados com sucesso
 
       return true
     } catch (err: unknown) {
@@ -80,9 +125,14 @@ export function useCreditCardInvoice() {
     }
   }
 
+  function clearError() {
+    error.value = null
+  }
+
   return {
     error,
     isSubmitting,
     payInvoice,
+    clearError,
   }
 }

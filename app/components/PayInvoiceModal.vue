@@ -44,8 +44,26 @@ function handleAmountInput(event: Event) {
   amountDisplay.value = formatAmount(numValue)
 }
 
+const submitBlockReason = ref<string | null>(null)
+
 function submit() {
-  if (!accountId.value || amount.value <= 0 || !paymentDate.value) return
+  submitBlockReason.value = null
+  if (!accountId.value) {
+    submitBlockReason.value = 'Selecione uma conta para continuar.'
+    console.warn('[PayInvoiceModal] Submit bloqueado: nenhuma conta selecionada')
+    return
+  }
+  if (amount.value <= 0) {
+    submitBlockReason.value = 'Informe o valor do pagamento.'
+    console.warn('[PayInvoiceModal] Submit bloqueado: valor inválido', amount.value)
+    return
+  }
+  if (!paymentDate.value) {
+    submitBlockReason.value = 'Informe a data do pagamento.'
+    console.warn('[PayInvoiceModal] Submit bloqueado: data não preenchida')
+    return
+  }
+  console.log('[PayInvoiceModal] Enviando submit:', { accountId: accountId.value, amount: amount.value, paymentDate: paymentDate.value })
   emit('submit', {
     accountId: accountId.value,
     amount: amount.value,
@@ -57,11 +75,13 @@ watch(
   () => props.isOpen,
   (open) => {
     if (open) {
+      submitBlockReason.value = null
       amount.value = props.initialAmount
       amountDisplay.value = formatAmount(props.initialAmount)
       const due = props.dueDate?.slice(0, 10)
       paymentDate.value = due || new Date().toISOString().split('T')[0]
       accountId.value = props.accounts[0]?.id ?? ''
+      console.log('[PayInvoiceModal] Modal aberto. Contas:', props.accounts?.length, 'conta pré-selecionada:', accountId.value || 'nenhuma')
     }
   }
 )
@@ -107,6 +127,7 @@ watch(
           :disabled="isSubmitting"
         />
       </div>
+      <p v-if="submitBlockReason" class="text-sm text-warning">{{ submitBlockReason }}</p>
       <p v-if="error" class="text-sm text-error">{{ error }}</p>
     </form>
     <template #footer>

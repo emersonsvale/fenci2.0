@@ -73,7 +73,7 @@ const {
   clear: clearSelection,
 } = useExtratoSelection()
 
-const { payInvoice, error: payInvoiceError, isSubmitting: isPayInvoiceSubmitting } = useCreditCardInvoice()
+const { payInvoice, error: payInvoiceError, isSubmitting: isPayInvoiceSubmitting, clearError: clearPayInvoiceError } = useCreditCardInvoice()
 const isPayInvoiceModalOpen = ref(false)
 const payInvoicePayload = ref<{
   creditCardId: string
@@ -84,11 +84,14 @@ const payInvoicePayload = ref<{
 } | null>(null)
 
 function handlePayInvoice(payload: { creditCardId: string; invoiceId?: string; referenceMonth?: string; amount: number; dueDate?: string }) {
+  console.log('[Extrato] Abrindo modal Pagar fatura:', payload)
+  clearPayInvoiceError()
   payInvoicePayload.value = payload
   isPayInvoiceModalOpen.value = true
 }
 
 async function handlePayInvoiceSubmit(submitPayload: { accountId: string; amount: number; paymentDate: string }) {
+  console.log('[Extrato] handlePayInvoiceSubmit chamado:', { submitPayload, payInvoicePayload: payInvoicePayload.value })
   if (!payInvoicePayload.value) return
   const success = await payInvoice(
     payInvoicePayload.value.invoiceId ?? null,
@@ -107,6 +110,7 @@ async function handlePayInvoiceSubmit(submitPayload: { accountId: string; amount
 }
 
 function handleClosePayInvoiceModal() {
+  clearPayInvoiceError()
   isPayInvoiceModalOpen.value = false
   payInvoicePayload.value = null
 }

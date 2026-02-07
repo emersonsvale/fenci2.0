@@ -60,11 +60,16 @@ function isTagActive(tag: string): boolean {
 }
 
 const isTagFilterOpen = ref(false)
+const filtersExpanded = ref(true)
+
+function toggleFiltersExpanded() {
+  filtersExpanded.value = !filtersExpanded.value
+}
 </script>
 
 <template>
   <div id="extrato-filters" class="space-y-4">
-    <!-- Tabs -->
+    <!-- Tabs + seta para ocultar/mostrar filtros -->
     <div class="flex items-center gap-1 border-b border-default">
       <button
         v-for="tab in tabs"
@@ -83,10 +88,35 @@ const isTagFilterOpen = ref(false)
           class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full"
         />
       </button>
+      <div class="flex-1 min-w-2" />
+      <button
+        type="button"
+        class="p-2 rounded-lg text-content-subtle hover:bg-surface-overlay hover:text-content-main transition-colors"
+        :title="filtersExpanded ? 'Ocultar filtros' : 'Mostrar filtros'"
+        aria-label="Ocultar ou mostrar filtros"
+        @click="toggleFiltersExpanded"
+      >
+        <span
+          class="material-symbols-outlined text-xl transition-transform"
+          :class="filtersExpanded ? '' : 'rotate-180'"
+        >
+          expand_more
+        </span>
+      </button>
     </div>
 
-    <!-- Search + Date Filter + Status Filters -->
-    <div class="flex items-center gap-3 flex-wrap">
+    <!-- Área de filtros (busca, data, status, tags) — recolhível -->
+    <Transition
+      enter-active-class="transition-all duration-200 ease-out"
+      enter-from-class="opacity-0 -translate-y-2"
+      enter-to-class="opacity-100 translate-y-0"
+      leave-active-class="transition-all duration-150 ease-in"
+      leave-from-class="opacity-100 translate-y-0"
+      leave-to-class="opacity-0 -translate-y-2"
+    >
+      <div v-show="filtersExpanded" class="space-y-4">
+        <!-- Search + Date Filter + Status Filters -->
+        <div class="flex items-center gap-3 flex-wrap">
       <!-- Search Input -->
       <div class="relative min-w-[180px] max-w-xs">
         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-content-subtle text-lg">
@@ -190,5 +220,7 @@ const isTagFilterOpen = ref(false)
         </div>
       </Transition>
     </div>
+      </div>
+    </Transition>
   </div>
 </template>
