@@ -61,7 +61,7 @@ function getStatusLabel(status: string | null): string {
 </script>
 
 <template>
-  <aside id="calendario-sidebar" class="w-[320px] flex-shrink-0 space-y-4">
+  <aside id="calendario-sidebar" class="w-full lg:w-[320px] lg:flex-shrink-0 space-y-4">
     <!-- Day Summary Card -->
     <div class="bg-surface-elevated rounded-xl p-5 shadow-xs border border-default-subtle">
       <h3 class="text-body-sm text-content-muted mb-1">Valores do dia</h3>

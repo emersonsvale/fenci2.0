@@ -57,7 +57,7 @@ function selectOption(type: LancamentoType) {
       v-if="isOpen"
       id="lancamento-dropdown"
       ref="dropdownRef"
-      class="absolute right-0 top-full mt-2 w-52 rounded-xl bg-surface-elevated shadow-xl border border-default z-dropdown"
+      class="absolute right-0 top-full mt-2 w-48 sm:w-52 rounded-xl bg-surface-elevated shadow-xl border border-default z-dropdown"
     >
       <div class="p-2 flex flex-col gap-1">
         <!-- Nova Saída -->

@@ -178,16 +178,16 @@ function closeDropdown() {
 }
 
 .period-display {
-  @apply flex items-center gap-2 px-4 py-2 rounded-lg
-         text-body-sm font-medium text-content-primary dark:text-content-primary-dark
+  @apply flex items-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-2 rounded-lg
+         text-caption lg:text-body-sm font-medium text-content-primary dark:text-content-primary-dark
          bg-surface-light dark:bg-surface-dark-secondary
          border border-border-light dark:border-border-dark
          hover:border-primary dark:hover:border-primary
-         transition-all duration-200;
+         transition-all duration-200 whitespace-nowrap;
 }
 
 .period-dropdown {
-  @apply absolute top-full left-1/2 -translate-x-1/2 mt-2 z-dropdown;
+  @apply fixed sm:absolute top-auto sm:top-full left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 bottom-20 sm:bottom-auto mt-0 sm:mt-2 z-dropdown;
 }
 
 .year-btn {

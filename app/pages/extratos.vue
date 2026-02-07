@@ -4,7 +4,10 @@ import { useRoute } from 'vue-router'
 import { useExtrato, type ExtratoTab, type ExtratoStatus, type ExtratoCreditCard } from '../composables/useExtrato'
 import { useExtratoSelection } from '../composables/useExtratoSelection'
 import { useLancamento, type LancamentoType, type LancamentoFormData } from '../composables/useLancamento'
+import { usePullToRefresh } from '../composables/usePullToRefresh'
+import { useSidebar } from '../composables/useSidebar'
 import PageHeader from '../components/PageHeader.vue'
+import PullToRefreshIndicator from '../components/PullToRefreshIndicator.vue'
 import ExtratoFilters from '../components/ExtratoFilters.vue'
 import ExtratoList from '../components/ExtratoList.vue'
 import ExtratoListByDate from '../components/ExtratoListByDate.vue'
@@ -18,6 +21,7 @@ import ConfirmDeleteModal from '../components/ConfirmDeleteModal.vue'
 import InstallmentScopeModal from '../components/InstallmentScopeModal.vue'
 import PayInvoiceModal from '../components/PayInvoiceModal.vue'
 import ExtratoCardLancamentosDrawer from '../components/ExtratoCardLancamentosDrawer.vue'
+import ExtratoSkeleton from '../components/ExtratoSkeleton.vue'
 import { useCreditCardInvoice } from '../composables/useCreditCardInvoice'
 
 /**
@@ -592,10 +596,32 @@ async function handleMarkUnpaid(id: string) {
     console.error('Erro ao marcar como não pago/recebido:', err)
   }
 }
+
+// Pull-to-refresh (mobile)
+const { isMobile: ptrMobile } = useSidebar()
+const ptrEnabled = computed(() => ptrMobile.value)
+const { pullDistance, isPulling, isRefreshing: ptrRefreshing } = usePullToRefresh({
+  enabled: ptrEnabled,
+  onRefresh: async () => {
+    await fetchExtratoData()
+  },
+})
 </script>
 
 <template>
   <div id="extrato-page" class="flex flex-col">
+    <!-- Pull-to-Refresh Indicator -->
+    <PullToRefreshIndicator
+      :pull-distance="pullDistance"
+      :is-pulling="isPulling"
+      :is-refreshing="ptrRefreshing"
+    />
+
+    <!-- Full-page Skeleton (first load only) -->
+    <ExtratoSkeleton v-if="isLoading && !filteredTransactions.length" />
+
+    <!-- Real Content -->
+    <template v-else>
     <!-- Header em largura total (fora da coluna) -->
     <PageHeader
       :user-name="userName"
@@ -606,10 +632,10 @@ async function handleMarkUnpaid(id: string) {
     />
 
     <!-- Conteúdo: coluna principal + sidebar (max 1500px, centralizado) -->
-    <div class="flex gap-5 flex-1 min-w-0 w-full max-w-[1500px] mx-auto">
+    <div class="flex flex-col lg:flex-row gap-5 flex-1 min-w-0 w-full max-w-[1500px] mx-auto">
       <div class="flex-1 min-w-0">
       <!-- Summary Cards -->
-      <div class="grid grid-cols-4 gap-4 mb-5">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-5">
         <SummaryCard
           label="A pagar"
           :value="summaryData.aPagar"
@@ -697,7 +723,7 @@ async function handleMarkUnpaid(id: string) {
 
     <!-- Right Sidebar -->
     <ExtratoSidebar
-      class="w-[320px] flex-shrink-0"
+      class="w-full lg:w-[320px] lg:flex-shrink-0"
       :credit-cards="creditCardsList"
       :total-credit-cards="totalCreditCards"
       :contas-pagas="contasPagas"
@@ -707,6 +733,7 @@ async function handleMarkUnpaid(id: string) {
       @card-click="handleCardClick"
     />
     </div>
+    </template>
 
     <!-- Modais de Lançamento -->
     <LancamentoEntradaModal

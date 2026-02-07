@@ -74,8 +74,8 @@ function formatCompact(value: number): string {
 
 <style scoped>
 .calendar-cell {
-  @apply relative flex flex-col items-start p-2 rounded-lg
-         min-h-[100px] w-full text-left
+  @apply relative flex flex-col items-start p-1 lg:p-2 rounded-md lg:rounded-lg
+         min-h-[56px] lg:min-h-[100px] w-full text-left
          transition-all duration-200 ease-smooth
          bg-surface-light-tertiary dark:bg-surface-dark-tertiary
          hover:bg-surface-light-secondary dark:hover:bg-surface-dark-secondary
@@ -100,7 +100,7 @@ function formatCompact(value: number): string {
 }
 
 .day-number {
-  @apply text-body-sm font-medium text-content-primary dark:text-content-primary-dark mb-2;
+  @apply text-caption lg:text-body-sm font-medium text-content-primary dark:text-content-primary-dark mb-1 lg:mb-2;
 }
 
 .day-number-today {
@@ -116,7 +116,7 @@ function formatCompact(value: number): string {
 }
 
 .transaction-badge {
-  @apply text-caption font-medium px-2 py-0.5 rounded-md text-center;
+  @apply text-[9px] lg:text-caption font-medium px-1 lg:px-2 py-0.5 rounded-md text-center truncate;
 }
 
 .badge-income {

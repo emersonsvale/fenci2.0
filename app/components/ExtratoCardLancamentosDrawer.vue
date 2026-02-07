@@ -87,10 +87,6 @@ const transactionsByDate = computed<DateGroup[]>(() => {
   }))
 })
 
-function getBrandIcon(): string {
-  return '💳'
-}
-
 function handleKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape') emit('close')
 }
@@ -160,12 +156,6 @@ watch(
         <!-- Header -->
         <div class="flex items-center justify-between px-5 py-4 border-b border-default-subtle shrink-0">
           <div class="flex items-center gap-3 min-w-0">
-            <div
-              class="w-10 h-10 rounded-lg flex items-center justify-center text-lg flex-shrink-0"
-              :style="{ backgroundColor: card.color }"
-            >
-              {{ getBrandIcon() }}
-            </div>
             <div class="min-w-0">
               <h2 class="text-lg font-semibold text-content-main truncate">
                 {{ card.name }}

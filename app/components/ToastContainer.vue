@@ -35,7 +35,7 @@ function getIcon(variant: ToastVariant): string {
 <template>
   <div
     id="toast-container"
-    class="fixed top-4 right-4 z-[100] flex flex-col gap-2 max-w-[380px] w-full pointer-events-none"
+    class="fixed top-16 lg:top-4 left-2 right-2 sm:left-auto sm:right-4 z-toast flex flex-col gap-2 sm:max-w-[380px] sm:w-full pointer-events-none"
     aria-live="polite"
   >
     <TransitionGroup

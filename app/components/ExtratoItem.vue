@@ -208,12 +208,12 @@ function handlePayInvoice() {
 <template>
   <div
     id="extrato-item"
-    class="bg-surface-elevated rounded-xl p-4 flex items-center justify-between gap-4 hover:bg-surface-elevated/80 hover:shadow-md transition-all group shadow-xs border border-transparent hover:border-default-subtle"
+    class="bg-surface-elevated rounded-xl p-3 lg:p-4 flex items-center justify-between gap-2 lg:gap-4 hover:bg-surface-elevated/80 hover:shadow-md transition-all group shadow-xs border border-transparent hover:border-default-subtle"
   >
     <!-- Category Icon / Seletor (hover = mostra seletor; clique = toggle seleção) -->
     <button
       type="button"
-      class="extrato-item-icon-wrapper w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0 shadow-sm transition-all cursor-pointer border-2 border-transparent hover:border-primary/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+      class="extrato-item-icon-wrapper w-9 h-9 lg:w-11 lg:h-11 rounded-lg lg:rounded-xl flex items-center justify-center text-lg lg:text-xl flex-shrink-0 shadow-sm transition-all cursor-pointer border-2 border-transparent hover:border-primary/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
       :class="[
         selected ? 'bg-success/20 border-success' : '',
         !selected && transaction.category?.color ? '' : !selected ? 'bg-surface-overlay' : ''
@@ -292,7 +292,7 @@ function handlePayInvoice() {
     </div>
 
     <!-- Date -->
-    <div class="text-right flex-shrink-0 w-20">
+    <div class="text-right flex-shrink-0 w-16 lg:w-20 hidden sm:block">
       <p class="text-caption text-content-muted whitespace-pre-line leading-tight">
         {{ formatDate(transaction.date) }}
       </p>
@@ -301,7 +301,7 @@ function handlePayInvoice() {
     <!-- Installment Progress: percentual já pago do lançamento parcelado (current/total parcelas) -->
     <div
       v-if="transaction.installmentInfo"
-      class="flex flex-shrink-0 w-24 flex-col items-center justify-center"
+      class="hidden md:flex flex-shrink-0 w-24 flex-col items-center justify-center"
       role="progressbar"
       :aria-valuenow="transaction.installmentInfo.current"
       :aria-valuemin="0"
@@ -327,21 +327,29 @@ function handlePayInvoice() {
     </div>
 
     <!-- Status Badge -->
-    <div class="flex-shrink-0">
+    <div class="flex-shrink-0 hidden sm:block">
       <span
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-caption font-medium border shadow-sm"
+        class="inline-flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1 lg:py-1.5 rounded-lg text-[10px] lg:text-caption font-medium border shadow-sm"
         :class="statusConfig.class"
       >
-        {{ statusConfig.label }}
+        <span class="hidden sm:inline">{{ statusConfig.label }}</span>
         <span class="material-symbols-outlined text-sm">{{ statusConfig.icon }}</span>
       </span>
     </div>
 
     <!-- Amount -->
-    <div class="flex-shrink-0 w-28 text-right">
-      <p class="text-body-md font-bold" :class="amountClass">
+    <div class="flex-shrink-0 w-auto lg:w-28 text-right">
+      <p class="text-body-sm lg:text-body-md font-bold" :class="amountClass">
         {{ displayAmount }}
       </p>
+      <!-- Mobile: show status icon inline with amount -->
+      <span
+        class="sm:hidden inline-flex items-center gap-1 text-[10px] font-medium mt-0.5"
+        :class="statusConfig.class.replace('border', '').replace('shadow-sm', '')"
+      >
+        <span class="material-symbols-outlined text-xs">{{ statusConfig.icon }}</span>
+        {{ statusConfig.label }}
+      </span>
     </div>
 
     <!-- Actions Menu -->

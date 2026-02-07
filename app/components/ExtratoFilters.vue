@@ -70,12 +70,12 @@ function toggleFiltersExpanded() {
 <template>
   <div id="extrato-filters" class="space-y-4">
     <!-- Tabs + seta para ocultar/mostrar filtros -->
-    <div class="flex items-center gap-1 border-b border-default">
+    <div class="flex items-center gap-1 border-b border-default overflow-x-auto scrollbar-hide">
       <button
         v-for="tab in tabs"
         :key="tab.id"
         type="button"
-        class="relative px-4 py-3 text-body-sm font-medium transition-all rounded-t-lg"
+        class="relative px-3 lg:px-4 py-3 text-body-sm font-medium transition-all rounded-t-lg whitespace-nowrap shrink-0"
         :class="activeTab === tab.id 
           ? 'text-content-main bg-surface-overlay/50' 
           : 'text-content-subtle hover:text-content-muted hover:bg-surface-overlay/30'"
@@ -116,9 +116,9 @@ function toggleFiltersExpanded() {
     >
       <div v-show="filtersExpanded" class="space-y-4">
         <!-- Search + Date Filter + Status Filters -->
-        <div class="flex items-center gap-3 flex-wrap">
+        <div class="flex items-center gap-2 lg:gap-3 flex-wrap">
       <!-- Search Input -->
-      <div class="relative min-w-[180px] max-w-xs">
+      <div class="relative w-full sm:w-auto sm:min-w-[180px] sm:max-w-xs">
         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-content-subtle text-lg">
           search
         </span>
@@ -141,7 +141,7 @@ function toggleFiltersExpanded() {
       <div class="w-px h-6 bg-border-default-subtle hidden sm:block" />
 
       <!-- Status Filter Tags -->
-      <div class="flex items-center gap-2 flex-wrap">
+      <div class="flex items-center gap-2 flex-nowrap overflow-x-auto scrollbar-hide sm:flex-wrap sm:overflow-visible pb-1 sm:pb-0">
         <button
           v-for="filter in statusFilters"
           :key="filter.id"

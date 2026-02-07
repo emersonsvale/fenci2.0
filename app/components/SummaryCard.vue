@@ -53,11 +53,11 @@ const variantClasses = computed(() => {
 </script>
 
 <template>
-  <div id="summary-card" class="card p-4 flex items-center gap-4 hover:shadow-card-hover transition-all duration-200">
+  <div id="summary-card" class="card p-3 lg:p-4 flex items-center gap-3 lg:gap-4 hover:shadow-card-hover transition-all duration-200">
     <!-- Icon -->
     <div
       v-if="icon"
-      class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+      class="w-9 h-9 lg:w-11 lg:h-11 rounded-lg lg:rounded-xl flex items-center justify-center flex-shrink-0"
       :class="{
         'bg-error/10': icon === 'down',
         'bg-success/10': icon === 'up',
@@ -65,7 +65,7 @@ const variantClasses = computed(() => {
       }"
     >
       <span
-        class="material-symbols-outlined text-2xl"
+        class="material-symbols-outlined text-xl lg:text-2xl"
         :class="{
           'text-error': icon === 'down',
           'text-success': icon === 'up',
@@ -79,26 +79,26 @@ const variantClasses = computed(() => {
     <!-- Content -->
     <div class="flex-1 min-w-0">
       <!-- Label with visibility toggle -->
-      <div class="flex items-center gap-2 mb-0.5">
-        <span class="text-caption font-medium text-content-subtle">
+      <div class="flex items-center gap-1.5 lg:gap-2 mb-0.5">
+        <span class="text-[10px] lg:text-caption font-medium text-content-subtle truncate">
           {{ label }}
         </span>
         <button
           v-if="showVisibilityToggle"
           type="button"
-          class="text-content-subtle hover:text-content-muted transition-colors"
+          class="text-content-subtle hover:text-content-muted transition-colors shrink-0"
           @click="toggleVisibility"
           :title="isValueVisible ? 'Ocultar valor' : 'Mostrar valor'"
         >
-          <span class="material-symbols-outlined text-base">
+          <span class="material-symbols-outlined text-sm lg:text-base">
             {{ isValueVisible ? 'visibility' : 'visibility_off' }}
           </span>
         </button>
       </div>
 
       <!-- Value -->
-      <div v-if="loading" class="skeleton h-7 w-28 rounded" />
-      <p v-else class="text-heading-sm font-bold truncate" :class="variantClasses">
+      <div v-if="loading" class="skeleton h-5 lg:h-7 w-20 lg:w-28 rounded" />
+      <p v-else class="text-body-sm lg:text-heading-sm font-bold truncate" :class="variantClasses">
         {{ isValueVisible ? formattedValue : '••••••' }}
       </p>
     </div>

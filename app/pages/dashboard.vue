@@ -5,7 +5,10 @@ import { useDashboard } from '../composables/useDashboard'
 import { useLancamento, type LancamentoType, type LancamentoFormData } from '../composables/useLancamento'
 import { useProfile } from '../composables/useProfile'
 import { useLimitAlerts } from '../composables/useLimitAlerts'
+import { usePullToRefresh } from '../composables/usePullToRefresh'
+import { useSidebar } from '../composables/useSidebar'
 import PageHeader from '../components/PageHeader.vue'
+import PullToRefreshIndicator from '../components/PullToRefreshIndicator.vue'
 import SummaryCard from '../components/SummaryCard.vue'
 import AreaChart from '../components/AreaChart.vue'
 import CategoryList from '../components/CategoryList.vue'
@@ -18,6 +21,7 @@ import LancamentoEntradaModal from '../components/LancamentoEntradaModal.vue'
 import LancamentoSaidaModal from '../components/LancamentoSaidaModal.vue'
 import LancamentoCartaoModal from '../components/LancamentoCartaoModal.vue'
 import LimitModal from '../components/LimitModal.vue'
+import DashboardSkeleton from '../components/DashboardSkeleton.vue'
 
 /**
  * Dashboard - Página principal do sistema
@@ -184,10 +188,32 @@ function handleCloseLimitModal() {
   limitModalOpen.value = false
   limitError.value = null
 }
+
+// Pull-to-refresh (mobile)
+const { isMobile } = useSidebar()
+const ptrEnabled = computed(() => isMobile.value)
+const { pullDistance, isPulling, isRefreshing } = usePullToRefresh({
+  enabled: ptrEnabled,
+  onRefresh: async () => {
+    await fetchDashboardData()
+  },
+})
 </script>
 
 <template>
   <div id="dashboard-page" class="flex flex-col w-full">
+    <!-- Pull-to-Refresh Indicator -->
+    <PullToRefreshIndicator
+      :pull-distance="pullDistance"
+      :is-pulling="isPulling"
+      :is-refreshing="isRefreshing"
+    />
+
+    <!-- Full-page Skeleton (first load only) -->
+    <DashboardSkeleton v-if="isLoading && !chartSeries.length" />
+
+    <!-- Real Content (hidden during first load skeleton) -->
+    <template v-else>
     <!-- Header -->
     <PageHeader
       :user-name="userName"
@@ -201,7 +227,7 @@ function handleCloseLimitModal() {
       <div class="flex-1 min-w-0 space-y-6 animate-fade-in">
         <!-- Resumo do mês (igual ao extrato) -->
         <section aria-label="Resumo do mês">
-          <div class="grid grid-cols-4 gap-4 mb-5">
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-5">
             <SummaryCard
               label="A pagar"
               :value="summaryData.aPagar"
@@ -271,7 +297,7 @@ function handleCloseLimitModal() {
       </div>
 
       <!-- Sidebar direita -->
-      <aside class="w-full lg:w-[320px] flex-shrink-0 space-y-4 animate-fade-in">
+      <aside class="w-full lg:w-[320px] lg:flex-shrink-0 space-y-4 animate-fade-in">
       <!-- Limite Card -->
       <LimitCard
         :limite="limiteData.limite"
@@ -297,6 +323,7 @@ function handleCloseLimitModal() {
       />
     </aside>
     </div>
+    </template>
 
     <!-- Modais de Lançamento -->
     <LancamentoEntradaModal

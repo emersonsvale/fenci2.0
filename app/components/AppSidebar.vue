@@ -4,13 +4,13 @@ import { useRoute } from 'vue-router'
 import { useSupabaseClient, useSupabaseUser } from '#imports'
 import { useTheme } from '~/composables/useTheme'
 import { useProfile } from '~/composables/useProfile'
-import { useSidebar } from '~/composables/useSidebar'
+import { useSidebar, SIDEBAR_WIDTH_EXPANDED } from '~/composables/useSidebar'
 import NotificationBell from '~/components/NotificationBell.vue'
 
 /**
  * AppSidebar - Sidebar de navegação principal
- * Usado em todo o sistema para navegação entre módulos
- * Exibe avatar do usuário (profile ou user_metadata)
+ * Desktop: sidebar fixa (minimizável)
+ * Mobile: drawer lateral com overlay + bottom navigation bar
  */
 
 interface NavItem {
@@ -31,7 +31,7 @@ const navItems: NavItem[] = [
   { id: 'extratos', label: 'Extrato', icon: 'receipt', route: '/extratos' },
   { id: 'contas', label: 'Contas', icon: 'account_balance', route: '/contas' },
   { id: 'calendario', label: 'Calendário', icon: 'calendar_month', route: '/calendario' },
-  { id: 'planejamentos', label: 'Planejamentos', icon: 'savings', route: '/planejamentos' },
+  { id: 'planejamentos', label: 'Planej.', icon: 'savings', route: '/planejamentos' },
 ]
 
 const currentRoute = computed(() => route.path)
@@ -73,99 +73,166 @@ const handleLogout = async (): Promise<void> => {
 }
 
 const { isDark, toggleTheme } = useTheme()
-const { isCollapsed, toggle: toggleSidebar, width: sidebarWidth } = useSidebar()
+const { isCollapsed, isMobile, isMobileOpen, toggle: toggleSidebar, closeMobile, width: sidebarWidth } = useSidebar()
+
+// Fechar drawer mobile ao navegar
+watch(() => route.path, () => {
+  if (isMobile.value && isMobileOpen.value) {
+    closeMobile()
+  }
+})
+
+/** Indica se a sidebar (drawer) deve ser exibida no mobile */
+const showSidebar = computed(() => !isMobile.value || isMobileOpen.value)
+
+/** Largura inline da sidebar */
+const sidebarStyle = computed(() => {
+  if (isMobile.value) return { width: `${SIDEBAR_WIDTH_EXPANDED}px` }
+  return { width: `${sidebarWidth.value}px` }
+})
 </script>
 
 <template>
-  <aside
-    id="app-sidebar"
-    class="app-sidebar fixed left-0 top-0 h-screen bg-surface-elevated border-r border-default flex flex-col z-sticky transition-[width] duration-200 ease-smooth"
-    :style="{ width: `${sidebarWidth}px` }"
+  <!-- Overlay Mobile -->
+  <Transition
+    enter-active-class="transition-opacity duration-200"
+    enter-from-class="opacity-0"
+    enter-to-class="opacity-100"
+    leave-active-class="transition-opacity duration-150"
+    leave-from-class="opacity-100"
+    leave-to-class="opacity-0"
   >
-    <!-- Logo + Toggle -->
-    <div class="flex items-center gap-2 p-4 pb-6 shrink-0" :class="isCollapsed ? 'justify-center px-3' : 'justify-between'">
-      <NuxtLink v-if="!isCollapsed" to="/dashboard" class="block min-w-0 flex-1">
-        <img
-          src="/logotipo.png"
-          alt="Fenci"
-          class="h-8 w-auto dark:brightness-0 dark:invert"
-        />
-      </NuxtLink>
-      <button
-        type="button"
-        class="sidebar-toggle shrink-0 p-2 rounded-lg text-content-secondary hover:bg-surface-light-tertiary hover:text-content-primary dark:text-content-secondary-dark dark:hover:bg-surface-dark-tertiary dark:hover:text-content-primary-dark transition-colors"
-        :aria-label="isCollapsed ? 'Expandir menu' : 'Minimizar menu'"
-        @click="toggleSidebar"
-      >
-        <span class="material-symbols-outlined text-xl">
-          {{ isCollapsed ? 'menu_open' : 'menu' }}
-        </span>
-      </button>
-    </div>
+    <div
+      v-if="isMobile && isMobileOpen"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[199]"
+      @click="closeMobile"
+    />
+  </Transition>
 
-    <!-- Navigation -->
-    <nav class="flex-1 px-3 min-w-0">
-      <ul class="space-y-1">
-        <li v-for="item in navItems" :key="item.id">
-          <NuxtLink
-            :to="item.route"
-            class="nav-item"
-            :class="{
-              'nav-item-active': currentRoute === item.route || currentRoute.startsWith(item.route + '/'),
-              'sidebar-collapsed': isCollapsed,
-            }"
-            :title="isCollapsed ? item.label : undefined"
-          >
-            <span class="material-symbols-outlined nav-icon shrink-0">{{ item.icon }}</span>
-            <span class="nav-label truncate" :class="{ 'sr-only': isCollapsed }">{{ item.label }}</span>
-          </NuxtLink>
-        </li>
-      </ul>
-    </nav>
-
-    <!-- User Profile Section -->
-    <div class="p-3 mt-auto" :class="isCollapsed ? 'flex flex-col items-center' : ''">
-      <!-- User Info -->
-      <NuxtLink to="/perfil" class="sidebar-user-link" :class="isCollapsed ? 'justify-center p-2' : ''" :title="isCollapsed ? user.name : undefined">
-        <div class="sidebar-avatar">
-          <img v-if="user.avatar" :src="user.avatar" :alt="user.name" class="w-full h-full object-cover rounded-full" />
-          <span v-else class="sidebar-avatar-initial">{{ user.name.charAt(0) }}</span>
-        </div>
-        <div v-if="!isCollapsed" class="flex-1 min-w-0">
-          <p class="text-body-sm font-medium text-content-main truncate">{{ user.name }}</p>
-          <p class="text-caption text-content-subtle">{{ user.subtitle }}</p>
-        </div>
-      </NuxtLink>
-
-      <!-- Actions -->
-      <div class="mt-2 space-y-0.5" :class="isCollapsed ? 'flex flex-col items-center w-full' : ''">
+  <!-- Sidebar (Desktop fixo + Mobile drawer) -->
+  <Transition
+    enter-active-class="transition-transform duration-200 ease-smooth"
+    enter-from-class="-translate-x-full"
+    enter-to-class="translate-x-0"
+    leave-active-class="transition-transform duration-150 ease-smooth"
+    leave-from-class="translate-x-0"
+    leave-to-class="-translate-x-full"
+  >
+    <aside
+      v-show="showSidebar"
+      id="app-sidebar"
+      class="app-sidebar fixed left-0 top-0 h-screen bg-surface-elevated border-r border-default flex flex-col z-sticky transition-[width] duration-200 ease-smooth"
+      :class="{ 'shadow-2xl': isMobile }"
+      :style="sidebarStyle"
+    >
+      <!-- Logo + Toggle -->
+      <div class="flex items-center gap-2 p-4 pb-6 shrink-0" :class="isCollapsed && !isMobile ? 'justify-center px-3' : 'justify-between'">
+        <NuxtLink v-if="!isCollapsed || isMobile" to="/dashboard" class="block min-w-0 flex-1">
+          <img
+            src="/logotipo.png"
+            alt="Fenci"
+            class="h-8 w-auto dark:brightness-0 dark:invert"
+          />
+        </NuxtLink>
+        <!-- Toggle desktop / Close mobile -->
         <button
           type="button"
-          class="sidebar-action"
-          aria-label="Alternar modo escuro"
-          :title="isDark ? 'Modo Claro' : 'Modo Escuro'"
-          @click="toggleTheme"
+          class="sidebar-toggle shrink-0 p-2 rounded-lg text-content-secondary hover:bg-surface-light-tertiary hover:text-content-primary dark:text-content-secondary-dark dark:hover:bg-surface-dark-tertiary dark:hover:text-content-primary-dark transition-colors"
+          :aria-label="isMobile ? 'Fechar menu' : (isCollapsed ? 'Expandir menu' : 'Minimizar menu')"
+          @click="isMobile ? closeMobile() : toggleSidebar()"
         >
-          <span class="material-symbols-outlined text-lg shrink-0">
-            {{ isDark ? 'light_mode' : 'dark_mode' }}
+          <span class="material-symbols-outlined text-xl">
+            {{ isMobile ? 'close' : (isCollapsed ? 'menu_open' : 'menu') }}
           </span>
-          <span class="truncate" :class="{ 'sr-only': isCollapsed }">{{ isDark ? 'Modo Claro' : 'Modo Escuro' }}</span>
-        </button>
-        <NotificationBell :collapsed="isCollapsed" />
-        <button class="sidebar-action" title="Novo Aqui?">
-          <span class="material-symbols-outlined text-lg shrink-0">help</span>
-          <span class="truncate" :class="{ 'sr-only': isCollapsed }">Novo Aqui?</span>
-        </button>
-        <button class="sidebar-action sidebar-action-logout" title="Sair" @click="handleLogout">
-          <span class="material-symbols-outlined text-lg shrink-0">logout</span>
-          <span class="truncate" :class="{ 'sr-only': isCollapsed }">Sair</span>
         </button>
       </div>
 
-      <!-- Version -->
-      <p v-if="!isCollapsed" class="text-caption text-content-subtle mt-3 px-2 opacity-70">Versão 2.0</p>
+      <!-- Navigation -->
+      <nav class="flex-1 px-3 min-w-0">
+        <ul class="space-y-1">
+          <li v-for="item in navItems" :key="item.id">
+            <NuxtLink
+              :to="item.route"
+              class="nav-item"
+              :class="{
+                'nav-item-active': currentRoute === item.route || currentRoute.startsWith(item.route + '/'),
+                'sidebar-collapsed': isCollapsed && !isMobile,
+              }"
+              :title="isCollapsed && !isMobile ? item.label : undefined"
+            >
+              <span class="material-symbols-outlined nav-icon shrink-0">{{ item.icon }}</span>
+              <span class="nav-label truncate" :class="{ 'sr-only': isCollapsed && !isMobile }">{{ item.label }}</span>
+            </NuxtLink>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- User Profile Section -->
+      <div class="p-3 mt-auto" :class="isCollapsed && !isMobile ? 'flex flex-col items-center' : ''">
+        <!-- User Info -->
+        <NuxtLink to="/perfil" class="sidebar-user-link" :class="isCollapsed && !isMobile ? 'justify-center p-2' : ''" :title="isCollapsed && !isMobile ? user.name : undefined">
+          <div class="sidebar-avatar">
+            <img v-if="user.avatar" :src="user.avatar" :alt="user.name" class="w-full h-full object-cover rounded-full" />
+            <span v-else class="sidebar-avatar-initial">{{ user.name.charAt(0) }}</span>
+          </div>
+          <div v-if="!isCollapsed || isMobile" class="flex-1 min-w-0">
+            <p class="text-body-sm font-medium text-content-main truncate">{{ user.name }}</p>
+            <p class="text-caption text-content-subtle">{{ user.subtitle }}</p>
+          </div>
+        </NuxtLink>
+
+        <!-- Actions -->
+        <div class="mt-2 space-y-0.5" :class="isCollapsed && !isMobile ? 'flex flex-col items-center w-full' : ''">
+          <button
+            type="button"
+            class="sidebar-action"
+            aria-label="Alternar modo escuro"
+            :title="isDark ? 'Modo Claro' : 'Modo Escuro'"
+            @click="toggleTheme"
+          >
+            <span class="material-symbols-outlined text-lg shrink-0">
+              {{ isDark ? 'light_mode' : 'dark_mode' }}
+            </span>
+            <span class="truncate" :class="{ 'sr-only': isCollapsed && !isMobile }">{{ isDark ? 'Modo Claro' : 'Modo Escuro' }}</span>
+          </button>
+          <NotificationBell :collapsed="isCollapsed && !isMobile" />
+          <button class="sidebar-action" title="Novo Aqui?">
+            <span class="material-symbols-outlined text-lg shrink-0">help</span>
+            <span class="truncate" :class="{ 'sr-only': isCollapsed && !isMobile }">Novo Aqui?</span>
+          </button>
+          <button class="sidebar-action sidebar-action-logout" title="Sair" @click="handleLogout">
+            <span class="material-symbols-outlined text-lg shrink-0">logout</span>
+            <span class="truncate" :class="{ 'sr-only': isCollapsed && !isMobile }">Sair</span>
+          </button>
+        </div>
+
+        <!-- Version -->
+        <p v-if="!isCollapsed || isMobile" class="text-caption text-content-subtle mt-3 px-2 opacity-70">Versão 2.0</p>
+      </div>
+    </aside>
+  </Transition>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav
+    v-if="isMobile"
+    id="mobile-bottom-nav"
+    class="fixed bottom-0 left-0 right-0 bg-surface-elevated border-t border-default z-sticky safe-bottom"
+  >
+    <div class="flex items-center justify-around h-14">
+      <NuxtLink
+        v-for="item in navItems"
+        :key="item.id"
+        :to="item.route"
+        class="flex flex-col items-center justify-center flex-1 h-full px-1 transition-colors"
+        :class="currentRoute === item.route || currentRoute.startsWith(item.route + '/')
+          ? 'text-primary'
+          : 'text-content-subtle'"
+      >
+        <span class="material-symbols-outlined text-xl">{{ item.icon }}</span>
+        <span class="text-[10px] font-medium mt-0.5 leading-none truncate max-w-full">{{ item.label }}</span>
+      </NuxtLink>
     </div>
-  </aside>
+  </nav>
 </template>
 
 <style scoped>

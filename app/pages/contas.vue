@@ -2,7 +2,10 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useContas } from '../composables/useContas'
 import { useLancamento, type LancamentoType, type LancamentoFormData } from '../composables/useLancamento'
+import { usePullToRefresh } from '../composables/usePullToRefresh'
+import { useSidebar } from '../composables/useSidebar'
 import PageHeader from '../components/PageHeader.vue'
+import PullToRefreshIndicator from '../components/PullToRefreshIndicator.vue'
 import RendaCard from '../components/RendaCard.vue'
 import ContasCategorySection from '../components/ContasCategorySection.vue'
 import ContasListSection from '../components/ContasListSection.vue'
@@ -660,10 +663,27 @@ const accountsListItems = computed(() => {
     color: account.color,
   }))
 })
+
+// Pull-to-refresh (mobile)
+const { isMobile: ptrMobile } = useSidebar()
+const ptrEnabled = computed(() => ptrMobile.value)
+const { pullDistance, isPulling, isRefreshing: ptrRefreshing } = usePullToRefresh({
+  enabled: ptrEnabled,
+  onRefresh: async () => {
+    await fetchContasData()
+  },
+})
 </script>
 
 <template>
   <div id="contas-page" class="flex flex-col h-full gap-5">
+    <!-- Pull-to-Refresh Indicator -->
+    <PullToRefreshIndicator
+      :pull-distance="pullDistance"
+      :is-pulling="isPulling"
+      :is-refreshing="ptrRefreshing"
+    />
+
     <!-- Header + conteúdo (max 1500px, centralizado) -->
     <div class="w-full max-w-[1500px] mx-auto flex flex-col flex-1 min-w-0 gap-5">
     <PageHeader
@@ -675,9 +695,9 @@ const accountsListItems = computed(() => {
 
     <!-- Main Content: 3 colunas — Rendas (altura total) | Categorias + Cartões | Categorias + Contas -->
     <div class="flex flex-col flex-1 min-w-0 overflow-y-auto">
-      <div class="grid grid-cols-3 gap-5 flex-1 min-h-0 grid-rows-[1fr]">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 flex-1 min-h-0 lg:grid-rows-[1fr]">
         <!-- Coluna 1: Rendas (altura total da página) -->
-        <div class="bg-surface-elevated rounded-xl p-5 shadow-xs h-full min-h-0 flex flex-col">
+        <div class="bg-surface-elevated rounded-xl p-5 shadow-xs min-h-0 flex flex-col md:col-span-2 lg:col-span-1 lg:h-full">
           <div class="flex items-center justify-between mb-4 shrink-0">
             <div>
               <h3 class="text-body-md font-semibold text-content-main">Rendas</h3>
@@ -725,7 +745,7 @@ const accountsListItems = computed(() => {
         </div>
 
         <!-- Coluna 2: Categorias de entradas + Cartões de crédito (mesmo tamanho) -->
-        <div class="grid grid-rows-[1fr_1fr] gap-5 h-full min-h-0">
+        <div class="grid grid-rows-[1fr_1fr] gap-5 min-h-0">
           <div class="min-h-0 flex flex-col">
             <ContasCategorySection
               title="Categorias de entradas"
@@ -751,7 +771,7 @@ const accountsListItems = computed(() => {
         </div>
 
         <!-- Coluna 3: Categorias de saídas + Contas bancárias (mesmo tamanho) -->
-        <div class="grid grid-rows-[1fr_1fr] gap-5 h-full min-h-0">
+        <div class="grid grid-rows-[1fr_1fr] gap-5 min-h-0">
           <div class="min-h-0 flex flex-col">
             <ContasCategorySection
               title="Categorias de saídas"

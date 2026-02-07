@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useCalendario } from '../composables/useCalendario'
 import { useLancamento, type LancamentoType, type LancamentoFormData } from '../composables/useLancamento'
+import { usePullToRefresh } from '../composables/usePullToRefresh'
+import { useSidebar } from '../composables/useSidebar'
 import PageHeader from '../components/PageHeader.vue'
+import PullToRefreshIndicator from '../components/PullToRefreshIndicator.vue'
 import LancamentoDropdown from '../components/LancamentoDropdown.vue'
 import CalendarioGrid from '../components/CalendarioGrid.vue'
 import CalendarioSidebar from '../components/CalendarioSidebar.vue'
@@ -121,18 +124,35 @@ function handleSelectLancamentoFromDropdown(type: LancamentoType) {
   isLancamentoDropdownOpen.value = false
   handleOpenLancamento(type)
 }
+
+// Pull-to-refresh (mobile)
+const { isMobile: ptrMobile } = useSidebar()
+const ptrEnabled = computed(() => ptrMobile.value)
+const { pullDistance, isPulling, isRefreshing: ptrRefreshing } = usePullToRefresh({
+  enabled: ptrEnabled,
+  onRefresh: async () => {
+    await fetchTransactions()
+  },
+})
 </script>
 
 <template>
   <div id="calendario-page" class="flex flex-col">
+    <!-- Pull-to-Refresh Indicator -->
+    <PullToRefreshIndicator
+      :pull-distance="pullDistance"
+      :is-pulling="isPulling"
+      :is-refreshing="ptrRefreshing"
+    />
+
     <!-- Header em largura total -->
     <PageHeader
       :user-name="userName"
       :quote="dailyQuote"
     >
       <template #actions>
-        <div class="flex items-center gap-3">
-          <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 lg:gap-3 flex-wrap sm:flex-nowrap">
+          <div class="flex items-center gap-2 lg:gap-3">
             <button
               type="button"
               class="w-8 h-8 rounded-full border border-default-subtle flex items-center justify-center hover:bg-surface-overlay transition-colors"
@@ -140,7 +160,7 @@ function handleSelectLancamentoFromDropdown(type: LancamentoType) {
             >
               <span class="material-symbols-outlined text-lg text-content-subtle">chevron_left</span>
             </button>
-            <span class="text-body-md font-medium text-content-main capitalize min-w-[120px] text-center">
+            <span class="text-body-sm lg:text-body-md font-medium text-content-main capitalize min-w-[100px] lg:min-w-[120px] text-center">
               {{ monthName }} {{ currentYear }}
             </span>
             <button
@@ -154,10 +174,10 @@ function handleSelectLancamentoFromDropdown(type: LancamentoType) {
           <div class="relative">
             <button
               type="button"
-              class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white font-medium text-body-sm hover:bg-primary-600 transition-colors"
+              class="inline-flex items-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-2 rounded-lg bg-primary text-white font-medium text-body-sm hover:bg-primary-600 transition-colors"
               @click.stop="toggleLancamentoDropdown"
             >
-              Lançamento
+              <span class="hidden sm:inline">Lançamento</span>
               <span class="material-symbols-outlined text-lg">add</span>
             </button>
             <LancamentoDropdown
@@ -171,20 +191,21 @@ function handleSelectLancamentoFromDropdown(type: LancamentoType) {
     </PageHeader>
 
     <!-- Conteúdo: coluna principal + sidebar (max 1500px, centralizado) -->
-    <div class="flex gap-5 flex-1 min-w-0 w-full max-w-[1500px] mx-auto">
-      <div class="flex-1 min-w-0">
+    <div class="flex flex-col lg:flex-row gap-5 flex-1 min-w-0 w-full max-w-[1500px] mx-auto">
+      <div class="flex-1 min-w-0 overflow-x-auto">
         <!-- Calendar Grid -->
         <CalendarioGrid
-        :days="calendarDays"
-        :loading="isLoading"
+          :days="calendarDays"
+          :loading="isLoading"
           @select-date="selectDate"
         />
       </div>
 
       <!-- Sidebar -->
       <CalendarioSidebar
-      :selected-date="selectedDate"
-      :day-summary="selectedDayData"
+        class="w-full lg:w-auto"
+        :selected-date="selectedDate"
+        :day-summary="selectedDayData"
         :loading="isLoading"
       />
     </div>

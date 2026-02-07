@@ -543,3 +543,37 @@
     padding-right: env(safe-area-inset-right);
   }
 }
+
+/* ============================================
+   MOBILE-SPECIFIC STYLES
+   ============================================ */
+
+/* Bottom nav bar - prevent content overlap */
+#mobile-bottom-nav {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Mobile top bar - account for status bar */
+#mobile-top-bar {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Prevent body scroll when mobile sidebar is open */
+body.sidebar-open {
+  overflow: hidden;
+}
+
+/* Touch-friendly tap targets */
+@media (max-width: 1023px) {
+  /* Ensure minimum 44px tap targets */
+  .nav-item,
+  .sidebar-action,
+  .sidebar-user-link {
+    min-height: 44px;
+  }
+
+  /* Prevent horizontal overflow on mobile */
+  #dashboard-layout {
+    overflow-x: hidden;
+  }
+}

@@ -13,6 +13,7 @@
     "@nuxtjs/color-mode": "^4.0.0",
     "@nuxtjs/supabase": "^2.0.3",
     "@nuxtjs/tailwindcss": "^6.14.0",
+    "@vite-pwa/nuxt": "^1.1.1",
     "@vuepic/vue-datepicker": "^12.1.0",
     "chart.js": "^4.5.1",
     "date-fns": "^4.1.0",

@@ -50,7 +50,7 @@ function handleDelete() {
 <template>
   <div
     id="extrato-selection-summary"
-    class="fixed bottom-6 right-6 z-popover flex items-center gap-4 rounded-2xl border border-default-subtle bg-surface-elevated px-4 py-3 shadow-lg"
+    class="fixed bottom-20 lg:bottom-6 left-4 right-4 sm:left-auto sm:right-6 z-popover flex items-center gap-3 lg:gap-4 rounded-2xl border border-default-subtle bg-surface-elevated px-3 lg:px-4 py-3 shadow-lg"
   >
     <button
       type="button"

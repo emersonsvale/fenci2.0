@@ -112,7 +112,7 @@ onUnmounted(() => {
       <div
         v-if="isOpen"
         ref="panelRef"
-        class="absolute right-0 top-full mt-2 w-[360px] max-h-[420px] flex flex-col rounded-2xl border border-default bg-surface-elevated shadow-xl z-[90] overflow-hidden"
+        class="fixed sm:absolute right-2 left-2 sm:left-auto sm:right-0 top-16 sm:top-full sm:mt-2 w-auto sm:w-[360px] max-h-[420px] flex flex-col rounded-2xl border border-default bg-surface-elevated shadow-xl z-[90] overflow-hidden"
       >
         <div class="flex items-center justify-between px-4 py-3 border-b border-default">
           <h3 class="text-body-sm font-semibold text-content-main">Notificações</h3>

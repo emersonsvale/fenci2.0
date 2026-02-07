@@ -36,10 +36,10 @@ const statusColor = computed(() => {
 </script>
 
 <template>
-  <div id="profile-header" class="flex items-center gap-6 pb-6 border-b border-border-light dark:border-border-dark">
+  <div id="profile-header" class="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 pb-6 border-b border-border-light dark:border-border-dark">
     <!-- Avatar -->
     <div class="relative">
-      <div class="w-24 h-24 rounded-full overflow-hidden bg-surface-light-secondary dark:bg-surface-dark-secondary border-2 border-border-light dark:border-border-dark">
+      <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-surface-light-secondary dark:bg-surface-dark-secondary border-2 border-border-light dark:border-border-dark">
         <img 
           v-if="avatarUrl" 
           :src="avatarUrl" 
@@ -56,8 +56,8 @@ const statusColor = computed(() => {
     </div>
 
     <!-- Info -->
-    <div class="flex-1">
-      <h1 class="text-2xl font-bold text-content-primary dark:text-content-primary-dark">
+    <div class="flex-1 text-center sm:text-left">
+      <h1 class="text-xl sm:text-2xl font-bold text-content-primary dark:text-content-primary-dark">
         {{ displayName }}
       </h1>
       <p class="text-content-secondary dark:text-content-secondary-dark mt-1">
@@ -65,7 +65,7 @@ const statusColor = computed(() => {
       </p>
       
       <!-- Status Badge -->
-      <div class="mt-3 flex items-center gap-2">
+      <div class="mt-3 flex items-center justify-center sm:justify-start gap-2 flex-wrap">
         <span 
           class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
           :class="statusColor"
