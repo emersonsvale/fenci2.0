@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useSupabaseClient } from '#imports'
 import { useTheme } from '~/composables/useTheme'
 import AppInput from '../components/AppInput.vue'
@@ -12,10 +12,29 @@ const password = ref('')
 const isLoading = ref(false)
 const errorMessage = ref('')
 
+/** Se já estiver logado (ex.: voltou para /login), redireciona para o dashboard. */
+onMounted(async () => {
+  if (!import.meta.client) return
+  const { data: { session } } = await supabase.auth.getSession()
+  if (session) {
+    window.location.replace('/dashboard')
+  }
+})
+
+/** Aguarda a sessão aparecer no client (até ~2,5s) após login. */
+async function waitForSession (): Promise<boolean> {
+  for (let i = 0; i < 50; i++) {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session) return true
+    await new Promise(r => setTimeout(r, 50))
+  }
+  return false
+}
+
 const handleLogin = async (): Promise<void> => {
   errorMessage.value = ''
   isLoading.value = true
-  
+
   try {
     const { error } = await supabase.auth.signInWithPassword({
       email: email.value,
@@ -33,8 +52,18 @@ const handleLogin = async (): Promise<void> => {
       return
     }
 
-    // Redireciona para o dashboard após login bem-sucedido
-    await navigateTo('/dashboard')
+    // Garante que a sessão está no client antes de recarregar em /dashboard
+    const hasSession = await waitForSession()
+    if (import.meta.client) {
+      if (hasSession) {
+        window.location.href = '/dashboard'
+      } else {
+        // Fallback: força mesmo assim; o middleware vai tentar getSession com retry
+        window.location.href = '/dashboard'
+      }
+    } else {
+      await navigateTo('/dashboard', { replace: true })
+    }
   } catch (error) {
     console.error('Login error:', error)
     errorMessage.value = 'Ocorreu um erro ao fazer login. Tente novamente.'
