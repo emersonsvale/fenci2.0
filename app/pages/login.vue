@@ -5,10 +5,6 @@ import { useTheme } from '~/composables/useTheme'
 import AppInput from '../components/AppInput.vue'
 import AppButton from '../components/AppButton.vue'
 
-definePageMeta({
-  middleware: ['guest-only'],
-})
-
 const supabase = useSupabaseClient()
 
 const email = ref('')

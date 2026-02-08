@@ -3,9 +3,6 @@ import { ref } from 'vue'
 import { useSupabaseClient } from '#imports'
 import { useTheme } from '~/composables/useTheme'
 
-definePageMeta({
-  middleware: ['guest-only'],
-})
 
 const supabase = useSupabaseClient()
 

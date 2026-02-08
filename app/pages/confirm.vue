@@ -8,7 +8,6 @@ import { useSupabaseCookieRedirect } from '#imports'
 
 definePageMeta({
   layout: 'default',
-  middleware: ['guest-only'],
 })
 
 const user = useSupabaseUser()

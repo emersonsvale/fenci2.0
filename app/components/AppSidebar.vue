@@ -5,7 +5,6 @@ import { useSupabaseClient, useSupabaseUser } from '#imports'
 import { useTheme } from '~/composables/useTheme'
 import { useProfile } from '~/composables/useProfile'
 import { useSidebar, SIDEBAR_WIDTH_EXPANDED } from '~/composables/useSidebar'
-import NotificationBell from '~/components/NotificationBell.vue'
 
 /**
  * AppSidebar - Sidebar de navegação principal
@@ -31,7 +30,7 @@ const navItems: NavItem[] = [
   { id: 'extratos', label: 'Extrato', icon: 'receipt', route: '/extratos' },
   { id: 'contas', label: 'Contas', icon: 'account_balance', route: '/contas' },
   { id: 'calendario', label: 'Calendário', icon: 'calendar_month', route: '/calendario' },
-  { id: 'planejamentos', label: 'Planej.', icon: 'savings', route: '/planejamentos' },
+  { id: 'planejamentos', label: 'Planejamentos', icon: 'savings', route: '/planejamentos' },
 ]
 
 const currentRoute = computed(() => route.path)
@@ -194,11 +193,6 @@ const sidebarStyle = computed(() => {
               {{ isDark ? 'light_mode' : 'dark_mode' }}
             </span>
             <span class="truncate" :class="{ 'sr-only': isCollapsed && !isMobile }">{{ isDark ? 'Modo Claro' : 'Modo Escuro' }}</span>
-          </button>
-          <NotificationBell :collapsed="isCollapsed && !isMobile" />
-          <button class="sidebar-action" title="Novo Aqui?">
-            <span class="material-symbols-outlined text-lg shrink-0">help</span>
-            <span class="truncate" :class="{ 'sr-only': isCollapsed && !isMobile }">Novo Aqui?</span>
           </button>
           <button class="sidebar-action sidebar-action-logout" title="Sair" @click="handleLogout">
             <span class="material-symbols-outlined text-lg shrink-0">logout</span>

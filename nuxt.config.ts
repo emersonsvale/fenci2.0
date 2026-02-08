@@ -96,7 +96,7 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
 
   supabase: {
-    redirect: true,
+    redirect: false, // Redirecionamento feito pelo middleware auth.global.ts
     redirectOptions: {
       login: '/login',
       callback: '/confirm',
