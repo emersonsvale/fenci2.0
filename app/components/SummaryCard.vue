@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { useCurrency } from '~/composables/useCurrency'
+import { usePrivacyMode } from '~/composables/usePrivacyMode'
 
 /**
  * SummaryCard - Card de resumo financeiro
@@ -8,6 +9,7 @@ import { useCurrency } from '~/composables/useCurrency'
  */
 
 const { formatCurrency } = useCurrency()
+const { isPrivacyMode, togglePrivacyMode, PRIVACY_MASK } = usePrivacyMode()
 
 export interface SummaryCardProps {
   label: string
@@ -26,14 +28,8 @@ const props = withDefaults(defineProps<SummaryCardProps>(), {
   showVisibilityToggle: false,
 })
 
-// Estado de visibilidade do valor
-const isValueVisible = ref(true)
-
-function toggleVisibility() {
-  isValueVisible.value = !isValueVisible.value
-}
-
 const formattedValue = computed(() => {
+  if (isPrivacyMode.value) return PRIVACY_MASK
   if (props.showCurrency) {
     return formatCurrency(props.value)
   }
@@ -87,11 +83,11 @@ const variantClasses = computed(() => {
           v-if="showVisibilityToggle"
           type="button"
           class="text-content-subtle hover:text-content-muted transition-colors shrink-0"
-          @click="toggleVisibility"
-          :title="isValueVisible ? 'Ocultar valor' : 'Mostrar valor'"
+          @click="togglePrivacyMode"
+          :title="isPrivacyMode ? 'Mostrar valores' : 'Ocultar valores'"
         >
           <span class="material-symbols-outlined text-sm lg:text-base">
-            {{ isValueVisible ? 'visibility' : 'visibility_off' }}
+            {{ isPrivacyMode ? 'visibility_off' : 'visibility' }}
           </span>
         </button>
       </div>
@@ -99,7 +95,7 @@ const variantClasses = computed(() => {
       <!-- Value -->
       <div v-if="loading" class="skeleton h-5 lg:h-7 w-20 lg:w-28 rounded" />
       <p v-else class="text-body-sm lg:text-heading-sm font-bold truncate" :class="variantClasses">
-        {{ isValueVisible ? formattedValue : '••••••' }}
+        {{ formattedValue }}
       </p>
     </div>
   </div>

@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import DonutChart from './DonutChart.vue'
+import { useCurrency } from '~/composables/useCurrency'
+import { usePrivacyMode } from '~/composables/usePrivacyMode'
 
 /**
  * ContasPagasCard - Card de contas pagas do mês
- * Igual ao bloco da sidebar do extrato: título com mês, donut, legenda Pagas/Pendentes
+ * Exibe valor pago vs valor pendente em formato monetário com gráfico donut
  */
 
 export interface ContasPagasCardProps {
-  contasPagas: { pagas: number; total: number }
+  contasPagas: { valorPago: number; valorPendente: number; totalValor: number }
   monthName: string
   loading?: boolean
 }
@@ -16,6 +18,9 @@ export interface ContasPagasCardProps {
 const props = withDefaults(defineProps<ContasPagasCardProps>(), {
   loading: false,
 })
+
+const { formatCurrency } = useCurrency()
+const { isPrivacyMode, PRIVACY_MASK } = usePrivacyMode()
 
 const chartWrapRef = ref<HTMLElement | null>(null)
 const chartSize = ref(130)
@@ -61,7 +66,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Empty State (sem despesas) -->
-    <div v-else-if="contasPagas.total === 0" class="flex flex-col items-center justify-center py-8">
+    <div v-else-if="contasPagas.totalValor === 0" class="flex flex-col items-center justify-center py-8">
       <div class="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mb-3">
         <span class="material-symbols-outlined text-3xl text-success">
           check_circle
@@ -79,26 +84,43 @@ onUnmounted(() => {
         class="w-full max-w-[200px] mx-auto aspect-square py-2"
       >
         <DonutChart
-          :value="contasPagas.pagas"
-          :total="contasPagas.total"
+          :value="contasPagas.valorPago"
+          :total="contasPagas.totalValor"
           :size="donutSize"
           :stroke-width="12"
           color="#22C55E"
-        />
+        >
+          <template #center="{ percentage }">
+            <div class="text-center">
+              <span class="text-heading-md font-bold text-content-main">
+                {{ isPrivacyMode ? PRIVACY_MASK : `${percentage}%` }}
+              </span>
+              <p class="text-caption text-content-subtle leading-tight mt-0.5">
+                {{ formatCurrency(contasPagas.valorPago) }}
+              </p>
+            </div>
+          </template>
+        </DonutChart>
       </div>
 
       <!-- Legend -->
-      <div class="flex items-center justify-center gap-6 mt-4 pt-3 border-t border-default-subtle">
-        <div class="flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-success shadow-sm" />
-          <span class="text-caption text-content-muted">
-            Pagas ({{ contasPagas.pagas }})
+      <div class="flex flex-col gap-2 mt-4 pt-3 border-t border-default-subtle">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-success shadow-sm" />
+            <span class="text-caption text-content-muted">Pago</span>
+          </div>
+          <span class="text-caption font-medium text-content-main">
+            {{ formatCurrency(contasPagas.valorPago) }}
           </span>
         </div>
-        <div class="flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-surface-overlay shadow-sm" />
-          <span class="text-caption text-content-muted">
-            Pendentes ({{ contasPagas.total - contasPagas.pagas }})
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-surface-overlay shadow-sm" />
+            <span class="text-caption text-content-muted">Pendente</span>
+          </div>
+          <span class="text-caption font-medium text-content-main">
+            {{ formatCurrency(contasPagas.valorPendente) }}
           </span>
         </div>
       </div>

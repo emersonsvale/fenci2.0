@@ -1,13 +1,33 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+/**
+ * Returns CORS headers with a validated origin.
+ * Set ALLOWED_ORIGINS env var as comma-separated list (e.g. "https://app.fenci.com.br,https://fenci.com.br").
+ * In development, localhost origins are also allowed.
+ */
+function getCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get("Origin") ?? "";
+  const allowedRaw = Deno.env.get("ALLOWED_ORIGINS") ?? "";
+  const allowedOrigins = allowedRaw
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean);
+
+  // Also allow localhost for development
+  const isLocalhost = origin.startsWith("http://localhost") || origin.startsWith("http://127.0.0.1");
+  const isAllowed = allowedOrigins.includes(origin) || isLocalhost;
+
+  return {
+    "Access-Control-Allow-Origin": isAllowed ? origin : "",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Vary": "Origin",
+  };
+}
 
 Deno.serve(async (req: Request): Promise<Response> => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ success: false, message: "Método não permitido" }), {
@@ -72,6 +92,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
     if (catErr) {
       console.error("categories", catErr);
       return new Response(JSON.stringify({ success: false, message: catErr.message }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { error: notificationsErr } = await admin.from("notifications").delete().eq("user_id", userId);
+    if (notificationsErr) {
+      console.error("notifications", notificationsErr);
+      return new Response(JSON.stringify({ success: false, message: notificationsErr.message }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

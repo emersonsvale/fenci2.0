@@ -2,9 +2,11 @@
 import { computed, ref } from 'vue'
 import type { ExtratoTransaction } from '../composables/useExtrato'
 import { useCurrency } from '~/composables/useCurrency'
+import { usePrivacyMode } from '~/composables/usePrivacyMode'
 import ProgressBar from './ProgressBar.vue'
 
 const { formatCurrency } = useCurrency()
+const { isPrivacyMode, PRIVACY_MASK } = usePrivacyMode()
 
 /**
  * ExtratoItem - Item individual da lista de extratos
@@ -33,6 +35,8 @@ const emit = defineEmits<{
   'mark-renda-received': [payload: { recurringId: string; transactionDate: string }]
   'toggle-select': [id: string]
   'pay-invoice': [payload: { creditCardId: string; invoiceId?: string; referenceMonth?: string; amount: number; dueDate?: string }]
+  'open-invoice-drawer': [creditCardId: string]
+  'open-installment-drawer': [installmentGroupId: string]
 }>()
 
 const isRendaRecorrente = computed(() => props.transaction.isRendaRecorrente === true)
@@ -44,6 +48,15 @@ const isSaidaRecorrente = computed(
 const isSaidaRecorrenteVirtual = computed(() => props.transaction.isSaidaRecorrente === true)
 /** Linha de resumo da fatura do cartão (não editar como transação única; ação "Pagar fatura") */
 const isFaturaSummary = computed(() => props.transaction.isFaturaSummary === true)
+/** Lançamento parcelado (várias parcelas no mesmo grupo) — abre drawer ao clicar na linha */
+const isParcelado = computed(
+  () =>
+    !!(
+      props.transaction.installmentInfo &&
+      props.transaction.installmentInfo.total > 1 &&
+      props.transaction.installmentGroupId
+    )
+)
 
 // Menu de ações
 const isMenuOpen = ref(false)
@@ -188,7 +201,6 @@ function handleDelete() {
 }
 
 function handleToggleSelect() {
-  if (isFaturaSummary.value) return
   emit('toggle-select', props.transaction.id)
 }
 
@@ -203,12 +215,30 @@ function handlePayInvoice() {
   })
   closeMenu()
 }
+
+/** Clique na linha: fatura → drawer do cartão; parcelado → drawer das parcelas */
+function handleRowClick() {
+  if (isFaturaSummary.value && props.transaction.creditCardId) {
+    emit('open-invoice-drawer', props.transaction.creditCardId)
+    return
+  }
+  if (isParcelado.value && props.transaction.installmentGroupId) {
+    emit('open-installment-drawer', props.transaction.installmentGroupId)
+  }
+}
 </script>
 
 <template>
   <div
     id="extrato-item"
+    :role="isFaturaSummary || isParcelado ? 'button' : undefined"
+    :tabindex="isFaturaSummary || isParcelado ? 0 : undefined"
+    :aria-label="isFaturaSummary ? `Ver lançamentos da fatura ${transaction.description}` : isParcelado ? `Ver parcelas: ${transaction.description}` : undefined"
     class="bg-surface-elevated rounded-xl p-3 lg:p-4 flex items-center justify-between gap-2 lg:gap-4 hover:bg-surface-elevated/80 hover:shadow-md transition-all group shadow-xs border border-transparent hover:border-default-subtle"
+    :class="{ 'cursor-pointer': isFaturaSummary || isParcelado }"
+    @click="handleRowClick"
+    @keydown.enter="handleRowClick"
+    @keydown.space.prevent="handleRowClick"
   >
     <!-- Category Icon / Seletor (hover = mostra seletor; clique = toggle seleção) -->
     <button
@@ -234,7 +264,7 @@ function handlePayInvoice() {
       </span>
       <!-- Não selecionado + hover no ícone: círculo vazio (seletor) -->
       <span
-        v-else-if="!isFaturaSummary && isIconHovered"
+        v-else-if="isIconHovered"
         class="material-symbols-outlined text-primary text-2xl rounded-full border-2 border-primary bg-surface-elevated flex items-center justify-center"
         aria-hidden="true"
       >
@@ -310,7 +340,7 @@ function handlePayInvoice() {
     >
       <div class="text-center mb-1">
         <span class="text-caption font-medium text-content-muted">
-          {{ transaction.installmentInfo.percentage }}%
+          {{ isPrivacyMode ? PRIVACY_MASK : `${transaction.installmentInfo.percentage}%` }}
         </span>
       </div>
       <ProgressBar

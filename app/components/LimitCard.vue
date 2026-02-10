@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useCurrency } from '~/composables/useCurrency'
+import { usePrivacyMode } from '~/composables/usePrivacyMode'
 
 const { formatCurrency } = useCurrency()
+const { isPrivacyMode, PRIVACY_MASK } = usePrivacyMode()
 
 /**
  * LimitCard - Card de limite mensal
@@ -66,7 +68,7 @@ const progressColor = computed(() => {
 
       <!-- Gasto Info -->
       <p class="text-body-sm text-content-muted mb-4">
-        Gasto: <span class="font-semibold" :class="percentage >= 80 ? 'text-error' : 'text-primary'">{{ formatCurrency(gasto) }}</span>
+        Gasto: <span class="font-semibold" :class="!isPrivacyMode && percentage >= 80 ? 'text-error' : 'text-primary'">{{ formatCurrency(gasto) }}</span>
       </p>
 
       <!-- Progress Bar -->
@@ -79,7 +81,7 @@ const progressColor = computed(() => {
           />
         </div>
         <span class="text-body-sm font-semibold w-12 text-right" :class="progressColor.replace('bg-', 'text-')">
-          {{ percentage }}%
+          {{ isPrivacyMode ? PRIVACY_MASK : `${percentage}%` }}
         </span>
       </div>
 

@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { usePrivacyMode } from '~/composables/usePrivacyMode'
 
 /**
  * DonutChart - Gráfico de rosca
  * Usado para exibir proporções como contas pagas/pendentes
  */
+
+const { isPrivacyMode, PRIVACY_MASK } = usePrivacyMode()
 
 export interface DonutChartProps {
   value: number
@@ -72,14 +75,16 @@ const center = computed(() => props.size / 2)
 
       <!-- Center Content -->
       <div class="absolute inset-0 flex items-center justify-center">
-        <div class="text-center">
-          <span class="text-heading-md font-bold text-content-main">
-            {{ percentage }}%
-          </span>
-          <p class="text-caption text-content-subtle">
-            {{ value }} de {{ total }}
-          </p>
-        </div>
+        <slot name="center" :percentage="percentage" :value="value" :total="total">
+          <div class="text-center">
+            <span class="text-heading-md font-bold text-content-main">
+              {{ isPrivacyMode ? PRIVACY_MASK : `${percentage}%` }}
+            </span>
+            <p class="text-caption text-content-subtle">
+              {{ isPrivacyMode ? PRIVACY_MASK : `${value} de ${total}` }}
+            </p>
+          </div>
+        </slot>
       </div>
     </div>
 

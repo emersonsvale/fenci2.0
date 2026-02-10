@@ -1,6 +1,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useSupabaseClient, useSupabaseUser, useState } from '#imports'
 import type { Database, Transaction, Category, CreditCard, Account, RecurringTransaction, CreditCardInvoice } from 'shared/types/database.types'
+import { parseTransactionDateLocal } from '../utils/formatDate'
 
 /**
  * useExtrato - Composable para a página de extratos
@@ -63,6 +64,28 @@ export interface ExtratoTransaction {
   referenceMonth?: string
   /** Data de vencimento da fatura (YYYY-MM-DD) quando isFaturaSummary */
   dueDate?: string
+  /** ID do grupo de parcelas quando a transação é parcelada (installmentInfo.total > 1) */
+  installmentGroupId?: string
+}
+
+/** Dados do grupo de parcelas para o drawer de lançamento parcelado */
+export interface ExtratoInstallmentGroupData {
+  description: string
+  totalAmount: number
+  installments: {
+    id: string
+    installmentNumber: number
+    totalInstallments: number
+    amount: number
+    transactionDate: string
+    category: {
+      id: string
+      name: string
+      icon: string | null
+      color: string | null
+    } | null
+    isPaid: boolean
+  }[]
 }
 
 export interface ExtratoCreditCard {
@@ -412,13 +435,22 @@ export function useExtrato() {
     }
   })
 
-  // Contas pagas do mês (apenas despesas de conta, não cartão)
+  // Contas pagas do mês (apenas despesas de conta, não cartão — valores monetários)
   const contasPagas = computed(() => {
+    const toNum = (v: unknown) => (typeof v === 'number' ? v : Number(v) || 0)
     const despesas = periodTransactions.value.filter((t) => t.type === 'expense' && !t.credit_card_id)
-    const pagas = despesas.filter((t) => t.is_paid).length
-    const total = despesas.length
 
-    return { pagas, total }
+    const valorPago = despesas
+      .filter((t) => t.is_paid)
+      .reduce((sum, t) => sum + Math.abs(toNum(t.amount)), 0)
+
+    const valorPendente = despesas
+      .filter((t) => !t.is_paid)
+      .reduce((sum, t) => sum + Math.abs(toNum(t.amount)), 0)
+
+    const totalValor = valorPago + valorPendente
+
+    return { valorPago, valorPendente, totalValor: totalValor || 1 }
   })
 
   // Tags já usadas em outros lançamentos (para autocomplete)
@@ -440,7 +472,7 @@ export function useExtrato() {
     
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    const transactionDate = new Date(t.transaction_date)
+    const transactionDate = parseTransactionDateLocal(t.transaction_date)
     transactionDate.setHours(0, 0, 0, 0)
     
     if (transactionDate < today) return 'atrasado'
@@ -451,7 +483,7 @@ export function useExtrato() {
   function mapTransaction(t: Transaction): ExtratoTransaction {
     const category = categories.value.find((c) => c.id === t.category_id)
     const account = accounts.value.find((a) => a.id === t.account_id)
-    const transactionDate = new Date(t.transaction_date)
+    const transactionDate = parseTransactionDateLocal(t.transaction_date)
 
     return {
       id: t.id,
@@ -481,6 +513,7 @@ export function useExtrato() {
         name: account.name,
       } : null,
       tags: t.tags && Array.isArray(t.tags) ? [...t.tags] : [],
+      installmentGroupId: t.installment_group_id ?? undefined,
     }
   }
 
@@ -1039,11 +1072,14 @@ export function useExtrato() {
     ]
   }
 
-  // Obter transação por ID (mapeada)
+  // Obter transação por ID (mapeada) — inclui faturas sintéticas de cartão
   function getTransactionById(transactionId: string): ExtratoTransaction | null {
+    // Primeiro tenta buscar em transações reais do banco
     const transaction = transactions.value.find((t) => t.id === transactionId)
-    if (!transaction) return null
-    return mapTransaction(transaction)
+    if (transaction) return mapTransaction(transaction)
+    // Se não encontrou, busca em filteredTransactions (inclui faturas sintéticas)
+    const syntheticItem = filteredTransactions.value.find((t) => t.id === transactionId)
+    return syntheticItem ?? null
   }
 
   // Obter dados brutos da transação por ID (para edição)
@@ -1051,8 +1087,8 @@ export function useExtrato() {
     const transaction = transactions.value.find((t) => t.id === transactionId)
     if (!transaction) return null
     
-    // Formatar a data para YYYY-MM-DD
-    const date = new Date(transaction.transaction_date)
+    // Formatar a data para YYYY-MM-DD (usar data local para evitar -1 dia por timezone)
+    const date = parseTransactionDateLocal(transaction.transaction_date)
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const day = String(date.getDate()).padStart(2, '0')
@@ -1073,6 +1109,43 @@ export function useExtrato() {
       tags: transaction.tags ? [...transaction.tags] : [],
       installmentGroupId: transaction.installment_group_id || null,
       installmentNumber: transaction.installment_number ?? null,
+    }
+  }
+
+  /**
+   * Retorna os dados do grupo de parcelas para exibir no drawer (todas as parcelas, qualquer período).
+   */
+  function getInstallmentGroupData(groupId: string): ExtratoInstallmentGroupData | null {
+    const groupTx = transactions.value
+      .filter((t) => t.installment_group_id === groupId)
+      .sort((a, b) => (a.installment_number ?? 0) - (b.installment_number ?? 0))
+    if (groupTx.length === 0) return null
+    const first = groupTx[0]
+    const totalAmount = groupTx.reduce((sum, t) => sum + Math.abs(t.amount), 0)
+    const installments = groupTx.map((t) => {
+      const category = categories.value.find((c) => c.id === t.category_id)
+      const dateStr = t.transaction_date.split('T')[0]
+      return {
+        id: t.id,
+        installmentNumber: t.installment_number ?? 0,
+        totalInstallments: t.total_installments ?? 1,
+        amount: Math.abs(t.amount),
+        transactionDate: dateStr,
+        category: category
+          ? {
+              id: category.id,
+              name: category.name,
+              icon: category.icon,
+              color: category.color,
+            }
+          : null,
+        isPaid: t.is_paid ?? false,
+      }
+    })
+    return {
+      description: first.description,
+      totalAmount,
+      installments,
     }
   }
 
@@ -1130,5 +1203,6 @@ export function useExtrato() {
     updateTransactionLocal,
     getTransactionById,
     getRawTransactionById,
+    getInstallmentGroupData,
   }
 }

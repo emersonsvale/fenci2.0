@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import type { LancamentoType } from '../composables/useLancamento'
 import LancamentoDropdown from './LancamentoDropdown.vue'
 import PeriodSelector from './PeriodSelector.vue'
@@ -7,16 +7,36 @@ import NotificationCenter from './NotificationCenter.vue'
 
 /**
  * PageHeader - Header padrão do sistema
- * Saudação, citação do dia, seletor de período e botão Lançamento
+ * Saudação, citação do dia (rotativa por período), seletor de período e botão Lançamento
  */
 
-const DEFAULT_QUOTES = [
-  { text: 'Uma jornada de mil milhas começa com o primeiro passo.', author: 'Lao Tsé' },
-  { text: 'O segredo para ir em frente é começar.', author: 'Mark Twain' },
+type QuoteItem = { text: string; author: string }
+
+const QUOTES_MANHA: QuoteItem[] = [
+  { text: 'O sucesso é a soma de pequenos esforços repetidos dia após dia.', author: 'Robert Collier' },
+  { text: 'A persistência é o caminho do êxito.', author: 'Charles Chaplin' },
+  { text: 'Poupar é o primeiro passo para a liberdade financeira.', author: '' },
   { text: 'Não é o mais forte que sobrevive, mas o que melhor se adapta às mudanças.', author: 'Charles Darwin' },
-  { text: 'Faça do seu dinheiro um servo, não um mestre.', author: 'Francis Bacon' },
-  { text: 'A economia é a base da liberdade.', author: 'Calvin Coolidge' },
-  { text: 'O dinheiro é um excelente servo, mas um péssimo mestre.', author: 'P.T. Barnum' },
+  { text: 'Se você quer colher frutos no futuro, comece plantando hoje!', author: '' },
+  { text: 'A disciplina é a ponte entre objetivos e realizações.', author: 'Jim Rohn' },
+]
+
+const QUOTES_TARDE: QuoteItem[] = [
+  { text: 'Acredite, você pode. Você já está no meio do caminho.', author: 'Theodore Roosevelt' },
+  { text: 'Gaste menos do que ganha e viva melhor do que imagina.', author: '' },
+  { text: 'A felicidade não está em possuir dinheiro, mas em usá-lo com sabedoria.', author: '' },
+  { text: 'Grandes conquistas exigem grandes esforços.', author: 'Heráclito' },
+  { text: 'O segredo do sucesso financeiro é gastar com propósito.', author: '' },
+  { text: 'Uma jornada de mil milhas começa com o primeiro passo.', author: 'Lao Tsé' },
+]
+
+const QUOTES_NOITE: QuoteItem[] = [
+  { text: 'Quem cedo madruga, conquista mais oportunidades.', author: '' },
+  { text: 'Planejar hoje é economizar amanhã.', author: '' },
+  { text: 'O conhecimento é a melhor moeda que existe.', author: 'Benjamin Franklin' },
+  { text: 'Não é sobre quanto você ganha, mas sobre quanto você economiza.', author: '' },
+  { text: 'A persistência é o caminho do êxito.', author: 'Charles Chaplin' },
+  { text: 'Descansar bem é parte do sucesso.', author: '' },
 ]
 
 export interface PageHeaderProps {
@@ -36,6 +56,8 @@ const emit = defineEmits<{
   'open-lancamento': [type: LancamentoType]
 }>()
 
+const ROTATION_INTERVAL_MS = 30_000 // 30 segundos
+
 const greeting = computed(() => {
   const hour = new Date().getHours()
   if (hour < 12) return 'Bom dia'
@@ -43,10 +65,32 @@ const greeting = computed(() => {
   return 'Boa noite'
 })
 
+const quotesForPeriod = computed((): QuoteItem[] => {
+  const hour = new Date().getHours()
+  if (hour < 12) return QUOTES_MANHA
+  if (hour < 18) return QUOTES_TARDE
+  return QUOTES_NOITE
+})
+
+const currentQuoteIndex = ref(0)
+
 const displayQuote = computed(() => {
   if (props.quote) return props.quote
-  const dayOfMonth = new Date().getDate()
-  return DEFAULT_QUOTES[dayOfMonth % DEFAULT_QUOTES.length]
+  const list = quotesForPeriod.value
+  const index = currentQuoteIndex.value % list.length
+  return list[index]
+})
+
+let rotationTimer: ReturnType<typeof setInterval> | null = null
+
+onMounted(() => {
+  rotationTimer = setInterval(() => {
+    currentQuoteIndex.value += 1
+  }, ROTATION_INTERVAL_MS)
+})
+
+onUnmounted(() => {
+  if (rotationTimer) clearInterval(rotationTimer)
 })
 
 const isDropdownOpen = ref(false)
@@ -75,9 +119,8 @@ function handleSelectLancamento(type: LancamentoType) {
           <h1 class="text-heading-sm lg:text-heading-lg text-content-main truncate">
             Olá, {{ greeting }}, {{ userName }}!
           </h1>
-          <p class="text-caption lg:text-body-sm text-content-subtle mt-1 flex items-start gap-1 leading-snug">
-            <span class="material-symbols-outlined text-base shrink-0 mt-0.5">format_quote</span>
-            <span class="line-clamp-2">"{{ displayQuote.text }}" – {{ displayQuote.author }}</span>
+          <p class="text-caption lg:text-body-sm text-content-subtle mt-1 leading-snug line-clamp-2">
+            "{{ displayQuote.text }}"<template v-if="displayQuote.author"> – {{ displayQuote.author }}</template>
           </p>
         </div>
 

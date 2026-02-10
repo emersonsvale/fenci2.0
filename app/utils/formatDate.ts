@@ -4,6 +4,20 @@
  */
 
 /**
+ * Converte string de data (YYYY-MM-DD ou ISO) para Date em horário local.
+ * Evita o bug de timezone: new Date("2026-02-10") é meia-noite UTC, que em UTC-3 vira dia 09.
+ */
+export function parseTransactionDateLocal(isoDate: string | null | undefined): Date {
+  if (!isoDate) return new Date()
+  const s = String(isoDate).split('T')[0]
+  const parts = s.split('-').map(Number)
+  if (parts.length < 3) return new Date()
+  const [y, m, d] = parts
+  if (Number.isNaN(y) || Number.isNaN(m) || Number.isNaN(d)) return new Date()
+  return new Date(y, m - 1, d)
+}
+
+/**
  * Converte data (YYYY-MM-DD ou Date) para string DD/MM/YYYY.
  */
 export function toDDMMYYYY(isoOrDate: string | Date): string {

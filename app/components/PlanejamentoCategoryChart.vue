@@ -2,12 +2,14 @@
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { Chart, registerables, type ChartConfiguration } from 'chart.js'
 import { useCurrency } from '~/composables/useCurrency'
+import { usePrivacyMode } from '~/composables/usePrivacyMode'
 
 /**
  * PlanejamentoCategoryChart - Gráfico de barras por categoria (previsto x realizado)
  */
 
 const { formatCurrency } = useCurrency()
+const { isPrivacyMode, PRIVACY_MASK } = usePrivacyMode()
 
 export interface CategoryTotal {
   name: string
@@ -98,6 +100,7 @@ function buildChartConfig(): ChartConfiguration<'bar'> | null {
             font: { size: 10 },
             color: '#6B7280',
             callback(value) {
+              if (isPrivacyMode.value) return PRIVACY_MASK
               if (typeof value === 'number' && value >= 1000) {
                 return 'R$ ' + (value / 1000).toFixed(1) + 'k'
               }
@@ -142,7 +145,7 @@ watch(
 )
 
 watch(
-  () => [props.data, props.loading],
+  () => [props.data, props.loading, isPrivacyMode.value],
   () => {
     if (props.loading) return
     initChart()

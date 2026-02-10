@@ -17,6 +17,8 @@ import CategoryModal from '../components/CategoryModal.vue'
 import LancamentoEntradaModal from '../components/LancamentoEntradaModal.vue'
 import LancamentoSaidaModal from '../components/LancamentoSaidaModal.vue'
 import LancamentoCartaoModal from '../components/LancamentoCartaoModal.vue'
+import CartaoFaturaDrawer from '../components/CartaoFaturaDrawer.vue'
+import ContaLancamentosDrawer from '../components/ContaLancamentosDrawer.vue'
 import type { CategoryDisplay, CreditCardFormData, AccountFormData } from '../composables/useContas'
 import type { RendaFormData as RendaModalFormData } from '../components/RendaModal.vue'
 import type { CategoryFormData as CategoryModalFormData } from '../components/CategoryModal.vue'
@@ -60,6 +62,10 @@ const {
   deleteAccount,
   fetchContasData,
   fetchCategoryTotals,
+  invoiceTotalsByCard,
+  fetchCreditCardInvoicesForMonth,
+  getCardInvoiceTransactions,
+  getAccountTransactions,
 } = useContas()
 
 // Composable para lançamentos
@@ -87,20 +93,22 @@ const selectedPeriod = ref({
   year: new Date().getFullYear(),
 })
 
-// Buscar totais por categoria quando o período mudar
+// Buscar totais por categoria e faturas de cartão quando o período mudar
 watch(
   selectedPeriod,
   (newPeriod) => {
     fetchCategoryTotals(newPeriod.month, newPeriod.year)
+    fetchCreditCardInvoicesForMonth(newPeriod.month, newPeriod.year)
   },
   { deep: true }
 )
 
 const route = useRoute()
 
-// Buscar totais na inicialização
+// Buscar totais e faturas na inicialização
 onMounted(() => {
   fetchCategoryTotals(selectedPeriod.value.month, selectedPeriod.value.year)
+  fetchCreditCardInvoicesForMonth(selectedPeriod.value.month, selectedPeriod.value.year)
   if (route.query.openCreditCard === '1') {
     openCreditCardModal()
     navigateTo({ path: route.path, query: {} })
@@ -155,6 +163,13 @@ const categoriesDrawerList = computed(() =>
 const isCreditCardsDrawerOpen = ref(false)
 const isAccountsDrawerOpen = ref(false)
 
+// Drawer: fatura do cartão (lançamentos) — abre ao clicar em um cartão na lista
+const isCartaoFaturaDrawerOpen = ref(false)
+const selectedCardForFatura = ref<{ id: string; name: string; identifier: string; color?: string } | null>(null)
+const faturaDrawerTransactions = ref<Array<{ id: string; description: string; amount: number; transactionDate: string; categoryName: string | null }>>([])
+const faturaDrawerTotal = ref(0)
+const faturaDrawerLoading = ref(false)
+
 function openCreditCardsDrawer() {
   isCreditCardsDrawerOpen.value = true
 }
@@ -181,7 +196,7 @@ async function handleCreditCardsDrawerDelete(item: { id: string; name: string; i
 
 function handleAccountsDrawerItemClick(item: { id: string; name: string; identifier: string; icon?: string | null; color?: string }) {
   isAccountsDrawerOpen.value = false
-  handleAccountClick(item)
+  handleAccountItemClick(item)
 }
 
 function handleAccountsDrawerEdit(item: { id: string; name: string; identifier: string; icon?: string | null; color?: string }) {
@@ -192,6 +207,69 @@ function handleAccountsDrawerEdit(item: { id: string; name: string; identifier: 
 function handleCreditCardsDrawerAdd() {
   isCreditCardsDrawerOpen.value = false
   openCreditCardModal()
+}
+
+async function handleCreditCardItemClick(item: { id: string; name: string; identifier: string; color?: string }) {
+  selectedCardForFatura.value = item
+  faturaDrawerLoading.value = true
+  isCartaoFaturaDrawerOpen.value = true
+  try {
+    const { transactions, total } = await getCardInvoiceTransactions(
+      item.id,
+      selectedPeriod.value.month,
+      selectedPeriod.value.year
+    )
+    faturaDrawerTransactions.value = transactions
+    faturaDrawerTotal.value = total
+  } finally {
+    faturaDrawerLoading.value = false
+  }
+}
+
+function closeCartaoFaturaDrawer() {
+  isCartaoFaturaDrawerOpen.value = false
+  selectedCardForFatura.value = null
+  faturaDrawerTransactions.value = []
+  faturaDrawerTotal.value = 0
+}
+
+// Drawer: lançamentos da conta — abre ao clicar em uma conta na lista
+const isContaLancamentosDrawerOpen = ref(false)
+const selectedAccountForDrawer = ref<{ id: string; name: string; identifier: string; color?: string; icon?: string | null } | null>(null)
+const contaDrawerBalance = ref(0)
+const contaDrawerTransactions = ref<Array<{ id: string; description: string; amount: number; transactionDate: string; categoryName: string | null; type: 'income' | 'expense' | 'transfer' }>>([])
+const contaDrawerLoading = ref(false)
+
+async function handleAccountItemClick(item: { id: string; name: string; identifier: string; icon?: string | null; color?: string }) {
+  const account = accountsList.value.find((a) => a.id === item.id)
+  if (!account) return
+  selectedAccountForDrawer.value = {
+    id: account.id,
+    name: account.name,
+    identifier: account.bankName || account.type,
+    color: account.color,
+    icon: account.icon,
+  }
+  contaDrawerBalance.value = account.balance
+  contaDrawerLoading.value = true
+  isContaLancamentosDrawerOpen.value = true
+  try {
+    const { transactions } = await getAccountTransactions(
+      item.id,
+      selectedPeriod.value.month,
+      selectedPeriod.value.year
+    )
+    contaDrawerTransactions.value = transactions
+  } finally {
+    contaDrawerLoading.value = false
+  }
+}
+
+function closeContaLancamentosDrawer() {
+  isContaLancamentosDrawerOpen.value = false
+  selectedAccountForDrawer.value = null
+  contaDrawerTransactions.value = []
+  contaDrawerBalance.value = 0
 }
 
 function handleAccountsDrawerAdd() {
@@ -346,13 +424,15 @@ async function handleCreateExpenseCategory(name: string) {
 }
 
 // === Handlers de Renda ===
-function openRendaModal(renda?: { id: string; provedor: string; valor: number; diaRecebimento: number; hasLimit?: boolean; endDate?: string | null }) {
+function openRendaModal(renda?: { id: string; provedor: string; valor: number; diaRecebimento: number; accountId?: string; categoryId?: string; hasLimit?: boolean; endDate?: string | null }) {
   if (renda) {
     editingRenda.value = {
       id: renda.id,
       provedor: renda.provedor,
       valor: renda.valor,
       diaRecebimento: renda.diaRecebimento,
+      accountId: renda.accountId,
+      categoryId: renda.categoryId,
       hasLimit: renda.hasLimit,
       endDate: renda.endDate,
     }
@@ -644,13 +724,14 @@ function cancelAccountDelete() {
   isConfirmingAccountDelete.value = false
 }
 
-// Prepara dados para o componente de lista
+// Prepara dados para o componente de lista (com valor da fatura do mês para cartões)
 const creditCardsListItems = computed(() => {
   return creditCardsList.value.map((card) => ({
     id: card.id,
     name: card.name,
     identifier: card.lastDigits,
     color: card.color,
+    invoiceAmount: invoiceTotalsByCard.value[card.id] ?? 0,
   }))
 })
 
@@ -661,6 +742,7 @@ const accountsListItems = computed(() => {
     identifier: account.bankName || account.type,
     icon: account.icon,
     color: account.color,
+    balance: account.balance,
   }))
 })
 
@@ -764,7 +846,7 @@ const { pullDistance, isPulling, isRefreshing: ptrRefreshing } = usePullToRefres
               variant="card"
               @add="openCreditCardModal"
               @view-all="openCreditCardsDrawer"
-              @item-click="() => {}"
+              @item-click="handleCreditCardItemClick"
               @edit="handleCreditCardEdit"
             />
           </div>
@@ -790,7 +872,7 @@ const { pullDistance, isPulling, isRefreshing: ptrRefreshing } = usePullToRefres
               variant="bank"
               @add="openAccountModal()"
               @view-all="openAccountsDrawer"
-              @item-click="handleAccountClick"
+              @item-click="handleAccountItemClick"
               @edit="handleAccountClick"
             />
           </div>
@@ -847,6 +929,26 @@ const { pullDistance, isPulling, isRefreshing: ptrRefreshing } = usePullToRefres
       @add="handleAccountsDrawerAdd"
       @item-click="handleAccountsDrawerItemClick"
       @edit="handleAccountsDrawerEdit"
+    />
+
+    <!-- Drawer: fatura do cartão (lançamentos) — abre ao clicar em um cartão -->
+    <CartaoFaturaDrawer
+      :is-open="isCartaoFaturaDrawerOpen"
+      :card="selectedCardForFatura"
+      :total-amount="faturaDrawerTotal"
+      :transactions="faturaDrawerTransactions"
+      :loading="faturaDrawerLoading"
+      @close="closeCartaoFaturaDrawer"
+    />
+
+    <!-- Drawer: lançamentos da conta — abre ao clicar em uma conta -->
+    <ContaLancamentosDrawer
+      :is-open="isContaLancamentosDrawerOpen"
+      :account="selectedAccountForDrawer"
+      :balance="contaDrawerBalance"
+      :transactions="contaDrawerTransactions"
+      :loading="contaDrawerLoading"
+      @close="closeContaLancamentosDrawer"
     />
 
     <!-- Modal de Categoria -->

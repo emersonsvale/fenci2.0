@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { DayData } from '../composables/useCalendario'
 import { useCurrency } from '~/composables/useCurrency'
+import { usePrivacyMode } from '~/composables/usePrivacyMode'
 
 /**
  * CalendarioDayCell - Célula de um dia no calendário
@@ -18,9 +19,11 @@ const emit = defineEmits<{
 }>()
 
 const { formatCurrency } = useCurrency()
+const { isPrivacyMode, PRIVACY_MASK } = usePrivacyMode()
 
 // Formatar valor compacto (sem símbolo, só número)
 function formatCompact(value: number): string {
+  if (isPrivacyMode.value) return PRIVACY_MASK
   return new Intl.NumberFormat('pt-BR', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -58,7 +61,7 @@ function formatCompact(value: number): string {
         v-if="dayData.totalEntradas > 0"
         class="transaction-badge badge-income"
       >
-        + R${{ formatCompact(dayData.totalEntradas) }}
+        {{ isPrivacyMode ? PRIVACY_MASK : `+ R$${formatCompact(dayData.totalEntradas)}` }}
       </div>
       
       <!-- Saídas -->
@@ -66,7 +69,7 @@ function formatCompact(value: number): string {
         v-if="dayData.totalSaidas > 0"
         class="transaction-badge badge-expense"
       >
-        - R${{ formatCompact(dayData.totalSaidas) }}
+        {{ isPrivacyMode ? PRIVACY_MASK : `- R$${formatCompact(dayData.totalSaidas)}` }}
       </div>
     </div>
   </button>

@@ -56,7 +56,7 @@ function handleDelete() {
 <template>
   <div
     id="renda-card"
-    class="bg-surface-elevated rounded-xl p-4 relative"
+    class="bg-surface-elevated rounded-xl p-4 relative border-l-4 border-primary"
   >
     <!-- Loading State -->
     <div v-if="loading" class="space-y-2">

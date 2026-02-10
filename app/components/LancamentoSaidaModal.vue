@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue'
 import type { Account, Category } from 'shared/types/database.types'
 import type { LancamentoFormData } from '../composables/useLancamento'
 import { REPETITION_FREQUENCIES, type RepetitionFrequency } from 'shared/constants/repetition'
+import { parseTransactionDateLocal } from '../utils/formatDate'
 import BaseModal from './BaseModal.vue'
 import AppDateInput from './AppDateInput.vue'
 
@@ -512,7 +513,7 @@ function applyInstallmentsInput() {
               <div class="flex-1 min-w-0">
                 <span class="text-xs text-content-main">Esta lançamento é uma cobrança fixa recorrente</span>
                 <p class="text-xs text-content-subtle mt-0.5">
-                  Todo mês no dia {{ new Date(form.transactionDate).getDate() || '[X]' }}, será gerado uma cobrança
+                  Todo mês no dia {{ parseTransactionDateLocal(form.transactionDate).getDate() || '[X]' }}, será gerado uma cobrança
                 </p>
               </div>
             </div>

@@ -21,6 +21,7 @@ import ConfirmDeleteModal from '../components/ConfirmDeleteModal.vue'
 import InstallmentScopeModal from '../components/InstallmentScopeModal.vue'
 import PayInvoiceModal from '../components/PayInvoiceModal.vue'
 import ExtratoCardLancamentosDrawer from '../components/ExtratoCardLancamentosDrawer.vue'
+import ExtratoInstallmentDrawer from '../components/ExtratoInstallmentDrawer.vue'
 import ExtratoSkeleton from '../components/ExtratoSkeleton.vue'
 import { useCreditCardInvoice } from '../composables/useCreditCardInvoice'
 
@@ -64,6 +65,7 @@ const {
   updateTransactionLocal,
   getTransactionById,
   getRawTransactionById,
+  getInstallmentGroupData,
   existingTags,
 } = useExtrato()
 
@@ -365,6 +367,7 @@ async function handleMarkPaid(id: string) {
 
 function handleEditTransaction(id: string) {
   handleCloseCardDrawer()
+  handleCloseInstallmentDrawer()
   const rawTransaction = getRawTransactionById(id)
   if (!rawTransaction) return
 
@@ -408,6 +411,7 @@ function handleCreateCard() {
 
 function handleDeleteTransaction(id: string) {
   handleCloseCardDrawer()
+  handleCloseInstallmentDrawer()
   const transaction = getTransactionById(id)
   if (!transaction) return
 
@@ -497,9 +501,9 @@ function cancelBulkDelete() {
   isBulkDeleteModalOpen.value = false
 }
 
-function handleViewMoreCards() {
-  // TODO: Navegar para página de cartões
-  console.log('Ver mais cartões')
+function handleViewMoreCards(cardId: string) {
+  const card = creditCardsList.value.find((c) => c.id === cardId) ?? null
+  selectedCardForDrawer.value = card
 }
 
 const selectedCardForDrawer = ref<ExtratoCreditCard | null>(null)
@@ -512,6 +516,25 @@ function handleCardClick(cardId: string) {
 function handleCloseCardDrawer() {
   selectedCardForDrawer.value = null
 }
+
+// Drawer de lançamento parcelado (parcelas do mesmo grupo)
+const selectedInstallmentGroupId = ref<string | null>(null)
+const selectedInstallmentGroupData = computed(() =>
+  selectedInstallmentGroupId.value ? getInstallmentGroupData(selectedInstallmentGroupId.value) : null
+)
+function handleOpenInstallmentDrawer(installmentGroupId: string) {
+  selectedInstallmentGroupId.value = installmentGroupId
+}
+function handleCloseInstallmentDrawer() {
+  selectedInstallmentGroupId.value = null
+}
+
+// Fechar drawer de parcelas quando o grupo ficar vazio (ex.: última parcela excluída)
+watch(selectedInstallmentGroupData, (data) => {
+  if (selectedInstallmentGroupId.value && !data) {
+    selectedInstallmentGroupId.value = null
+  }
+})
 
 // Pré-preenchimento ao adicionar lançamento a partir do drawer (cartão + mês da fatura)
 const initialCartaoCreditCardId = ref<string | null>(null)
@@ -700,6 +723,8 @@ const { pullDistance, isPulling, isRefreshing: ptrRefreshing } = usePullToRefres
         @mark-renda-received="handleMarkRendaReceived"
         @toggle-select="handleToggleSelect"
         @pay-invoice="handlePayInvoice"
+        @open-invoice-drawer="handleCardClick"
+        @open-installment-drawer="handleOpenInstallmentDrawer"
       />
       
       <!-- Exibição padrão (lista simples) -->
@@ -718,6 +743,8 @@ const { pullDistance, isPulling, isRefreshing: ptrRefreshing } = usePullToRefres
         @mark-renda-received="handleMarkRendaReceived"
         @toggle-select="handleToggleSelect"
         @pay-invoice="handlePayInvoice"
+        @open-invoice-drawer="handleCardClick"
+        @open-installment-drawer="handleOpenInstallmentDrawer"
       />
     </div>
 
@@ -844,6 +871,15 @@ const { pullDistance, isPulling, isRefreshing: ptrRefreshing } = usePullToRefres
       :card="selectedCardForDrawer"
       @close="handleCloseCardDrawer"
       @add="handleAddFromCardDrawer"
+      @edit="handleEditTransaction"
+      @delete="handleDeleteTransaction"
+    />
+
+    <!-- Drawer: parcelas do lançamento parcelado -->
+    <ExtratoInstallmentDrawer
+      :is-open="selectedInstallmentGroupId !== null"
+      :group-data="selectedInstallmentGroupData"
+      @close="handleCloseInstallmentDrawer"
       @edit="handleEditTransaction"
       @delete="handleDeleteTransaction"
     />

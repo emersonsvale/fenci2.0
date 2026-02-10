@@ -1,6 +1,7 @@
 import { ref, computed, watch } from 'vue'
 import { useSupabaseClient, useSupabaseUser } from '#imports'
 import type { Database, Transaction, Category, CreditCard, Account, Budget, Investment, RecurringTransaction, CreditCardInvoice } from 'shared/types/database.types'
+import { parseTransactionDateLocal } from '../utils/formatDate'
 
 interface DashboardPeriod {
   month: number
@@ -123,7 +124,7 @@ export function useDashboard() {
   // Transações do período atual
   const periodTransactions = computed(() => {
     return transactions.value.filter((t) => {
-      const transactionDate = new Date(t.transaction_date)
+      const transactionDate = parseTransactionDateLocal(t.transaction_date)
       const transactionMonth = transactionDate.getMonth()
       const transactionYear = transactionDate.getFullYear()
       return transactionMonth === selectedPeriod.value.month && transactionYear === selectedPeriod.value.year
@@ -238,7 +239,7 @@ export function useDashboard() {
       }
 
       const monthTransactions = transactions.value.filter((t) => {
-        const transactionDate = new Date(t.transaction_date)
+        const transactionDate = parseTransactionDateLocal(t.transaction_date)
         return transactionDate.getMonth() === month && transactionDate.getFullYear() === year
       })
 
@@ -295,13 +296,22 @@ export function useDashboard() {
     return result.sort((a, b) => b.value - a.value).slice(0, 5)
   })
 
-  // Contas pagas do mês (apenas despesas de conta, não cartão — igual ao extrato)
+  // Contas pagas do mês (apenas despesas de conta, não cartão — valores monetários)
   const contasPagas = computed(() => {
+    const toNum = (v: unknown) => (typeof v === 'number' ? v : Number(v) || 0)
     const periodo = periodTransactions.value.filter((t) => t.type === 'expense' && !t.credit_card_id)
-    const pagas = periodo.filter((t) => t.is_paid).length
-    const total = periodo.length
 
-    return { pagas, total: total || 1 }
+    const valorPago = periodo
+      .filter((t) => t.is_paid)
+      .reduce((sum, t) => sum + Math.abs(toNum(t.amount)), 0)
+
+    const valorPendente = periodo
+      .filter((t) => !t.is_paid)
+      .reduce((sum, t) => sum + Math.abs(toNum(t.amount)), 0)
+
+    const totalValor = valorPago + valorPendente
+
+    return { valorPago, valorPendente, totalValor: totalValor || 1 }
   })
 
   // Vencimentos próximos: apenas lançamentos que NÃO são de cartão + faturas de cartão
@@ -318,7 +328,7 @@ export function useDashboard() {
           id: t.id,
           descricao: t.description,
           tipo: category?.name || 'Outros',
-          vencimento: new Date(t.transaction_date),
+          vencimento: parseTransactionDateLocal(t.transaction_date),
           valor: Math.abs(toNum(t.amount)),
           pago: false,
         }

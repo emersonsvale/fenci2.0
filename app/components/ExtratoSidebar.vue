@@ -30,7 +30,7 @@ const CAROUSEL_INACTIVE_SCALE = 0.78
 export interface ExtratoSidebarProps {
   creditCards: ExtratoCreditCard[]
   totalCreditCards: number
-  contasPagas: { pagas: number; total: number }
+  contasPagas: { valorPago: number; valorPendente: number; totalValor: number }
   monthName: string
   loading?: boolean
 }
@@ -40,7 +40,7 @@ const props = withDefaults(defineProps<ExtratoSidebarProps>(), {
 })
 
 const emit = defineEmits<{
-  'view-more-cards': []
+  'view-more-cards': [cardId: string]
   'card-click': [cardId: string]
 }>()
 
@@ -57,7 +57,7 @@ function onCardClick(cardId: string, event: Event) {
   const target = event.target as HTMLElement
   if (target.closest('[data-ver-mais]')) {
     event.stopPropagation()
-    emit('view-more-cards')
+    // O botão "Ver mais" emite view-more-cards; aqui só evitamos que dispare card-click
   } else {
     emit('card-click', cardId)
   }
@@ -265,7 +265,7 @@ function onCarouselMouseLeave() {
                     type="button"
                     data-ver-mais
                     class="w-full text-center text-caption text-content-subtle hover:text-content-main transition-colors py-1.5"
-                    @click.prevent="emit('view-more-cards')"
+                    @click.prevent="emit('view-more-cards', card.id)"
                   >
                     Ver mais
                   </button>

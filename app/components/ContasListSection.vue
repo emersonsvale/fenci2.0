@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useCurrency } from '~/composables/useCurrency'
 
 /**
  * ContasListSection - Seção de lista (cartões ou contas bancárias)
- * Lista items com ícone, nome e identificador
+ * Lista items com ícone, nome e identificador.
+ * Para variant="card" pode exibir valor da fatura do mês (invoiceAmount) e ao clicar abre drawer de lançamentos.
  */
+
+const { formatCurrency } = useCurrency()
 
 export interface ListItem {
   id: string
@@ -12,6 +16,10 @@ export interface ListItem {
   identifier: string
   icon?: string | null
   color?: string
+  /** Valor da fatura do mês (apenas para cartões); ao clicar no item abre drawer com lançamentos */
+  invoiceAmount?: number
+  /** Saldo atual da conta (apenas para contas bancárias); ao clicar no item abre drawer com lançamentos */
+  balance?: number
 }
 
 export interface ContasListSectionProps {
@@ -149,9 +157,23 @@ const headerIcon = computed(() => {
                 {{ getItemIcon(item) }}
               </span>
             </div>
-            <span class="text-body-sm text-content-main truncate">
-              {{ item.name }}
-            </span>
+            <div class="min-w-0 flex-1">
+              <span class="text-body-sm text-content-main truncate block">
+                {{ item.name }}
+              </span>
+              <span
+                v-if="variant === 'card' && item.invoiceAmount != null"
+                class="text-caption font-medium text-content-main block mt-0.5"
+              >
+                {{ formatCurrency(item.invoiceAmount) }}
+              </span>
+              <span
+                v-if="variant === 'bank' && item.balance != null"
+                class="text-caption font-medium text-content-main block mt-0.5"
+              >
+                {{ formatCurrency(item.balance) }}
+              </span>
+            </div>
           </div>
           <div class="flex items-center gap-1 flex-shrink-0">
             <button

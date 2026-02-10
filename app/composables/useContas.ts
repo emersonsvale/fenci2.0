@@ -22,6 +22,8 @@ export interface RendaDisplay {
   isActive: boolean
   hasLimit: boolean
   endDate: string | null
+  accountId?: string
+  categoryId?: string
 }
 
 export interface CategoryDisplay {
@@ -50,6 +52,7 @@ export interface AccountDisplay {
   type: string
   color: string
   icon: string | null
+  balance: number
 }
 
 export interface RendaFormData {
@@ -89,6 +92,25 @@ export interface AccountFormData {
   icon?: string
 }
 
+/** Lançamento da fatura do cartão para exibição no drawer */
+export interface CardInvoiceTransaction {
+  id: string
+  description: string
+  amount: number
+  transactionDate: string
+  categoryName: string | null
+}
+
+/** Lançamento de conta para exibição no drawer (extrato da conta) */
+export interface AccountTransaction {
+  id: string
+  description: string
+  amount: number
+  transactionDate: string
+  categoryName: string | null
+  type: 'income' | 'expense' | 'transfer'
+}
+
 /**
  * useContas - Composable para gerenciar dados da página de Contas
  */
@@ -104,6 +126,8 @@ export function useContas() {
   const creditCards = useState<CreditCard[]>('contas-creditCards', () => [])
   const accounts = useState<Account[]>('contas-accounts', () => [])
   const categoryTotals = useState<Record<string, number>>('contas-categoryTotals', () => ({}))
+  /** Total da fatura do mês por credit_card_id (preenchido por fetchCreditCardInvoicesForMonth) */
+  const invoiceTotalsByCard = useState<Record<string, number>>('contas-invoiceTotalsByCard', () => ({}))
 
   // Nome do usuário
   const userName = computed(() => {
@@ -132,6 +156,8 @@ export function useContas() {
         isActive: r.is_active ?? true,
         hasLimit: !!r.end_date,
         endDate: r.end_date,
+        accountId: r.account_id ?? undefined,
+        categoryId: r.category_id ?? undefined,
       }))
   })
 
@@ -190,6 +216,7 @@ export function useContas() {
         type: a.type,
         color: a.color || '#6B7280',
         icon: a.icon,
+        balance: Number(a.current_balance ?? 0),
       }))
   })
 
@@ -303,6 +330,126 @@ export function useContas() {
       categoryTotals.value = totals
     } catch (err) {
       console.error('Erro ao buscar totais por categoria:', err)
+    }
+  }
+
+  /**
+   * Buscar totais de fatura por cartão para um mês (reference_month = primeiro dia do mês).
+   * Preenche invoiceTotalsByCard.
+   */
+  async function fetchCreditCardInvoicesForMonth(month: number, year: number) {
+    const { data: authData } = await supabase.auth.getUser()
+    const userId = authData?.user?.id
+    if (!userId) return
+
+    const referenceMonthDate = `${year}-${String(month + 1).padStart(2, '0')}-01`
+    try {
+      const { data: invoices, error: invError } = await supabase
+        .from('credit_card_invoices')
+        .select('credit_card_id, total_amount')
+        .eq('user_id', userId)
+        .eq('reference_month', referenceMonthDate)
+
+      if (invError) throw invError
+
+      const byCard: Record<string, number> = {}
+      if (invoices) {
+        for (const inv of invoices) {
+          byCard[inv.credit_card_id] = Number(inv.total_amount ?? 0)
+        }
+      }
+      invoiceTotalsByCard.value = byCard
+    } catch (err) {
+      console.error('Erro ao buscar faturas por cartão:', err)
+      invoiceTotalsByCard.value = {}
+    }
+  }
+
+  /**
+   * Buscar lançamentos (compras) do cartão que entram na fatura do mês selecionado.
+   * Regra: fatura do mês M contém compras do mês M-1.
+   */
+  async function getCardInvoiceTransactions(
+    cardId: string,
+    month: number,
+    year: number
+  ): Promise<{ transactions: CardInvoiceTransaction[]; total: number }> {
+    const { data: authData } = await supabase.auth.getUser()
+    const userId = authData?.user?.id
+    if (!userId) return { transactions: [], total: 0 }
+
+    const prevDate = new Date(year, month - 1, 1)
+    const prevMonth = prevDate.getMonth()
+    const prevYear = prevDate.getFullYear()
+    const startDate = new Date(prevYear, prevMonth, 1).toISOString().split('T')[0]
+    const endDate = new Date(prevYear, prevMonth + 1, 0).toISOString().split('T')[0]
+
+    try {
+      const { data: rows, error } = await supabase
+        .from('transactions')
+        .select('id, description, amount, transaction_date, category_id, categories(name)')
+        .eq('user_id', userId)
+        .eq('credit_card_id', cardId)
+        .gte('transaction_date', startDate)
+        .lte('transaction_date', endDate)
+        .order('transaction_date', { ascending: true })
+
+      if (error) throw error
+
+      const transactions: CardInvoiceTransaction[] = (rows || []).map((t) => ({
+        id: t.id,
+        description: t.description || '',
+        amount: Math.abs(Number(t.amount)),
+        transactionDate: (t.transaction_date || '').toString().split('T')[0],
+        categoryName: (t.categories as { name: string } | null)?.name ?? null,
+      }))
+      const total = transactions.reduce((sum, t) => sum + t.amount, 0)
+      return { transactions, total }
+    } catch (err) {
+      console.error('Erro ao buscar lançamentos da fatura do cartão:', err)
+      return { transactions: [], total: 0 }
+    }
+  }
+
+  /**
+   * Buscar lançamentos da conta no mês/ano selecionado (transações onde account_id = accountId).
+   */
+  async function getAccountTransactions(
+    accountId: string,
+    month: number,
+    year: number
+  ): Promise<{ transactions: AccountTransaction[] }> {
+    const { data: authData } = await supabase.auth.getUser()
+    const userId = authData?.user?.id
+    if (!userId) return { transactions: [] }
+
+    const startDate = new Date(year, month, 1).toISOString().split('T')[0]
+    const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0]
+
+    try {
+      const { data: rows, error } = await supabase
+        .from('transactions')
+        .select('id, description, amount, transaction_date, type, category_id, categories(name)')
+        .eq('user_id', userId)
+        .eq('account_id', accountId)
+        .gte('transaction_date', startDate)
+        .lte('transaction_date', endDate)
+        .order('transaction_date', { ascending: false })
+
+      if (error) throw error
+
+      const transactions: AccountTransaction[] = (rows || []).map((t) => ({
+        id: t.id,
+        description: t.description || '',
+        amount: Number(t.amount),
+        transactionDate: (t.transaction_date || '').toString().split('T')[0],
+        categoryName: (t.categories as { name: string } | null)?.name ?? null,
+        type: (t.type as 'income' | 'expense' | 'transfer') || 'expense',
+      }))
+      return { transactions }
+    } catch (err) {
+      console.error('Erro ao buscar lançamentos da conta:', err)
+      return { transactions: [] }
     }
   }
 
@@ -775,5 +922,13 @@ export function useContas() {
     // Refresh
     fetchContasData,
     fetchCategoryTotals,
+
+    // Faturas de cartão
+    invoiceTotalsByCard,
+    fetchCreditCardInvoicesForMonth,
+    getCardInvoiceTransactions,
+
+    // Lançamentos de conta
+    getAccountTransactions,
   }
 }

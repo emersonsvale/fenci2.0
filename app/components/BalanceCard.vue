@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { useCurrency } from '~/composables/useCurrency'
+import { usePrivacyMode } from '~/composables/usePrivacyMode'
 
 /**
  * BalanceCard - Card de balanço financeiro
@@ -18,17 +19,8 @@ const props = withDefaults(defineProps<BalanceCardProps>(), {
   loading: false,
 })
 
-const { formatCurrency: formatCurrencyBase } = useCurrency()
-const showValues = ref(true)
-
-function formatCurrency(value: number): string {
-  if (!showValues.value) return '••••••'
-  return formatCurrencyBase(value)
-}
-
-function toggleVisibility() {
-  showValues.value = !showValues.value
-}
+const { formatCurrency } = useCurrency()
+const { isPrivacyMode, togglePrivacyMode } = usePrivacyMode()
 </script>
 
 <template>
@@ -39,11 +31,11 @@ function toggleVisibility() {
       <button
         type="button"
         class="p-1.5 rounded-lg hover:bg-surface-overlay transition-colors"
-        :title="showValues ? 'Ocultar valores' : 'Mostrar valores'"
-        @click="toggleVisibility"
+        :title="isPrivacyMode ? 'Mostrar valores' : 'Ocultar valores'"
+        @click="togglePrivacyMode"
       >
         <span class="material-symbols-outlined text-lg text-content-subtle">
-          {{ showValues ? 'visibility' : 'visibility_off' }}
+          {{ isPrivacyMode ? 'visibility_off' : 'visibility' }}
         </span>
       </button>
     </div>

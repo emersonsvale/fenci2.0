@@ -30,6 +30,8 @@ const emit = defineEmits<{
   'mark-renda-received': [payload: { recurringId: string; transactionDate: string }]
   'toggle-select': [id: string]
   'pay-invoice': [payload: { creditCardId: string; invoiceId?: string; referenceMonth?: string; amount: number; dueDate?: string }]
+  'open-invoice-drawer': [creditCardId: string]
+  'open-installment-drawer': [installmentGroupId: string]
 }>()
 
 const selectedSet = computed(() =>
@@ -99,6 +101,8 @@ function isSelected(id: string): boolean {
           @mark-renda-received="emit('mark-renda-received', $event)"
           @toggle-select="emit('toggle-select', $event)"
           @pay-invoice="emit('pay-invoice', $event)"
+          @open-invoice-drawer="emit('open-invoice-drawer', $event)"
+          @open-installment-drawer="emit('open-installment-drawer', $event)"
         />
       </TransitionGroup>
     </template>
