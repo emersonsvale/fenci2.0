@@ -435,19 +435,51 @@ export function useExtrato() {
     }
   })
 
-  // Contas pagas do mês (apenas despesas de conta, não cartão — valores monetários)
+  // Contas pagas do mês (despesas de conta + faturas do mês de referência — igual ao Dashboard)
   const contasPagas = computed(() => {
     const toNum = (v: unknown) => (typeof v === 'number' ? v : Number(v) || 0)
-    const despesas = periodTransactions.value.filter((t) => t.type === 'expense' && !t.credit_card_id)
+    const monthKey = `${selectedPeriod.value.year}-${String(selectedPeriod.value.month + 1).padStart(2, '0')}`
+    // Despesas de conta; exclui "Pagamento fatura cartão" para não duplicar com faturas
+    const despesas = periodTransactions.value.filter(
+      (t) =>
+        t.type === 'expense' &&
+        !t.credit_card_id &&
+        !(t.invoice_id && t.type === 'expense')
+    )
 
-    const valorPago = despesas
+    const valorPagoConta = despesas
       .filter((t) => t.is_paid)
       .reduce((sum, t) => sum + Math.abs(toNum(t.amount)), 0)
-
-    const valorPendente = despesas
+    const valorPendenteConta = despesas
       .filter((t) => !t.is_paid)
       .reduce((sum, t) => sum + Math.abs(toNum(t.amount)), 0)
 
+    // Faturas do mês: valor = soma compras do mês anterior por cartão (igual à lista do extrato)
+    const prevMonthCartao = previousMonthCardTransactions.value
+    const byCard = new Map<string, number>()
+    for (const t of prevMonthCartao) {
+      const cid = t.credit_card_id!
+      byCard.set(cid, (byCard.get(cid) ?? 0) + Math.abs(toNum(t.amount)))
+    }
+    let faturasPagas = 0
+    let faturasPendentes = 0
+    for (const [creditCardId, totalCard] of byCard) {
+      if (totalCard <= 0) continue
+      const inv = invoices.value.find((i) => {
+        if (i.credit_card_id !== creditCardId) return false
+        const ref = (i.reference_month ?? '').slice(0, 7)
+        return ref === monthKey
+      })
+      const isPaid =
+        inv &&
+        (inv.status === 'paid' ||
+          (inv.paid_amount != null && toNum(inv.paid_amount) >= totalCard))
+      if (isPaid) faturasPagas += totalCard
+      else faturasPendentes += totalCard
+    }
+
+    const valorPago = valorPagoConta + faturasPagas
+    const valorPendente = valorPendenteConta + faturasPendentes
     const totalValor = valorPago + valorPendente
 
     return { valorPago, valorPendente, totalValor: totalValor || 1 }

@@ -93,6 +93,7 @@ export function useDashboard() {
   const budgets = ref<Budget[]>([])
   const investments = ref<Investment[]>([])
   const recurringIncomes = ref<RecurringTransaction[]>([])
+  const recurringExpenses = ref<RecurringTransaction[]>([])
   const creditCardInvoices = ref<CreditCardInvoice[]>([])
 
   // Evita fetch duplo: só refetch quando o userId realmente mudar (ex.: outro login)
@@ -121,13 +122,18 @@ export function useDashboard() {
     }
   })
 
-  // Transações do período atual
+  // Transações do período atual (mesmo critério do extrato: YYYY-MM-DD por partes da string)
   const periodTransactions = computed(() => {
     return transactions.value.filter((t) => {
-      const transactionDate = parseTransactionDateLocal(t.transaction_date)
-      const transactionMonth = transactionDate.getMonth()
-      const transactionYear = transactionDate.getFullYear()
-      return transactionMonth === selectedPeriod.value.month && transactionYear === selectedPeriod.value.year
+      const dateParts = (t.transaction_date || '').toString().split('T')[0].split('-')
+      const transactionYear = parseInt(dateParts[0], 10)
+      const transactionMonth = parseInt(dateParts[1], 10) - 1
+      return (
+        !Number.isNaN(transactionYear) &&
+        !Number.isNaN(transactionMonth) &&
+        transactionMonth === selectedPeriod.value.month &&
+        transactionYear === selectedPeriod.value.year
+      )
     })
   })
 
@@ -148,6 +154,17 @@ export function useDashboard() {
         return true
       })
       .reduce((sum, inv) => sum + Math.max(0, toNum(inv.total_amount) - toNum(inv.paid_amount)), 0)
+
+    if (isSelectedMonthFuture.value) {
+      const aPagar = projectedSaidasRecorrentesSelectedMonth.value + totalFaturasCartao
+      const receitaMensal = projectedReceitaSelectedMonth.value
+      return {
+        aPagar,
+        receitaMensal,
+        aReceber: receitaMensal,
+        totalRecorrentes: projectedReceitaSelectedMonth.value + projectedSaidasRecorrentesSelectedMonth.value,
+      }
+    }
 
     // A pagar: despesas de conta pendentes + faturas não pagas
     const aPagarConta = periodTxConta
@@ -193,32 +210,162 @@ export function useDashboard() {
     }
   })
 
+  // Transações de cartão do mês ANTERIOR (compras que entram na fatura do mês selecionado) — mesma regra do extrato
+  const previousMonthCardTransactions = computed(() => {
+    const { month, year } = selectedPeriod.value
+    const prevDate = new Date(year, month - 1, 1)
+    const prevMonth = prevDate.getMonth()
+    const prevYear = prevDate.getFullYear()
+    return transactions.value.filter((t) => {
+      if (!t.credit_card_id) return false
+      const dateParts = (t.transaction_date || '').toString().split('T')[0].split('-')
+      const transactionYear = parseInt(dateParts[0], 10)
+      const transactionMonth = parseInt(dateParts[1], 10) - 1
+      return (
+        !Number.isNaN(transactionYear) &&
+        !Number.isNaN(transactionMonth) &&
+        transactionMonth === prevMonth &&
+        transactionYear === prevYear
+      )
+    })
+  })
+
+  // Faturas do mês: valor = soma das compras do mês anterior por cartão (igual extrato), não invoice.total_amount
+  const monthKeyRef = computed(() =>
+    `${selectedPeriod.value.year}-${String(selectedPeriod.value.month + 1).padStart(2, '0')}`
+  )
+  const paidInvoicesAmountForMonth = computed(() => {
+    const toNum = (v: unknown) => (typeof v === 'number' ? v : Number(v) || 0)
+    const prevMonthCartao = previousMonthCardTransactions.value
+    const byCard = new Map<string, number>()
+    for (const t of prevMonthCartao) {
+      const cid = t.credit_card_id!
+      byCard.set(cid, (byCard.get(cid) ?? 0) + Math.abs(toNum(t.amount)))
+    }
+    let total = 0
+    for (const [creditCardId, totalCard] of byCard) {
+      if (totalCard <= 0) continue
+      const inv = creditCardInvoices.value.find((i) => {
+        if (i.credit_card_id !== creditCardId) return false
+        return (i.reference_month || '').slice(0, 7) === monthKeyRef.value
+      })
+      const isPaid =
+        inv &&
+        ((inv.status || '').toLowerCase() === 'paid' ||
+          (inv.paid_amount != null && toNum(inv.paid_amount) >= totalCard))
+      if (isPaid) total += totalCard
+    }
+    return total
+  })
+  const unpaidInvoicesAmountForMonth = computed(() => {
+    const toNum = (v: unknown) => (typeof v === 'number' ? v : Number(v) || 0)
+    const prevMonthCartao = previousMonthCardTransactions.value
+    const byCard = new Map<string, number>()
+    for (const t of prevMonthCartao) {
+      const cid = t.credit_card_id!
+      byCard.set(cid, (byCard.get(cid) ?? 0) + Math.abs(toNum(t.amount)))
+    }
+    let total = 0
+    for (const [creditCardId, totalCard] of byCard) {
+      if (totalCard <= 0) continue
+      const inv = creditCardInvoices.value.find((i) => {
+        if (i.credit_card_id !== creditCardId) return false
+        return (i.reference_month || '').slice(0, 7) === monthKeyRef.value
+      })
+      const isPaid =
+        inv &&
+        ((inv.status || '').toLowerCase() === 'paid' ||
+          (inv.paid_amount != null && toNum(inv.paid_amount) >= totalCard))
+      if (!isPaid) total += totalCard
+    }
+    return total
+  })
+
+  // Mês selecionado é futuro? (para mostrar projeções em todo o dashboard)
+  const isSelectedMonthFuture = computed(() => {
+    const today = new Date()
+    const realMonth = today.getMonth()
+    const realYear = today.getFullYear()
+    const { month, year } = selectedPeriod.value
+    return year > realYear || (year === realYear && month > realMonth)
+  })
+
+  // Valores projetados para o mês selecionado (quando é futuro: rendas e despesas recorrentes mensais)
+  const projectedReceitaSelectedMonth = computed(() => {
+    const toNum = (v: unknown) => (typeof v === 'number' ? v : Number(v) || 0)
+    const { month, year } = selectedPeriod.value
+    const lastDay = new Date(year, month + 1, 0).getDate()
+    const monthStart = `${year}-${String(month + 1).padStart(2, '0')}-01`
+    const monthEnd = `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+    return recurringIncomes.value
+      .filter((r) => r.is_active !== false && r.frequency === 'monthly')
+      .filter((r) => {
+        const startStr = r.start_date ? r.start_date.slice(0, 10) : null
+        const endStr = r.end_date ? r.end_date.slice(0, 10) : null
+        if (startStr && monthEnd < startStr) return false
+        if (endStr && monthStart > endStr) return false
+        return true
+      })
+      .reduce((sum, r) => sum + toNum(r.amount), 0)
+  })
+  const projectedSaidasRecorrentesSelectedMonth = computed(() => {
+    const toNum = (v: unknown) => (typeof v === 'number' ? v : Number(v) || 0)
+    const { month, year } = selectedPeriod.value
+    const lastDay = new Date(year, month + 1, 0).getDate()
+    const monthStart = `${year}-${String(month + 1).padStart(2, '0')}-01`
+    const monthEnd = `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+    return recurringExpenses.value
+      .filter((r) => r.is_active !== false && r.frequency === 'monthly')
+      .filter((r) => {
+        const startStr = r.start_date ? r.start_date.slice(0, 10) : null
+        const endStr = r.end_date ? r.end_date.slice(0, 10) : null
+        if (startStr && monthEnd < startStr) return false
+        if (endStr && monthStart > endStr) return false
+        return true
+      })
+      .reduce((sum, r) => sum + Math.abs(toNum(r.amount)), 0)
+  })
+
   // Entradas e saídas totais do período (balanço do mês)
   const balanceData = computed(() => {
     const periodo = periodTransactions.value
     const toNum = (v: unknown) => (typeof v === 'number' ? v : Number(v) || 0)
+
+    if (isSelectedMonthFuture.value) {
+      const entradas = projectedReceitaSelectedMonth.value
+      const saidas = projectedSaidasRecorrentesSelectedMonth.value + unpaidInvoicesAmountForMonth.value
+      return {
+        saldo: entradas - saidas,
+        entradas,
+        saidas,
+      }
+    }
 
     // Entradas = apenas o que já foi recebido (pago); aguardando e atrasado não entram
     const entradas = periodo
       .filter((t) => t.type === 'income' && t.is_paid)
       .reduce((sum, t) => sum + toNum(t.amount), 0)
 
-    // Saídas: despesas pagas do período
-    const saidas = periodo
-      .filter((t) => t.type === 'expense' && t.is_paid)
+    // Saídas: despesas de conta pagas (exclui credit_card_id e "Pagamento fatura cartão") + faturas do mês pagas
+    const saidasTransacoes = periodo
+      .filter(
+        (t) =>
+          t.type === 'expense' &&
+          t.is_paid &&
+          !t.credit_card_id &&
+          !(t.invoice_id && t.type === 'expense')
+      )
       .reduce((sum, t) => sum + Math.abs(toNum(t.amount)), 0)
-
-    // Saldo = entradas recebidas - saídas pagas
-    const saldo = entradas - saidas
+    const saidas = saidasTransacoes + paidInvoicesAmountForMonth.value
 
     return {
-      saldo,
+      saldo: entradas - saidas,
       entradas,
       saidas,
     }
   })
 
-  // Dados do gráfico - últimos 6 meses (entradas = todas as rendas; saídas = despesas pagas)
+  // Dados do gráfico: últimos 6 meses + mês atual + próximos 2 meses (mesma lógica do card Saídas para saídas)
   const chartSeries = computed<ChartSeries[]>(() => {
     const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
     const currentMonth = selectedPeriod.value.month
@@ -228,33 +375,127 @@ export function useDashboard() {
     const entradasData: ChartDataPoint[] = []
     const saidasData: ChartDataPoint[] = []
 
-    // Últimos 6 meses incluindo o atual
-    for (let i = 5; i >= 0; i--) {
+    // i de 5 a -2: 6 meses atrás, mês atual, 2 meses à frente
+    for (let i = 5; i >= -2; i--) {
       let month = currentMonth - i
       let year = currentYear
 
       if (month < 0) {
         month += 12
         year -= 1
+      } else if (month > 11) {
+        month -= 12
+        year += 1
       }
 
+      const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`
+
       const monthTransactions = transactions.value.filter((t) => {
-        const transactionDate = parseTransactionDateLocal(t.transaction_date)
-        return transactionDate.getMonth() === month && transactionDate.getFullYear() === year
+        const dateParts = (t.transaction_date || '').toString().split('T')[0].split('-')
+        const transactionYear = parseInt(dateParts[0], 10)
+        const transactionMonth = parseInt(dateParts[1], 10) - 1
+        return (
+          !Number.isNaN(transactionYear) &&
+          !Number.isNaN(transactionMonth) &&
+          transactionMonth === month &&
+          transactionYear === year
+        )
       })
 
-      // Entradas = apenas rendas já recebidas no mês (aguardando/atrasado não entram)
+      // Entradas = rendas já recebidas no mês
       const entradas = monthTransactions
         .filter((t) => t.type === 'income' && t.is_paid)
         .reduce((sum, t) => sum + toNum(t.amount), 0)
 
-      // Saídas = despesas pagas do mês
-      const saidas = monthTransactions
-        .filter((t) => t.type === 'expense' && t.is_paid)
+      // Saídas = despesas de conta pagas (sem cartão, sem "Pagamento fatura") + faturas do mês pagas
+      const saidasConta = monthTransactions
+        .filter(
+          (t) =>
+            t.type === 'expense' &&
+            t.is_paid &&
+            !t.credit_card_id &&
+            !(t.invoice_id && t.type === 'expense')
+        )
         .reduce((sum, t) => sum + Math.abs(toNum(t.amount)), 0)
 
-      entradasData.push({ label: months[month], value: entradas })
-      saidasData.push({ label: months[month], value: saidas })
+      const prevDate = new Date(year, month - 1, 1)
+      const prevMonth = prevDate.getMonth()
+      const prevYear = prevDate.getFullYear()
+      const prevMonthCartao = transactions.value.filter((t) => {
+        if (!t.credit_card_id) return false
+        const dateParts = (t.transaction_date || '').toString().split('T')[0].split('-')
+        const transactionYear = parseInt(dateParts[0], 10)
+        const transactionMonth = parseInt(dateParts[1], 10) - 1
+        return (
+          !Number.isNaN(transactionYear) &&
+          !Number.isNaN(transactionMonth) &&
+          transactionMonth === prevMonth &&
+          transactionYear === prevYear
+        )
+      })
+      const byCard = new Map<string, number>()
+      for (const t of prevMonthCartao) {
+        const cid = t.credit_card_id!
+        byCard.set(cid, (byCard.get(cid) ?? 0) + Math.abs(toNum(t.amount)))
+      }
+      let saidasFaturas = 0
+      for (const [creditCardId, totalCard] of byCard) {
+        if (totalCard <= 0) continue
+        const inv = creditCardInvoices.value.find((i) => {
+          if (i.credit_card_id !== creditCardId) return false
+          return (i.reference_month || '').slice(0, 7) === monthKey
+        })
+        const isPaid =
+          inv &&
+          ((inv.status || '').toLowerCase() === 'paid' ||
+            (inv.paid_amount != null && toNum(inv.paid_amount) >= totalCard))
+        if (isPaid) saidasFaturas += totalCard
+      }
+
+      let saidas = saidasConta + saidasFaturas
+
+      // Mês futuro = após a data de HOJE (não o mês selecionado), para que Mar/Abr/Mai etc. mostrem projeção quando ainda não ocorreram
+      const today = new Date()
+      const realMonth = today.getMonth()
+      const realYear = today.getFullYear()
+      const isFutureMonth =
+        year > realYear || (year === realYear && month > realMonth)
+      if (isFutureMonth) {
+        const lastDayOfMonth = new Date(year, month + 1, 0).getDate()
+        // Entradas projetadas: rendas recorrentes ativas que ocorrem nesse mês
+        const entradasProjetadas = recurringIncomes.value
+          .filter((r) => r.is_active !== false)
+          .filter((r) => {
+            if (r.frequency !== 'monthly') return false
+            const startStr = r.start_date ? r.start_date.slice(0, 10) : null
+            const endStr = r.end_date ? r.end_date.slice(0, 10) : null
+            const monthStart = `${year}-${String(month + 1).padStart(2, '0')}-01`
+            const monthEnd = `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDayOfMonth).padStart(2, '0')}`
+            if (startStr && monthEnd < startStr) return false
+            if (endStr && monthStart > endStr) return false
+            return true
+          })
+          .reduce((sum, r) => sum + toNum(r.amount), 0)
+        // Saídas projetadas: despesas recorrentes ativas que ocorrem nesse mês
+        const saidasProjetadas = recurringExpenses.value
+          .filter((r) => r.is_active !== false)
+          .filter((r) => {
+            if (r.frequency !== 'monthly') return false
+            const startStr = r.start_date ? r.start_date.slice(0, 10) : null
+            const endStr = r.end_date ? r.end_date.slice(0, 10) : null
+            const monthStart = `${year}-${String(month + 1).padStart(2, '0')}-01`
+            const monthEnd = `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDayOfMonth).padStart(2, '0')}`
+            if (startStr && monthEnd < startStr) return false
+            if (endStr && monthStart > endStr) return false
+            return true
+          })
+          .reduce((sum, r) => sum + Math.abs(toNum(r.amount)), 0)
+        entradasData.push({ label: months[month], value: entradasProjetadas })
+        saidasData.push({ label: months[month], value: saidasProjetadas })
+      } else {
+        entradasData.push({ label: months[month], value: entradas })
+        saidasData.push({ label: months[month], value: saidas })
+      }
     }
 
     return [
@@ -263,28 +504,47 @@ export function useDashboard() {
     ]
   })
 
-  // Gastos por categoria
+  // Gastos por categoria (mês selecionado: real ou projetado quando futuro)
   const categorySummary = computed<CategorySummary[]>(() => {
-    const periodo = periodTransactions.value.filter((t) => t.type === 'expense' && t.is_paid)
-    const totalGasto = periodo.reduce((sum, t) => sum + Math.abs(t.amount), 0)
-
-    if (totalGasto === 0) return []
+    const toNum = (v: unknown) => (typeof v === 'number' ? v : Number(v) || 0)
+    const { month, year } = selectedPeriod.value
+    const lastDay = new Date(year, month + 1, 0).getDate()
+    const monthStart = `${year}-${String(month + 1).padStart(2, '0')}-01`
+    const monthEnd = `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
 
     const categoryMap = new Map<string, number>()
 
-    periodo.forEach((t) => {
-      if (t.category_id) {
-        const current = categoryMap.get(t.category_id) || 0
-        categoryMap.set(t.category_id, current + Math.abs(t.amount))
-      }
-    })
+    if (isSelectedMonthFuture.value) {
+      recurringExpenses.value
+        .filter((r) => r.is_active !== false && r.frequency === 'monthly')
+        .filter((r) => {
+          const startStr = r.start_date ? r.start_date.slice(0, 10) : null
+          const endStr = r.end_date ? r.end_date.slice(0, 10) : null
+          if (startStr && monthEnd < startStr) return false
+          if (endStr && monthStart > endStr) return false
+          return true
+        })
+        .forEach((r) => {
+          const key = r.category_id ?? '__sem_categoria__'
+          categoryMap.set(key, (categoryMap.get(key) ?? 0) + Math.abs(toNum(r.amount)))
+        })
+    } else {
+      const periodo = periodTransactions.value.filter((t) => t.type === 'expense' && t.is_paid)
+      periodo.forEach((t) => {
+        if (t.category_id) {
+          categoryMap.set(t.category_id, (categoryMap.get(t.category_id) ?? 0) + Math.abs(toNum(t.amount)))
+        }
+      })
+    }
+
+    const totalGasto = [...categoryMap.values()].reduce((s, v) => s + v, 0)
+    if (totalGasto === 0) return []
 
     const result: CategorySummary[] = []
-
     categoryMap.forEach((value, categoryId) => {
       const category = categories.value.find((c) => c.id === categoryId)
       result.push({
-        id: categoryId,
+        id: categoryId === '__sem_categoria__' ? 'outros' : categoryId,
         name: category?.name ?? 'Outros',
         icon: category?.icon ?? null,
         color: category?.color ?? null,
@@ -292,23 +552,37 @@ export function useDashboard() {
         percentage: Math.round((value / totalGasto) * 100),
       })
     })
-
     return result.sort((a, b) => b.value - a.value).slice(0, 5)
   })
 
-  // Contas pagas do mês (apenas despesas de conta, não cartão — valores monetários)
+  // Contas pagas do mês (despesas de conta + faturas do mês de referência — alinhado ao extrato)
   const contasPagas = computed(() => {
     const toNum = (v: unknown) => (typeof v === 'number' ? v : Number(v) || 0)
-    const periodo = periodTransactions.value.filter((t) => t.type === 'expense' && !t.credit_card_id)
 
-    const valorPago = periodo
+    if (isSelectedMonthFuture.value) {
+      const valorPago = 0
+      const valorPendente = projectedSaidasRecorrentesSelectedMonth.value + unpaidInvoicesAmountForMonth.value
+      const totalValor = valorPendente || 1
+      return { valorPago, valorPendente, totalValor }
+    }
+
+    // Só despesas de conta; exclui "Pagamento fatura cartão" (invoice_id + expense) para não duplicar com faturas
+    const periodo = periodTransactions.value.filter(
+      (t) =>
+        t.type === 'expense' &&
+        !t.credit_card_id &&
+        !(t.invoice_id && t.type === 'expense')
+    )
+
+    const valorPagoConta = periodo
       .filter((t) => t.is_paid)
       .reduce((sum, t) => sum + Math.abs(toNum(t.amount)), 0)
-
-    const valorPendente = periodo
+    const valorPendenteConta = periodo
       .filter((t) => !t.is_paid)
       .reduce((sum, t) => sum + Math.abs(toNum(t.amount)), 0)
 
+    const valorPago = valorPagoConta + paidInvoicesAmountForMonth.value
+    const valorPendente = valorPendenteConta + unpaidInvoicesAmountForMonth.value
     const totalValor = valorPago + valorPendente
 
     return { valorPago, valorPendente, totalValor: totalValor || 1 }
@@ -458,6 +732,7 @@ export function useDashboard() {
         budgetsResult,
         investmentsResult,
         recurringIncomesResult,
+        recurringExpensesResult,
         invoicesResult,
       ] = await Promise.all([
         // Transações do período relevante (6 meses antes do mês selecionado até fim do mês selecionado)
@@ -491,6 +766,13 @@ export function useDashboard() {
           .eq('user_id', userId)
           .eq('type', 'income'),
 
+        // Despesas recorrentes (recurring_transactions tipo expense) — para projeção nos meses futuros do gráfico
+        supabase
+          .from('recurring_transactions')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('type', 'expense'),
+
         // Faturas de cartão (vencimento no mês atual ou próximo)
         supabase
           .from('credit_card_invoices')
@@ -509,6 +791,7 @@ export function useDashboard() {
       if (budgetsResult.error) throw budgetsResult.error
       if (investmentsResult.error) throw investmentsResult.error
       if (recurringIncomesResult.error) throw recurringIncomesResult.error
+      if (recurringExpensesResult.error) throw recurringExpensesResult.error
       if (invoicesResult.error) throw invoicesResult.error
 
       // Atualizar estado (deduplicar por id para evitar itens repetidos)
@@ -519,6 +802,7 @@ export function useDashboard() {
       budgets.value = dedupeById(budgetsResult.data || [])
       investments.value = dedupeById(investmentsResult.data || [])
       recurringIncomes.value = dedupeById(recurringIncomesResult.data || [])
+      recurringExpenses.value = dedupeById(recurringExpensesResult.data || [])
       creditCardInvoices.value = dedupeById(invoicesResult.data || [])
       lastFetchedUserId.value = userId
     } catch (err) {

@@ -4,7 +4,6 @@ import {
   Chart,
   registerables,
   type ChartConfiguration,
-  type ChartType,
 } from 'chart.js'
 
 /**
@@ -39,10 +38,27 @@ Chart.register(...registerables)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 let chartInstance: Chart | null = null
 
+const visibleSeries = ref<boolean[]>([])
+
+function toggleSeries(index: number) {
+  if (visibleSeries.value[index] === undefined) return
+  visibleSeries.value = [...visibleSeries.value]
+  visibleSeries.value[index] = !visibleSeries.value[index]
+  if (chartInstance) {
+    const meta = chartInstance.getDatasetMeta(index)
+    meta.hidden = !visibleSeries.value[index]
+    chartInstance.update()
+  }
+}
+
 function buildChartConfig(): ChartConfiguration<'line'> | null {
   if (!canvasRef.value || !props.series.length) return null
 
   const labels = props.series[0]?.data?.map((d) => d.label) ?? []
+  const allValues = props.series.flatMap((s) => s.data.map((d) => d.value))
+  const maxValue = allValues.length ? Math.max(...allValues) : 0
+  const suggestedMax = maxValue <= 0 ? 100 : Math.ceil((maxValue * 1.15) / 100) * 100
+
   const datasets = props.series.map((serie, index) => ({
     label: serie.name,
     data: serie.data.map((d) => d.value),
@@ -55,6 +71,15 @@ function buildChartConfig(): ChartConfiguration<'line'> | null {
     borderWidth: 2,
     order: props.series.length - index,
   }))
+
+  function formatCurrency(value: number): string {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value)
+  }
 
   return {
     type: 'line',
@@ -70,6 +95,16 @@ function buildChartConfig(): ChartConfiguration<'line'> | null {
         legend: {
           display: false,
         },
+        tooltip: {
+          enabled: true,
+          callbacks: {
+            label(context) {
+              const value = context.parsed.y
+              const serieName = context.dataset.label ?? ''
+              return `${serieName}: ${formatCurrency(value)}`
+            },
+          },
+        },
       },
       scales: {
         x: {
@@ -82,6 +117,7 @@ function buildChartConfig(): ChartConfiguration<'line'> | null {
         },
         y: {
           beginAtZero: true,
+          suggestedMax,
           grid: {
             color: 'rgba(0,0,0,0.06)',
           },
@@ -107,6 +143,15 @@ function initChart() {
   if (!config) return
   destroyChart()
   chartInstance = new Chart(canvasRef.value, config)
+  if (visibleSeries.value.length !== props.series.length) {
+    visibleSeries.value = props.series.map(() => true)
+  }
+  visibleSeries.value.forEach((visible, index) => {
+    if (!visible && chartInstance) {
+      const meta = chartInstance.getDatasetMeta(index)
+      if (meta) meta.hidden = true
+    }
+  })
 }
 
 function destroyChart() {
@@ -171,12 +216,16 @@ watch(
         </template>
       </ClientOnly>
 
-      <!-- Legenda -->
+      <!-- Legenda clicável: mostra/oculta série no gráfico -->
       <div class="flex items-center justify-center gap-6 mt-4">
-        <div
-          v-for="serie in series"
+        <button
+          v-for="(serie, index) in series"
           :key="serie.name"
-          class="flex items-center gap-2"
+          type="button"
+          class="flex items-center gap-2 rounded-lg px-2 py-1 transition-opacity hover:opacity-90"
+          :class="{ 'opacity-40': !visibleSeries[index] }"
+          :aria-pressed="visibleSeries[index]"
+          @click="toggleSeries(index)"
         >
           <div
             class="w-3 h-3 rounded-full shrink-0"
@@ -185,7 +234,7 @@ watch(
           <span class="text-body-sm text-content-muted">
             {{ serie.name }}
           </span>
-        </div>
+        </button>
       </div>
     </template>
   </div>

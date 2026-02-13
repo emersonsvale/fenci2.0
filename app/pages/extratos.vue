@@ -9,6 +9,7 @@ import { useSidebar } from '../composables/useSidebar'
 import PageHeader from '../components/PageHeader.vue'
 import PullToRefreshIndicator from '../components/PullToRefreshIndicator.vue'
 import ExtratoFilters from '../components/ExtratoFilters.vue'
+import ExtratoListHeader from '../components/ExtratoListHeader.vue'
 import ExtratoList from '../components/ExtratoList.vue'
 import ExtratoListByDate from '../components/ExtratoListByDate.vue'
 import ExtratoSidebar from '../components/ExtratoSidebar.vue'
@@ -77,6 +78,7 @@ const {
   isSelected,
   toggle: toggleSelection,
   clear: clearSelection,
+  selectAll,
 } = useExtratoSelection()
 
 const { payInvoice, error: payInvoiceError, isSubmitting: isPayInvoiceSubmitting, clearError: clearPayInvoiceError } = useCreditCardInvoice()
@@ -138,6 +140,41 @@ const selectedTransactionsSummary = computed(() => {
   }
   return { soma, valorLiquido }
 })
+
+// Total da lista visível: entradas, saídas e valor líquido para o header
+const listSummary = computed(() => {
+  const list = filteredTransactions.value
+  let totalEntradas = 0
+  let totalSaidas = 0
+  for (const t of list) {
+    if (t.amount > 0) totalEntradas += t.amount
+    else totalSaidas += Math.abs(t.amount)
+  }
+  return {
+    totalEntradas,
+    totalSaidas,
+    valorLiquido: totalEntradas - totalSaidas,
+  }
+})
+
+// IDs visíveis na lista atual (para "Selecionar todos")
+const visibleTransactionIds = computed(() => {
+  if (activeTab.value === 'por_data') {
+    return groupedByDateTransactions.value.flatMap((g) => g.transactions.map((t) => t.id))
+  }
+  return filteredTransactions.value.map((t) => t.id)
+})
+
+const allSelected = computed(
+  () =>
+    hasSelection.value &&
+    visibleTransactionIds.value.length > 0 &&
+    selectedCount.value === visibleTransactionIds.value.length
+)
+
+function handleSelectAll() {
+  selectAll(visibleTransactionIds.value)
+}
 
 // Ajusta o período exibido para o mês da transação (evita item sumir após editar)
 function setPeriodToTransactionDate(transactionDate: string) {
@@ -705,6 +742,21 @@ const { pullDistance, isPulling, isRefreshing: ptrRefreshing } = usePullToRefres
           @update:date-filter="setDateFilter"
         />
       </div>
+
+      <!-- Header da lista: seleção e somas -->
+      <ExtratoListHeader
+        :has-items="visibleTransactionIds.length > 0"
+        :has-selection="hasSelection"
+        :selected-count="selectedCount"
+        :selection-soma="selectedTransactionsSummary.soma"
+        :selection-valor-liquido="selectedTransactionsSummary.valorLiquido"
+        :list-total-entradas="listSummary.totalEntradas"
+        :list-total-saidas="listSummary.totalSaidas"
+        :list-valor-liquido="listSummary.valorLiquido"
+        :all-selected="allSelected"
+        @select-all="handleSelectAll"
+        @clear-selection="clearSelection"
+      />
 
       <!-- Transactions List -->
       <!-- Exibição por data (agrupada) -->

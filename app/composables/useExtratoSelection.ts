@@ -23,6 +23,11 @@ export function useExtratoSelection() {
     selectedIds.value = new Set()
   }
 
+  /** Seleciona todos os IDs passados. */
+  function selectAll(ids: string[]) {
+    selectedIds.value = new Set(ids)
+  }
+
   const selectedCount = computed(() => selectedIds.value.size)
   const hasSelection = computed(() => selectedIds.value.size > 0)
   const selectedIdsList = computed(() => Array.from(selectedIds.value))
@@ -35,5 +40,6 @@ export function useExtratoSelection() {
     isSelected,
     toggle,
     clear,
+    selectAll,
   }
 }
