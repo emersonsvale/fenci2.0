@@ -29,6 +29,7 @@ const {
   list,
   isLoading,
   error: composableError,
+  totalsByPlanningId,
   fetchPlanejamentos,
   createPlanejamento,
   updatePlanejamento,
@@ -77,6 +78,11 @@ async function handleFormSubmit(data: PlanningFormData) {
   }
   isSubmitting.value = false
 }
+
+async function handleDeletePlanning(planning: Planning) {
+  if (!confirm(`Excluir o planejamento "${planning.name}"? Esta ação não pode ser desfeita.`)) return
+  await deletePlanejamento(planning.id)
+}
 </script>
 
 <template>
@@ -122,7 +128,12 @@ async function handleFormSubmit(data: PlanningFormData) {
       </div>
       <ul v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <li v-for="planning in list" :key="planning.id">
-          <PlanejamentoCard :planning="planning" />
+          <PlanejamentoCard
+            :planning="planning"
+            :totals="totalsByPlanningId[planning.id]"
+            @edit="openEditModal(planning)"
+            @delete="handleDeletePlanning(planning)"
+          />
         </li>
       </ul>
     </section>

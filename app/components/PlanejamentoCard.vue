@@ -2,10 +2,11 @@
 import { computed } from 'vue'
 import type { Planning } from 'shared/types/database.types'
 import { useCurrency } from '~/composables/useCurrency'
+import type { PlanningTotals } from '~/composables/usePlanejamentos'
 
 /**
  * PlanejamentoCard - Card de um planejamento na listagem
- * Exibe nome, tipo, status, datas e link para o detalhe
+ * Exibe nome, tipo, status, datas, totais (previsto/realizado/guardado), link para o detalhe e menu (editar/excluir)
  */
 
 const { formatCurrency: formatCurrencyBase } = useCurrency()
@@ -17,7 +18,21 @@ function formatCurrency(value: number | null): string {
 
 const props = defineProps<{
   planning: Planning
+  totals?: PlanningTotals | null
 }>()
+
+const emit = defineEmits<{
+  edit: []
+  delete: []
+}>()
+
+function handleEdit() {
+  emit('edit')
+}
+
+function handleDelete() {
+  emit('delete')
+}
 
 const statusLabel: Record<string, string> = {
   rascunho: 'Rascunho',
@@ -51,12 +66,15 @@ function formatDate(dateStr: string | null) {
 </script>
 
 <template>
-  <NuxtLink
-    :to="`/planejamentos/${planning.id}`"
+  <div
+    id="planejamento-card"
     class="block rounded-xl border border-default bg-surface-elevated p-5 transition-colors hover:border-primary/40 hover:bg-surface-overlay"
   >
     <div class="flex items-start justify-between gap-3">
-      <div class="min-w-0 flex-1">
+      <NuxtLink
+        :to="`/planejamentos/${planning.id}`"
+        class="min-w-0 flex-1"
+      >
         <h3 class="text-body-lg font-semibold text-content-main truncate">
           {{ planning.name }}
         </h3>
@@ -78,8 +96,44 @@ function formatDate(dateStr: string | null) {
             {{ formatCurrency(planning.budget_total) }}
           </span>
         </div>
+        <div v-if="totals" class="mt-4 grid grid-cols-3 gap-3 border-t border-default pt-4 text-body-sm">
+          <div>
+            <p class="text-content-subtle">Total previsto</p>
+            <p class="font-semibold text-content-main">{{ formatCurrency(totals.totalPlanned) }}</p>
+          </div>
+          <div>
+            <p class="text-content-subtle">Total realizado</p>
+            <p class="font-semibold text-content-main">{{ formatCurrency(totals.totalActual) }}</p>
+          </div>
+          <div>
+            <p class="text-content-subtle">
+              Total guardado
+            </p>
+            <p class="font-semibold text-content-main">{{ formatCurrency(totals.totalSaved) }}</p>
+          </div>
+        </div>
+      </NuxtLink>
+      <div class="flex shrink-0 flex-row items-center gap-1">
+        <button
+          type="button"
+          class="inline-flex shrink-0 p-1.5 rounded-lg hover:bg-surface-tertiary transition-colors"
+          aria-label="Editar planejamento"
+          @click.stop="handleEdit"
+        >
+          <span class="material-symbols-outlined text-content-subtle text-lg">edit</span>
+        </button>
+        <button
+          type="button"
+          class="inline-flex shrink-0 p-1.5 rounded-lg hover:bg-surface-tertiary transition-colors hover:text-error"
+          aria-label="Excluir planejamento"
+          @click.stop="handleDelete"
+        >
+          <span class="material-symbols-outlined text-content-subtle text-lg">delete</span>
+        </button>
       </div>
-      <span class="material-symbols-outlined text-content-tertiary shrink-0">arrow_forward</span>
     </div>
-  </NuxtLink>
+  </div>
 </template>
+
+<style scoped>
+</style>

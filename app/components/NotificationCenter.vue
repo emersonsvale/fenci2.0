@@ -1,22 +1,38 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useSupabaseClient, useSupabaseUser } from '#imports'
 import { useToast, type ToastVariant } from '../composables/useToast'
+import { useNotifications } from '../composables/useNotifications'
+import type { Notification } from 'shared/types/database.types'
 
 /**
- * NotificationCenter - Ícone de sino + dropdown com histórico de notificações
+ * NotificationCenter - Ícone de sino + dropdown com notificações do banco e histórico de toasts
  */
 
 const { notificationHistory, clearNotificationHistory } = useToast()
+const {
+  notifications,
+  unreadCount,
+  fetchNotifications,
+  markAsRead,
+  markAllAsRead,
+} = useNotifications()
+const user = useSupabaseUser()
+const supabase = useSupabaseClient()
+
 const isOpen = ref(false)
 const panelRef = ref<HTMLElement | null>(null)
 const buttonRef = ref<HTMLElement | null>(null)
 
-const hasNotifications = computed(() => notificationHistory.value.length > 0)
+const hasNotifications = computed(
+  () => notifications.value.length > 0 || notificationHistory.value.length > 0
+)
 const countLabel = computed(() => {
-  const n = notificationHistory.value.length
-  if (n === 0) return ''
-  if (n > 99) return '99+'
-  return String(n)
+  const n = unreadCount.value
+  if (n === 0 && notificationHistory.value.length === 0) return ''
+  const total = n > 0 ? n : notificationHistory.value.length
+  if (total > 99) return '99+'
+  return String(total)
 })
 
 const iconByVariant: Record<ToastVariant, string> = {
@@ -56,8 +72,17 @@ function formatTime(createdAt: number): string {
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
 }
 
+function formatTimeDb(createdAt: string): string {
+  return formatTime(new Date(createdAt).getTime())
+}
+
 function toggle() {
   isOpen.value = !isOpen.value
+  if (isOpen.value) void fetchNotifications()
+}
+
+async function onSelectDbNotification(n: Notification) {
+  if (!n.read_at) await markAsRead(n.id)
 }
 
 function close() {
@@ -77,9 +102,28 @@ function handleClickOutside(event: MouseEvent) {
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
+  if (user.value) void fetchNotifications()
+})
+watch(user, (u) => {
+  if (u) void fetchNotifications()
+}, { immediate: true })
+
+let realtimeChannel: ReturnType<typeof supabase.channel> | null = null
+onMounted(() => {
+  const uid = user.value?.id
+  if (!uid) return
+  realtimeChannel = supabase
+    .channel('notification-center')
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${uid}` },
+      () => void fetchNotifications()
+    )
+    .subscribe()
 })
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
+  if (realtimeChannel) supabase.removeChannel(realtimeChannel)
 })
 </script>
 
@@ -116,17 +160,48 @@ onUnmounted(() => {
       >
         <div class="flex items-center justify-between px-4 py-3 border-b border-default">
           <h3 class="text-body-sm font-semibold text-content-main">Notificações</h3>
-          <button
-            v-if="hasNotifications"
-            type="button"
-            class="text-caption text-primary hover:underline"
-            @click="handleClear"
-          >
-            Limpar
-          </button>
+          <div class="flex items-center gap-2">
+            <button
+              v-if="unreadCount > 0"
+              type="button"
+              class="text-caption text-primary hover:underline"
+              @click="markAllAsRead"
+            >
+              Marcar todas como lidas
+            </button>
+            <button
+              v-if="notificationHistory.length > 0"
+              type="button"
+              class="text-caption text-content-subtle hover:underline"
+              @click="handleClear"
+            >
+              Limpar alertas
+            </button>
+          </div>
         </div>
         <div class="overflow-y-auto flex-1 min-h-0">
-          <template v-if="hasNotifications">
+          <template v-if="notifications.length > 0">
+            <ul class="divide-y divide-default">
+              <li
+                v-for="n in notifications"
+                :key="n.id"
+                class="flex items-start gap-3 px-4 py-3 hover:bg-surface-overlay/50 transition-colors cursor-pointer"
+                :class="{ 'bg-primary/5': !n.read_at }"
+                @click="onSelectDbNotification(n)"
+              >
+                <span class="material-symbols-outlined flex-shrink-0 mt-0.5 text-content-subtle">notifications</span>
+                <div class="min-w-0 flex-1">
+                  <p class="text-body-sm font-medium text-content-main">{{ n.title }}</p>
+                  <p class="text-body-sm text-content-secondary">{{ n.body }}</p>
+                  <p class="text-caption text-content-subtle mt-0.5">{{ formatTimeDb(n.created_at) }}</p>
+                </div>
+              </li>
+            </ul>
+          </template>
+          <template v-if="notificationHistory.length > 0">
+            <p class="px-4 py-2 text-caption font-medium text-content-subtle border-t border-default">
+              Alertas recentes
+            </p>
             <ul class="divide-y divide-default">
               <li
                 v-for="item in notificationHistory"
@@ -140,20 +215,19 @@ onUnmounted(() => {
                   {{ getIcon(item.variant) }}
                 </span>
                 <div class="min-w-0 flex-1">
-                  <p class="text-body-sm text-content-main">
-                    {{ item.message }}
-                  </p>
-                  <p class="text-caption text-content-subtle mt-0.5">
-                    {{ formatTime(item.createdAt) }}
-                  </p>
+                  <p class="text-body-sm text-content-main">{{ item.message }}</p>
+                  <p class="text-caption text-content-subtle mt-0.5">{{ formatTime(item.createdAt) }}</p>
                 </div>
               </li>
             </ul>
           </template>
-          <div v-else class="px-4 py-8 text-center">
+          <div
+            v-if="notifications.length === 0 && notificationHistory.length === 0"
+            class="px-4 py-8 text-center"
+          >
             <span class="material-symbols-outlined text-4xl text-content-subtle opacity-50">notifications_none</span>
             <p class="text-body-sm text-content-muted mt-2">Nenhuma notificação</p>
-            <p class="text-caption text-content-subtle mt-1">Os alertas aparecerão aqui</p>
+            <p class="text-caption text-content-subtle mt-1">Os alertas e lembretes aparecerão aqui</p>
           </div>
         </div>
         <div class="px-4 py-2 border-t border-default bg-surface">

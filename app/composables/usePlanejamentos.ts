@@ -11,6 +11,12 @@ export type PlanningFormData = {
   notes?: string | null
 }
 
+export type PlanningTotals = {
+  totalPlanned: number
+  totalActual: number
+  totalSaved: number
+}
+
 /**
  * usePlanejamentos - Composable para lista e CRUD de planejamentos
  * Usado na página de listagem e para criar/editar/excluir planejamentos
@@ -21,6 +27,34 @@ export function usePlanejamentos() {
   const isLoading = useState<boolean>('planejamentos-isLoading', () => false)
   const error = useState<string | null>('planejamentos-error', () => null)
   const list = useState<Planning[]>('planejamentos-list', () => [])
+  const totalsByPlanningId = useState<Record<string, PlanningTotals>>('planejamentos-totalsByPlanningId', () => ({}))
+
+  async function fetchTotalsForPlannings(planningIds: string[], userId: string) {
+    if (planningIds.length === 0) return
+    const map: Record<string, PlanningTotals> = {}
+    for (const id of planningIds) {
+      map[id] = { totalPlanned: 0, totalActual: 0, totalSaved: 0 }
+    }
+    const { data: entriesData } = await supabase
+      .from('planning_entries')
+      .select('planning_id, amount_planned, amount_actual, is_active')
+      .in('planning_id', planningIds)
+      .eq('user_id', userId)
+    const activeEntries = (entriesData ?? []).filter((e) => e.is_active !== false)
+    for (const e of activeEntries) {
+      map[e.planning_id].totalPlanned += Number(e.amount_planned)
+      map[e.planning_id].totalActual += Number(e.amount_actual ?? 0)
+    }
+    const { data: savingsData } = await supabase
+      .from('planning_savings')
+      .select('planning_id, amount')
+      .in('planning_id', planningIds)
+      .eq('user_id', userId)
+    for (const s of savingsData ?? []) {
+      map[s.planning_id].totalSaved += Number(s.amount)
+    }
+    totalsByPlanningId.value = { ...totalsByPlanningId.value, ...map }
+  }
 
   async function fetchPlanejamentos() {
     const { data: authData } = await supabase.auth.getUser()
@@ -38,9 +72,14 @@ export function usePlanejamentos() {
 
       if (err) throw err
       list.value = data ?? []
+      await fetchTotalsForPlannings(
+        list.value.map((p) => p.id),
+        userId,
+      )
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Erro ao carregar planejamentos'
       list.value = []
+      totalsByPlanningId.value = {}
     } finally {
       isLoading.value = false
     }
@@ -70,7 +109,10 @@ export function usePlanejamentos() {
         .single()
 
       if (err) throw err
-      if (data) list.value = [data, ...list.value]
+      if (data) {
+        list.value = [data, ...list.value]
+        totalsByPlanningId.value = { ...totalsByPlanningId.value, [data.id]: { totalPlanned: 0, totalActual: 0, totalSaved: 0 } }
+      }
       return { data: data as Planning, error: null }
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Erro ao criar planejamento'
@@ -135,6 +177,9 @@ export function usePlanejamentos() {
 
       if (err) throw err
       list.value = list.value.filter((p) => p.id !== id)
+      const next = { ...totalsByPlanningId.value }
+      delete next[id]
+      totalsByPlanningId.value = next
       return { error: null }
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Erro ao excluir planejamento'
@@ -149,6 +194,7 @@ export function usePlanejamentos() {
     list,
     isLoading,
     error,
+    totalsByPlanningId,
     fetchPlanejamentos,
     createPlanejamento,
     updatePlanejamento,

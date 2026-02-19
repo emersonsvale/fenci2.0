@@ -178,7 +178,7 @@ function closeDropdown() {
 }
 
 .period-display {
-  @apply flex items-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-2 rounded-lg
+  @apply flex items-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-2 rounded-xl
          text-caption lg:text-body-sm font-medium text-content-primary dark:text-content-primary-dark
          bg-surface-light dark:bg-surface-dark-secondary
          border border-border-light dark:border-border-dark

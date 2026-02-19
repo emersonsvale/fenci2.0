@@ -233,6 +233,7 @@ const sidebarStyle = computed(() => {
 .nav-item {
   @apply flex items-center gap-3 px-3 py-2 rounded-lg text-body-sm
          text-content-secondary dark:text-content-secondary-dark
+         border border-transparent
          transition-all duration-200 ease-smooth
          hover:bg-surface-light-tertiary dark:hover:bg-surface-dark-tertiary
          hover:text-content-primary dark:hover:text-content-primary-dark;
@@ -243,11 +244,12 @@ const sidebarStyle = computed(() => {
 }
 
 .nav-item-active {
-  @apply bg-primary text-white;
+  @apply bg-primary/15 dark:bg-primary/20 text-primary dark:text-primary
+         border border-primary/30 dark:border-primary/40;
 }
 
 .nav-item-active .nav-icon {
-  @apply text-white;
+  @apply text-primary;
 }
 
 .nav-icon {
