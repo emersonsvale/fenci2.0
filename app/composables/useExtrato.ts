@@ -106,6 +106,7 @@ export interface ExtratoCreditCard {
       icon: string | null
       color: string | null
     } | null
+    isRecurring?: boolean
   }[]
   totalAmount: number
 }
@@ -220,6 +221,50 @@ export function useExtrato() {
     })
   })
 
+  // Saídas recorrentes de cartão do mês ANTERIOR (compras virtuais que entram na fatura do mês selecionado)
+  const previousMonthCardRecurringTransactions = computed(() => {
+    const { month, year } = selectedPeriod.value
+    const prevDate = new Date(year, month - 1, 1)
+    const prevMonth = prevDate.getMonth()
+    const prevYear = prevDate.getFullYear()
+
+    const saidas = recurringTransactions.value.filter(
+      (r) => r.type === 'expense' && r.is_active && r.credit_card_id
+    )
+
+    const lastDayOfMonth = new Date(prevYear, prevMonth + 1, 0).getDate()
+    const result: any[] = []
+
+    for (const r of saidas) {
+      let occurrenceDate: Date | null = null
+
+      if (r.frequency === 'monthly' && r.day_of_month != null) {
+        const day = Math.min(r.day_of_month, lastDayOfMonth)
+        occurrenceDate = new Date(prevYear, prevMonth, day, 12, 0, 0)
+      } else if (r.next_occurrence) {
+        const next = new Date(r.next_occurrence)
+        if (next.getMonth() === prevMonth && next.getFullYear() === prevYear) {
+          occurrenceDate = next
+        }
+      }
+
+      if (!occurrenceDate) continue
+
+      const occurrenceStr = occurrenceDate.toISOString().slice(0, 10)
+      const startStr = r.start_date ? r.start_date.slice(0, 10) : null
+      const endStr = r.end_date ? r.end_date.slice(0, 10) : null
+      if (startStr && occurrenceStr < startStr) continue
+      if (endStr && occurrenceStr > endStr) continue
+
+      result.push({
+        ...r,
+        transaction_date: occurrenceStr,
+      })
+    }
+
+    return result
+  })
+
   // Rendas recorrentes (recurring_transactions tipo income) expandidas para o período como transações de exibição
   const rendasAsTransactions = computed<ExtratoTransaction[]>(() => {
     const month = selectedPeriod.value.month
@@ -260,11 +305,11 @@ export function useExtrato() {
         description: r.description,
         category: category
           ? {
-              id: category.id,
-              name: category.name,
-              icon: category.icon,
-              color: category.color,
-            }
+            id: category.id,
+            name: category.name,
+            icon: category.icon,
+            color: category.color,
+          }
           : null,
         type: 'income',
         date: occurrenceDate,
@@ -288,7 +333,7 @@ export function useExtrato() {
     const month = selectedPeriod.value.month
     const year = selectedPeriod.value.year
     const saidas = recurringTransactions.value.filter(
-      (r) => r.type === 'expense' && r.is_active
+      (r) => r.type === 'expense' && r.is_active && !r.credit_card_id
     )
 
     const lastDayOfMonth = new Date(year, month + 1, 0).getDate()
@@ -324,11 +369,11 @@ export function useExtrato() {
         description: r.description,
         category: category
           ? {
-              id: category.id,
-              name: category.name,
-              icon: category.icon,
-              color: category.color,
-            }
+            id: category.id,
+            name: category.name,
+            icon: category.icon,
+            color: category.color,
+          }
           : null,
         type: 'expense',
         date: occurrenceDate,
@@ -360,16 +405,10 @@ export function useExtrato() {
     // Total das faturas do cartão no mês selecionado = apenas faturas NÃO PAGAS (compras do mês anterior)
     const monthKeyRef = `${selectedPeriod.value.year}-${String(selectedPeriod.value.month + 1).padStart(2, '0')}`
     const totalFaturasCartao = (() => {
-      const prevMonthCartao = previousMonthCardTransactions.value
-      const byCard = new Map<string, number>()
-      for (const t of prevMonthCartao) {
-        const cid = t.credit_card_id!
-        byCard.set(cid, (byCard.get(cid) ?? 0) + Math.abs(t.amount))
-      }
       let total = 0
-      for (const [creditCardId, totalCard] of byCard) {
+      for (const card of creditCardsList.value) {
         const inv = invoices.value.find((i) => {
-          if (i.credit_card_id !== creditCardId) return false
+          if (i.credit_card_id !== card.id) return false
           const ref = i.reference_month ?? ''
           const norm = ref.slice(0, 7)
           return norm === monthKeyRef
@@ -377,8 +416,8 @@ export function useExtrato() {
         const isPaid =
           inv &&
           (inv.status === 'paid' ||
-            (inv.paid_amount != null && inv.paid_amount >= totalCard))
-        if (!isPaid) total += totalCard
+            (inv.paid_amount != null && inv.paid_amount >= card.totalAmount))
+        if (!isPaid) total += card.totalAmount
       }
       return total
     })()
@@ -455,15 +494,11 @@ export function useExtrato() {
       .reduce((sum, t) => sum + Math.abs(toNum(t.amount)), 0)
 
     // Faturas do mês: valor = soma compras do mês anterior por cartão (igual à lista do extrato)
-    const prevMonthCartao = previousMonthCardTransactions.value
-    const byCard = new Map<string, number>()
-    for (const t of prevMonthCartao) {
-      const cid = t.credit_card_id!
-      byCard.set(cid, (byCard.get(cid) ?? 0) + Math.abs(toNum(t.amount)))
-    }
     let faturasPagas = 0
     let faturasPendentes = 0
-    for (const [creditCardId, totalCard] of byCard) {
+    for (const card of creditCardsList.value) {
+      const creditCardId = card.id
+      const totalCard = card.totalAmount
       if (totalCard <= 0) continue
       const inv = invoices.value.find((i) => {
         if (i.credit_card_id !== creditCardId) return false
@@ -501,12 +536,12 @@ export function useExtrato() {
   // Determinar status da transação
   function getTransactionStatus(t: Transaction): 'pago' | 'atrasado' | 'aguardando' {
     if (t.is_paid) return 'pago'
-    
+
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     const transactionDate = parseTransactionDateLocal(t.transaction_date)
     transactionDate.setHours(0, 0, 0, 0)
-    
+
     if (transactionDate < today) return 'atrasado'
     return 'aguardando'
   }
@@ -535,10 +570,10 @@ export function useExtrato() {
       isRecurring: t.is_recurring || false,
       installmentInfo: t.total_installments && t.total_installments > 1 && t.installment_number
         ? {
-            current: t.installment_number,
-            total: t.total_installments,
-            percentage: Math.round((t.installment_number / t.total_installments) * 100),
-          }
+          current: t.installment_number,
+          total: t.total_installments,
+          percentage: Math.round((t.installment_number / t.total_installments) * 100),
+        }
         : null,
       account: account ? {
         id: account.id,
@@ -572,7 +607,6 @@ export function useExtrato() {
     )
 
     // Fatura do mês selecionado = compras do mês anterior (ex.: compras de jan → fatura de fev)
-    const prevMonthCartao = previousMonthCardTransactions.value
     const faturaRows: ExtratoTransaction[] = []
     const month = selectedPeriod.value.month
     const year = selectedPeriod.value.year
@@ -580,21 +614,12 @@ export function useExtrato() {
     const monthNamesShort = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
     const monthLabel = `${monthNamesShort[month]}/${year}`
 
-    const byCard = new Map<string, { total: number; invoiceId: string | null }>()
-    for (const t of prevMonthCartao) {
-      const cid = t.credit_card_id!
-      const key = cid
-      const absAmount = Math.abs(t.amount)
-      if (!byCard.has(key)) byCard.set(key, { total: 0, invoiceId: t.invoice_id ?? null })
-      const entry = byCard.get(key)!
-      entry.total += absAmount
-      if (t.invoice_id) entry.invoiceId = t.invoice_id
-    }
-
-    for (const [creditCardId, { total }] of byCard) {
+    for (const card of creditCardsList.value) {
+      const creditCardId = card.id
+      const total = card.totalAmount
       if (total <= 0) continue
-      const card = creditCards.value.find((c) => c.id === creditCardId)
-      const cardName = card?.name ?? 'Cartão'
+
+      const cardName = card.name
       const inv = invoices.value.find((i) => {
         if (i.credit_card_id !== creditCardId) return false
         const ref = i.reference_month
@@ -680,15 +705,15 @@ export function useExtrato() {
         const month = String(d.getMonth() + 1).padStart(2, '0')
         const day = String(d.getDate()).padStart(2, '0')
         const transactionDateStr = `${year}-${month}-${day}`
-        
+
         if (dateFilter.value.startDate) {
           if (transactionDateStr < dateFilter.value.startDate) return false
         }
-        
+
         if (dateFilter.value.endDate) {
           if (transactionDateStr > dateFilter.value.endDate) return false
         }
-        
+
         return true
       })
     }
@@ -751,36 +776,36 @@ export function useExtrato() {
   // Transações agrupadas por data (para aba "Por data")
   const groupedByDateTransactions = computed<TransactionDateGroup[]>(() => {
     const transactions = filteredTransactions.value
-    
+
     // Agrupar por data
     const groups = new Map<string, ExtratoTransaction[]>()
-    
+
     transactions.forEach((t) => {
       const d = t.date
       const year = d.getFullYear()
       const month = String(d.getMonth() + 1).padStart(2, '0')
       const day = String(d.getDate()).padStart(2, '0')
       const dateKey = `${year}-${month}-${day}`
-      
+
       if (!groups.has(dateKey)) {
         groups.set(dateKey, [])
       }
       groups.get(dateKey)!.push(t)
     })
-    
+
     // Converter para array e adicionar metadados
     const result: TransactionDateGroup[] = []
-    
+
     groups.forEach((txs, dateKey) => {
       const date = new Date(dateKey + 'T12:00:00') // Usar meio-dia para evitar problemas de timezone
-      
+
       // Calcular saldo do dia (entradas - saídas)
       const dailyBalance = txs.reduce((sum, t) => {
         if (t.type === 'income') return sum + t.amount
         if (t.type === 'expense') return sum - Math.abs(t.amount)
         return sum
       }, 0)
-      
+
       result.push({
         dateKey,
         dayOfWeek: date.toLocaleDateString('pt-BR', { weekday: 'long' }),
@@ -790,7 +815,7 @@ export function useExtrato() {
         transactions: txs.sort((a, b) => a.date.getTime() - b.date.getTime()), // Mais antigo primeiro dentro do grupo
       })
     })
-    
+
     // Ordenar grupos por data (mais antigo primeiro)
     return result.sort((a, b) => a.dateKey.localeCompare(b.dateKey))
   })
@@ -798,10 +823,18 @@ export function useExtrato() {
   // Cartões de crédito: compras do mês anterior (fatura do mês selecionado)
   const creditCardsList = computed<ExtratoCreditCard[]>(() => {
     const prevMonthCartao = previousMonthCardTransactions.value
+    const prevMonthCartaoRecurring = previousMonthCardRecurringTransactions.value
+
+    const recurringIdsWithReal = new Set(
+      prevMonthCartao
+        .filter((t) => t.recurring_transaction_id)
+        .map((t) => t.recurring_transaction_id as string)
+    )
+
     return creditCards.value
       .filter((c) => c.is_active)
       .map((card) => {
-        const cardTransactions = prevMonthCartao
+        const realTransactions = prevMonthCartao
           .filter((t) => t.credit_card_id === card.id)
           .map((t) => {
             const category = categories.value.find((c) => c.id === t.category_id)
@@ -819,8 +852,33 @@ export function useExtrato() {
                 icon: category.icon,
                 color: category.color,
               } : null,
+              isRecurring: t.is_recurring || false,
             }
           })
+
+        const virtualTransactions = prevMonthCartaoRecurring
+          .filter((r) => r.credit_card_id === card.id && !recurringIdsWithReal.has(r.id))
+          .map((r) => {
+            const category = categories.value.find((c) => c.id === r.category_id)
+            return {
+              id: `recurring-${r.id}`,
+              description: r.description,
+              amount: Math.abs(r.amount),
+              installmentInfo: null,
+              transactionDate: r.transaction_date,
+              category: category ? {
+                id: category.id,
+                name: category.name,
+                icon: category.icon,
+                color: category.color,
+              } : null,
+              isRecurring: true,
+            }
+          })
+
+        const cardTransactions = [...realTransactions, ...virtualTransactions].sort((a, b) => {
+          return new Date(b.transactionDate).getTime() - new Date(a.transactionDate).getTime()
+        })
 
         const totalAmount = cardTransactions.reduce((sum, t) => sum + t.amount, 0)
 
@@ -890,7 +948,7 @@ export function useExtrato() {
     if (user.value?.id) {
       return user.value.id
     }
-    
+
     // Fallback: obtém diretamente da sessão do Supabase
     const { data: { session } } = await supabase.auth.getSession()
     return session?.user?.id || null
@@ -900,7 +958,7 @@ export function useExtrato() {
   async function fetchExtratoData() {
     // Obtém o userId da sessão
     const userId = await getUserId()
-    
+
     if (!userId) {
       return
     }
@@ -1118,14 +1176,14 @@ export function useExtrato() {
   function getRawTransactionById(transactionId: string) {
     const transaction = transactions.value.find((t) => t.id === transactionId)
     if (!transaction) return null
-    
+
     // Formatar a data para YYYY-MM-DD (usar data local para evitar -1 dia por timezone)
     const date = parseTransactionDateLocal(transaction.transaction_date)
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const day = String(date.getDate()).padStart(2, '0')
     const formattedDate = `${year}-${month}-${day}`
-    
+
     return {
       id: transaction.id,
       accountId: transaction.account_id || '',
@@ -1165,11 +1223,11 @@ export function useExtrato() {
         transactionDate: dateStr,
         category: category
           ? {
-              id: category.id,
-              name: category.name,
-              icon: category.icon,
-              color: category.color,
-            }
+            id: category.id,
+            name: category.name,
+            icon: category.icon,
+            color: category.color,
+          }
           : null,
         isPaid: t.is_paid ?? false,
       }
@@ -1185,9 +1243,9 @@ export function useExtrato() {
   onMounted(async () => {
     // Aguarda um pequeno delay para garantir que a sessão esteja disponível
     await new Promise(resolve => setTimeout(resolve, 100))
-    
+
     const userId = await getUserId()
-    
+
     if (userId) {
       // Sempre carrega os dados ao montar
       await fetchExtratoData()

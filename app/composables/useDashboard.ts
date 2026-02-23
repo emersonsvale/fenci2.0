@@ -145,15 +145,7 @@ export function useDashboard() {
     const monthKey = `${selectedPeriod.value.year}-${String(selectedPeriod.value.month + 1).padStart(2, '0')}`
 
     // Total faturas de cartão não pagas (referência do mês selecionado)
-    const totalFaturasCartao = creditCardInvoices.value
-      .filter((inv) => {
-        const ref = (inv.reference_month || '').slice(0, 7)
-        if (ref !== monthKey) return false
-        const status = (inv.status || '').toLowerCase()
-        if (status === 'paid') return false
-        return true
-      })
-      .reduce((sum, inv) => sum + Math.max(0, toNum(inv.total_amount) - toNum(inv.paid_amount)), 0)
+    const totalFaturasCartao = unpaidInvoicesAmountForMonth.value
 
     if (isSelectedMonthFuture.value) {
       const aPagar = projectedSaidasRecorrentesSelectedMonth.value + totalFaturasCartao
@@ -230,6 +222,50 @@ export function useDashboard() {
     })
   })
 
+  // Saídas recorrentes de cartão do mês ANTERIOR (compras virtuais que entram na fatura do mês selecionado)
+  const previousMonthCardRecurringTransactions = computed(() => {
+    const { month, year } = selectedPeriod.value
+    const prevDate = new Date(year, month - 1, 1)
+    const prevMonth = prevDate.getMonth()
+    const prevYear = prevDate.getFullYear()
+
+    const saidas = recurringExpenses.value.filter(
+      (r) => r.is_active && r.credit_card_id
+    )
+
+    const lastDayOfMonth = new Date(prevYear, prevMonth + 1, 0).getDate()
+    const result: any[] = []
+
+    for (const r of saidas) {
+      let occurrenceDate: Date | null = null
+
+      if (r.frequency === 'monthly' && r.day_of_month != null) {
+        const day = Math.min(r.day_of_month, lastDayOfMonth)
+        occurrenceDate = new Date(prevYear, prevMonth, day, 12, 0, 0)
+      } else if (r.next_occurrence) {
+        const next = new Date(r.next_occurrence)
+        if (next.getMonth() === prevMonth && next.getFullYear() === prevYear) {
+          occurrenceDate = next
+        }
+      }
+
+      if (!occurrenceDate) continue
+
+      const occurrenceStr = occurrenceDate.toISOString().slice(0, 10)
+      const startStr = r.start_date ? r.start_date.slice(0, 10) : null
+      const endStr = r.end_date ? r.end_date.slice(0, 10) : null
+      if (startStr && occurrenceStr < startStr) continue
+      if (endStr && occurrenceStr > endStr) continue
+
+      result.push({
+        ...r,
+        transaction_date: occurrenceStr,
+      })
+    }
+
+    return result
+  })
+
   // Faturas do mês: valor = soma das compras do mês anterior por cartão (igual extrato), não invoice.total_amount
   const monthKeyRef = computed(() =>
     `${selectedPeriod.value.year}-${String(selectedPeriod.value.month + 1).padStart(2, '0')}`
@@ -237,11 +273,26 @@ export function useDashboard() {
   const paidInvoicesAmountForMonth = computed(() => {
     const toNum = (v: unknown) => (typeof v === 'number' ? v : Number(v) || 0)
     const prevMonthCartao = previousMonthCardTransactions.value
+    const prevMonthCartaoRecurring = previousMonthCardRecurringTransactions.value
+
+    const recurringIdsWithReal = new Set(
+      prevMonthCartao
+        .filter((t) => t.recurring_transaction_id)
+        .map((t) => t.recurring_transaction_id as string)
+    )
+
     const byCard = new Map<string, number>()
     for (const t of prevMonthCartao) {
       const cid = t.credit_card_id!
       byCard.set(cid, (byCard.get(cid) ?? 0) + Math.abs(toNum(t.amount)))
     }
+    for (const r of prevMonthCartaoRecurring) {
+      if (!recurringIdsWithReal.has(r.id)) {
+        const cid = r.credit_card_id!
+        byCard.set(cid, (byCard.get(cid) ?? 0) + Math.abs(toNum(r.amount)))
+      }
+    }
+
     let total = 0
     for (const [creditCardId, totalCard] of byCard) {
       if (totalCard <= 0) continue
@@ -260,11 +311,26 @@ export function useDashboard() {
   const unpaidInvoicesAmountForMonth = computed(() => {
     const toNum = (v: unknown) => (typeof v === 'number' ? v : Number(v) || 0)
     const prevMonthCartao = previousMonthCardTransactions.value
+    const prevMonthCartaoRecurring = previousMonthCardRecurringTransactions.value
+
+    const recurringIdsWithReal = new Set(
+      prevMonthCartao
+        .filter((t) => t.recurring_transaction_id)
+        .map((t) => t.recurring_transaction_id as string)
+    )
+
     const byCard = new Map<string, number>()
     for (const t of prevMonthCartao) {
       const cid = t.credit_card_id!
       byCard.set(cid, (byCard.get(cid) ?? 0) + Math.abs(toNum(t.amount)))
     }
+    for (const r of prevMonthCartaoRecurring) {
+      if (!recurringIdsWithReal.has(r.id)) {
+        const cid = r.credit_card_id!
+        byCard.set(cid, (byCard.get(cid) ?? 0) + Math.abs(toNum(r.amount)))
+      }
+    }
+
     let total = 0
     for (const [creditCardId, totalCard] of byCard) {
       if (totalCard <= 0) continue

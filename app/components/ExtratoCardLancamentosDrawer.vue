@@ -22,6 +22,7 @@ interface TransactionWithDate {
     icon: string | null
     color: string | null
   } | null
+  isRecurring?: boolean
 }
 
 interface DateGroup {
@@ -217,9 +218,10 @@ watch(
                 >
                   <div class="min-w-0 flex-1">
                     <span
-                      class="text-body-sm text-content-main block truncate"
+                      class="text-body-sm text-content-main block truncate flex items-center gap-1"
                       :title="`${tx.installmentInfo || ''} ${tx.description}`.trim()"
                     >
+                      <span v-if="tx.isRecurring" class="material-symbols-outlined text-[14px] text-content-muted" title="Lançamento recorrente">autorenew</span>
                       {{ tx.installmentInfo ? `${tx.installmentInfo} ` : '' }}{{ tx.description }}
                     </span>
                     <span
@@ -234,22 +236,24 @@ watch(
                     <span class="text-body-sm font-medium text-content-main mr-1">
                       {{ formatCurrency(tx.amount) }}
                     </span>
-                    <button
-                      type="button"
-                      class="p-1.5 rounded-lg text-content-subtle hover:bg-surface-overlay hover:text-content-main transition-colors"
-                      aria-label="Editar lançamento"
-                      @click="emit('edit', tx.id)"
-                    >
-                      <span class="material-symbols-outlined text-lg">edit</span>
-                    </button>
-                    <button
-                      type="button"
-                      class="p-1.5 rounded-lg text-content-subtle hover:text-error hover:bg-surface-overlay transition-colors"
-                      aria-label="Excluir lançamento"
-                      @click="emit('delete', tx.id)"
-                    >
-                      <span class="material-symbols-outlined text-lg">delete</span>
-                    </button>
+                    <template v-if="!tx.id.startsWith('recurring-')">
+                      <button
+                        type="button"
+                        class="p-1.5 rounded-lg text-content-subtle hover:bg-surface-overlay hover:text-content-main transition-colors"
+                        aria-label="Editar lançamento"
+                        @click="emit('edit', tx.id)"
+                      >
+                        <span class="material-symbols-outlined text-lg">edit</span>
+                      </button>
+                      <button
+                        type="button"
+                        class="p-1.5 rounded-lg text-content-subtle hover:text-error hover:bg-surface-overlay transition-colors"
+                        aria-label="Excluir lançamento"
+                        @click="emit('delete', tx.id)"
+                      >
+                        <span class="material-symbols-outlined text-lg">delete</span>
+                      </button>
+                    </template>
                   </div>
                 </li>
               </ul>

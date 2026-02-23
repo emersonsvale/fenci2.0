@@ -251,7 +251,8 @@ function onCarouselMouseLeave() {
                     :key="tx.id || index"
                     class="flex items-center justify-between gap-2 text-caption"
                   >
-                    <span class="text-content-subtle truncate min-w-0">
+                    <span class="text-content-subtle truncate min-w-0 flex items-center gap-1">
+                      <span v-if="tx.isRecurring" class="material-symbols-outlined text-[12px] text-content-muted" title="Lançamento recorrente">autorenew</span>
                       {{ tx.installmentInfo ? `${tx.installmentInfo} ` : '' }}{{ tx.description }}
                     </span>
                     <span class="text-content-main font-medium flex-shrink-0">
