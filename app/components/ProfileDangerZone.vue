@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref } from 'vue'
 import { useProfile } from '~/composables/useProfile'
 import AppButton from './AppButton.vue'
@@ -57,23 +57,23 @@ function cancelDelete(): void {
 <template>
   <div id="profile-danger-zone" class="space-y-8">
     <div>
-      <h2 class="text-lg font-semibold text-content-primary dark:text-content-primary-dark mb-1">
+      <h2 class="text-lg font-semibold text-content-main mb-1">
         Gerenciamento de conta
       </h2>
-      <p class="text-sm text-content-secondary dark:text-content-secondary-dark">
+      <p class="text-sm text-content-muted">
         Exportar dados e opções avançadas
       </p>
     </div>
 
     <!-- Exportar Dados -->
-    <div class="p-6 rounded-xl bg-surface-light-secondary dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark">
+    <div class="p-6 rounded-xl bg-surface-overlay border border-default-subtle">
       <div class="flex items-start gap-4">
         <span class="material-symbols-outlined text-2xl text-primary">download</span>
         <div class="flex-1">
-          <h3 class="font-medium text-content-primary dark:text-content-primary-dark">
+          <h3 class="font-medium text-content-main">
             Exportar dados
           </h3>
-          <p class="text-sm text-content-secondary dark:text-content-secondary-dark mt-1">
+          <p class="text-sm text-content-muted mt-1">
             Baixe todos os seus dados em formato JSON. Inclui transações, contas, categorias, metas e mais.
           </p>
           <AppButton
@@ -98,7 +98,7 @@ function cancelDelete(): void {
 
       <!-- Excluir Conta -->
       <div v-if="!showDeleteConfirm">
-        <p class="text-sm text-content-secondary dark:text-content-secondary-dark mb-4">
+        <p class="text-sm text-content-muted mb-4">
           A exclusão da conta é permanente. Todos os seus dados serão removidos e não poderão ser recuperados.
         </p>
         <button
@@ -127,7 +127,7 @@ function cancelDelete(): void {
         <div>
           <label 
             for="delete-confirm" 
-            class="block text-sm font-medium text-content-primary dark:text-content-primary-dark mb-2"
+            class="block text-sm font-medium text-content-main mb-2"
           >
             Digite <strong>EXCLUIR</strong> para confirmar
           </label>
@@ -160,7 +160,7 @@ function cancelDelete(): void {
           </button>
           <button
             type="button"
-            class="px-4 py-2 rounded-lg border border-border-light dark:border-border-dark text-content-secondary hover:bg-surface-light-tertiary dark:hover:bg-surface-dark-tertiary transition-colors duration-200"
+            class="px-4 py-2 rounded-lg border border-default-subtle text-content-muted hover:bg-surface-overlay transition-colors duration-200"
             @click="cancelDelete"
           >
             Cancelar

@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref } from 'vue'
 import { useProfile } from '~/composables/useProfile'
 import AppInput from './AppInput.vue'
@@ -53,17 +53,17 @@ async function handleChangePassword(): Promise<void> {
 <template>
   <div id="profile-security" class="space-y-8">
     <div>
-      <h2 class="text-lg font-semibold text-content-primary dark:text-content-primary-dark mb-1">
+      <h2 class="text-lg font-semibold text-content-main mb-1">
         Segurança
       </h2>
-      <p class="text-sm text-content-secondary dark:text-content-secondary-dark">
+      <p class="text-sm text-content-muted">
         Gerencie a segurança da sua conta
       </p>
     </div>
 
     <!-- Alterar Senha -->
-    <div class="p-6 rounded-xl bg-surface-light-secondary dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark">
-      <h3 class="font-medium text-content-primary dark:text-content-primary-dark mb-4">
+    <div class="p-6 rounded-xl bg-surface-overlay border border-default-subtle">
+      <h3 class="font-medium text-content-main mb-4">
         Alterar senha
       </h3>
 

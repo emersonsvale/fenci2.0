@@ -117,10 +117,10 @@ function handleSelectLancamento(type: LancamentoType) {
         <!-- Greeting + Quote -->
         <div class="min-w-0 flex-1">
           <h1 class="text-heading-sm lg:text-heading-lg text-content-main truncate">
-            Olá, {{ greeting }}, {{ userName }}!
+            {{ greeting }}, <span class="text-primary">{{ userName }}</span>!
           </h1>
-          <p class="text-caption lg:text-body-sm text-content-subtle mt-1 leading-snug line-clamp-2">
-            "{{ displayQuote.text }}"<template v-if="displayQuote.author"> – {{ displayQuote.author }}</template>
+          <p class="text-caption lg:text-body-sm text-content-subtle mt-1.5 leading-snug line-clamp-2 italic">
+            "{{ displayQuote.text }}"<template v-if="displayQuote.author"> — <span class="not-italic font-medium text-content-muted">{{ displayQuote.author }}</span></template>
           </p>
         </div>
 
@@ -137,7 +137,7 @@ function handleSelectLancamento(type: LancamentoType) {
             <div class="relative">
               <button
                 type="button"
-                class="btn btn-primary !w-auto px-4 lg:px-6 py-2 lg:py-2.5 rounded-full inline-flex items-center gap-1.5 lg:gap-2 text-body-sm"
+                class="btn btn-primary !w-auto px-4 lg:px-6 py-2 lg:py-2.5 rounded-full inline-flex items-center gap-1.5 lg:gap-2 text-body-sm shadow-primary"
                 @click.stop="toggleDropdown"
               >
                 <span class="material-symbols-outlined text-lg">add</span>

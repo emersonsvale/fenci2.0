@@ -24,13 +24,13 @@ const { isPrivacyMode, togglePrivacyMode } = usePrivacyMode()
 </script>
 
 <template>
-  <div id="balance-card" class="card p-5">
+  <div id="balance-card" class="card-glow p-5">
     <!-- Header -->
     <div class="flex items-center justify-between mb-3">
       <span class="text-caption font-medium text-content-subtle uppercase tracking-wider">Saldo atual</span>
       <button
         type="button"
-        class="p-1.5 rounded-lg hover:bg-surface-overlay transition-colors"
+        class="p-1.5 rounded-xl hover:bg-surface-overlay transition-all duration-200"
         :title="isPrivacyMode ? 'Mostrar valores' : 'Ocultar valores'"
         @click="togglePrivacyMode"
       >
@@ -50,29 +50,29 @@ const { isPrivacyMode, togglePrivacyMode } = usePrivacyMode()
     <!-- Content -->
     <div v-else>
       <!-- Saldo -->
-      <p class="text-heading-lg font-bold mb-4" :class="saldo >= 0 ? 'text-content-main' : 'text-error'">
+      <p class="text-heading-lg font-bold mb-4 transition-colors duration-300" :class="saldo >= 0 ? 'text-content-main' : 'text-error'">
         {{ formatCurrency(saldo) }}
       </p>
 
       <!-- Entradas e Saídas -->
-      <div class="space-y-3">
+      <div class="space-y-2">
         <!-- Entradas -->
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-full bg-success/15 flex items-center justify-center">
-            <span class="material-symbols-outlined text-base text-success">arrow_upward</span>
+        <div class="flex items-center gap-3 p-2 -mx-2 rounded-xl hover:bg-success/5 transition-colors duration-200">
+          <div class="w-8 h-8 rounded-xl bg-success/12 flex items-center justify-center">
+            <span class="material-symbols-outlined text-base text-success">trending_up</span>
           </div>
-          <div class="flex-1">
+          <div class="flex-1 flex items-center justify-between">
             <p class="text-caption text-content-subtle">Entradas</p>
             <p class="text-body-sm font-semibold text-success">{{ formatCurrency(entradas) }}</p>
           </div>
         </div>
 
         <!-- Saídas -->
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-full bg-error/15 flex items-center justify-center">
-            <span class="material-symbols-outlined text-base text-error">arrow_downward</span>
+        <div class="flex items-center gap-3 p-2 -mx-2 rounded-xl hover:bg-error/5 transition-colors duration-200">
+          <div class="w-8 h-8 rounded-xl bg-error/12 flex items-center justify-center">
+            <span class="material-symbols-outlined text-base text-error">trending_down</span>
           </div>
-          <div class="flex-1">
+          <div class="flex-1 flex items-center justify-between">
             <p class="text-caption text-content-subtle">Saídas</p>
             <p class="text-body-sm font-semibold text-error">{{ formatCurrency(saidas) }}</p>
           </div>

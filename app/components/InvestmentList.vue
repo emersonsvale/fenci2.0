@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed } from 'vue'
 import { useCurrency } from '~/composables/useCurrency'
 
@@ -69,7 +69,7 @@ const displayedInvestments = computed(() => {
       <div
         v-for="investment in displayedInvestments"
         :key="investment.id"
-        class="flex items-center justify-between py-3 px-3 rounded-lg bg-surface-overlay cursor-pointer hover:bg-surface-light-tertiary dark:hover:bg-surface-dark-tertiary transition-colors"
+        class="flex items-center justify-between py-3 px-3 rounded-lg bg-surface-overlay cursor-pointer hover:bg-surface-overlay transition-colors"
         @click="emit('item-click', investment)"
       >
         <div class="flex items-center gap-3">

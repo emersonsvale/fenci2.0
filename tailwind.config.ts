@@ -31,14 +31,14 @@ export default {
           900: '#14532D',
           950: '#052E16',
         },
-        
+
         // Cores da marca
         brand: {
           green: '#22C55E',
           teal: '#115E4D',
           'teal-dark': '#0D4D41',
         },
-        
+
         // Superfícies (backgrounds)
         surface: {
           light: '#FFFFFF',
@@ -48,7 +48,7 @@ export default {
           'dark-secondary': '#262626',
           'dark-tertiary': '#333333',
         },
-        
+
         // Texto
         content: {
           primary: '#111827',
@@ -58,7 +58,7 @@ export default {
           'secondary-dark': '#D1D5DB',
           'tertiary-dark': '#6B7280',
         },
-        
+
         // Bordas
         border: {
           light: '#E5E7EB',
@@ -66,7 +66,7 @@ export default {
           dark: '#374151',
           'dark-secondary': '#4B5563',
         },
-        
+
         // Estados
         success: {
           DEFAULT: '#22C55E',
@@ -89,35 +89,35 @@ export default {
           dark: '#1D4ED8',
         },
       },
-      
+
       // ============================================
       // TIPOGRAFIA
       // ============================================
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['Plus Jakarta Sans', 'system-ui', '-apple-system', 'sans-serif'],
       },
       fontSize: {
         // Display
         'display-lg': ['3.5rem', { lineHeight: '1.1', letterSpacing: '-0.02em', fontWeight: '700' }],
         'display-md': ['2.5rem', { lineHeight: '1.2', letterSpacing: '-0.02em', fontWeight: '700' }],
         'display-sm': ['2rem', { lineHeight: '1.2', letterSpacing: '-0.01em', fontWeight: '700' }],
-        
+
         // Headings
         'heading-xl': ['1.75rem', { lineHeight: '1.3', letterSpacing: '-0.01em', fontWeight: '600' }],
         'heading-lg': ['1.5rem', { lineHeight: '1.3', letterSpacing: '-0.01em', fontWeight: '600' }],
         'heading-md': ['1.25rem', { lineHeight: '1.4', fontWeight: '600' }],
         'heading-sm': ['1.125rem', { lineHeight: '1.4', fontWeight: '600' }],
-        
+
         // Body
         'body-lg': ['1.125rem', { lineHeight: '1.6', fontWeight: '400' }],
         'body-md': ['1rem', { lineHeight: '1.6', fontWeight: '400' }],
         'body-sm': ['0.875rem', { lineHeight: '1.5', fontWeight: '400' }],
-        
+
         // Caption / Labels
         'caption': ['0.75rem', { lineHeight: '1.4', fontWeight: '400' }],
         'label': ['0.875rem', { lineHeight: '1.4', fontWeight: '500' }],
       },
-      
+
       // ============================================
       // ESPAÇAMENTOS CUSTOMIZADOS
       // ============================================
@@ -130,7 +130,7 @@ export default {
         '26': '6.5rem',
         '30': '7.5rem',
       },
-      
+
       // ============================================
       // BORDER RADIUS
       // ============================================
@@ -144,23 +144,26 @@ export default {
         '3xl': '24px',
         '4xl': '32px',
       },
-      
+
       // ============================================
       // SOMBRAS
       // ============================================
       boxShadow: {
-        'xs': '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-        'sm': '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
-        'md': '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-        'lg': '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
-        'xl': '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
-        '2xl': '0 25px 50px -12px rgb(0 0 0 / 0.25)',
-        'primary': '0 4px 14px 0 rgb(34 197 94 / 0.3)',
-        'primary-lg': '0 8px 24px 0 rgb(34 197 94 / 0.35)',
-        'card': '0 2px 8px 0 rgb(0 0 0 / 0.08)',
-        'card-hover': '0 8px 24px 0 rgb(0 0 0 / 0.12)',
+        'xs': '0 1px 2px 0 rgb(0 0 0 / 0.04)',
+        'sm': '0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06)',
+        'md': '0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05)',
+        'lg': '0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.04)',
+        'xl': '0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.04)',
+        '2xl': '0 25px 50px -12px rgb(0 0 0 / 0.2)',
+        'primary': '0 4px 14px 0 rgb(34 197 94 / 0.25)',
+        'primary-lg': '0 8px 24px 0 rgb(34 197 94 / 0.3)',
+        'primary-glow': '0 0 20px 0 rgb(34 197 94 / 0.15)',
+        'card': '0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.02)',
+        'card-hover': '0 8px 24px 0 rgb(0 0 0 / 0.08), 0 2px 8px 0 rgb(0 0 0 / 0.04)',
+        'card-elevated': '0 4px 12px 0 rgb(0 0 0 / 0.06), 0 1px 4px 0 rgb(0 0 0 / 0.03)',
+        'inner-glow': 'inset 0 1px 0 0 rgb(255 255 255 / 0.1)',
       },
-      
+
       // ============================================
       // TRANSIÇÕES
       // ============================================
@@ -173,19 +176,23 @@ export default {
         'smooth': 'cubic-bezier(0.4, 0, 0.2, 1)',
         'bounce-in': 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
       },
-      
+
       // ============================================
       // ANIMAÇÕES
       // ============================================
       animation: {
-        'fade-in': 'fadeIn 0.3s ease-out',
-        'fade-in-up': 'fadeInUp 0.4s ease-out',
-        'fade-in-down': 'fadeInDown 0.4s ease-out',
-        'scale-in': 'scaleIn 0.2s ease-out',
-        'slide-in-right': 'slideInRight 0.3s ease-out',
-        'slide-in-left': 'slideInLeft 0.3s ease-out',
-        'pulse-soft': 'pulseSoft 2s ease-in-out infinite',
+        'fade-in': 'fadeIn 0.4s cubic-bezier(0.25,0.1,0.25,1) both',
+        'fade-in-up': 'fadeInUp 0.5s cubic-bezier(0.34,1.56,0.64,1) both',
+        'fade-in-down': 'fadeInDown 0.5s cubic-bezier(0.34,1.56,0.64,1) both',
+        'scale-in': 'scaleIn 0.3s cubic-bezier(0.34,1.56,0.64,1) both',
+        'slide-in-right': 'slideInRight 0.4s cubic-bezier(0.19,1,0.22,1) both',
+        'slide-in-left': 'slideInLeft 0.4s cubic-bezier(0.19,1,0.22,1) both',
+        'slide-up': 'slideUp 0.4s cubic-bezier(0.19,1,0.22,1) both',
+        'pulse-soft': 'pulseSoft 2.5s ease-in-out infinite',
         'spin-slow': 'spin 3s linear infinite',
+        'float': 'float 6s ease-in-out infinite',
+        'glow': 'glow 3s ease-in-out infinite',
+        'counter-rotate': 'counterRotate 8s linear infinite',
       },
       keyframes: {
         fadeIn: {
@@ -193,31 +200,47 @@ export default {
           '100%': { opacity: '1' },
         },
         fadeInUp: {
-          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '0%': { opacity: '0', transform: 'translateY(16px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         fadeInDown: {
-          '0%': { opacity: '0', transform: 'translateY(-10px)' },
+          '0%': { opacity: '0', transform: 'translateY(-16px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         scaleIn: {
-          '0%': { opacity: '0', transform: 'scale(0.95)' },
+          '0%': { opacity: '0', transform: 'scale(0.9)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
         slideInRight: {
-          '0%': { opacity: '0', transform: 'translateX(20px)' },
+          '0%': { opacity: '0', transform: 'translateX(24px)' },
           '100%': { opacity: '1', transform: 'translateX(0)' },
         },
         slideInLeft: {
-          '0%': { opacity: '0', transform: 'translateX(-20px)' },
+          '0%': { opacity: '0', transform: 'translateX(-24px)' },
           '100%': { opacity: '1', transform: 'translateX(0)' },
+        },
+        slideUp: {
+          '0%': { opacity: '0', transform: 'translateY(24px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         pulseSoft: {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.7' },
         },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-8px)' },
+        },
+        glow: {
+          '0%, 100%': { opacity: '0.4' },
+          '50%': { opacity: '0.8' },
+        },
+        counterRotate: {
+          '0%': { transform: 'rotate(0deg)' },
+          '100%': { transform: 'rotate(-360deg)' },
+        },
       },
-      
+
       // ============================================
       // TAMANHOS MÁXIMOS
       // ============================================
@@ -231,7 +254,7 @@ export default {
         'modal-md': '560px',
         'modal-lg': '720px',
       },
-      
+
       // ============================================
       // Z-INDEX (modal acima de popover/dropdown para abrir por cima de menus)
       // ============================================

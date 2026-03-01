@@ -31,6 +31,7 @@ const emit = defineEmits<{
   'edit-renda': [recurringId: string]
   'edit-saida': [recurringId: string]
   'mark-renda-received': [payload: { recurringId: string; transactionDate: string }]
+  'mark-saida-paid': [payload: { recurringId: string; transactionDate: string }]
   'toggle-select': [id: string]
   'pay-invoice': [payload: { creditCardId: string; invoiceId?: string; referenceMonth?: string; amount: number; dueDate?: string }]
   'open-invoice-drawer': [creditCardId: string]
@@ -84,7 +85,7 @@ function isNewMonth(index: number): boolean {
             <div class="h-4 w-40 bg-surface-overlay/70 rounded" />
             <div class="h-3 w-24 bg-surface-overlay/50 rounded" />
           </div>
-          <div class="h-8 w-24 bg-surface-overlay/60 rounded-lg" />
+          <div class="h-8 w-24 bg-surface-light-tertiary/60 dark:bg-surface-dark-tertiary/60 rounded-lg" />
           <div class="w-24 h-5 bg-surface-overlay/70 rounded" />
         </div>
       </div>
@@ -132,6 +133,7 @@ function isNewMonth(index: number): boolean {
             @edit-renda="emit('edit-renda', $event)"
             @edit-saida="emit('edit-saida', $event)"
             @mark-renda-received="emit('mark-renda-received', $event)"
+            @mark-saida-paid="emit('mark-saida-paid', $event)"
             @toggle-select="emit('toggle-select', $event)"
             @pay-invoice="emit('pay-invoice', $event)"
             @open-invoice-drawer="emit('open-invoice-drawer', $event)"

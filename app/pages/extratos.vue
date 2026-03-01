@@ -63,6 +63,7 @@ const {
   markAsUnpaid,
   deleteTransaction,
   markRendaAsReceived,
+  markSaidaAsPaid,
   updateTransactionLocal,
   getTransactionById,
   getRawTransactionById,
@@ -634,11 +635,13 @@ watch(creditCardsList, () => {
 }, { deep: true })
 
 function handleEditRenda(recurringId: string) {
-  navigateTo({ path: '/contas', query: { editarRenda: recurringId } })
+  activeTab.value = 'recorrentes'
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 function handleEditSaida(recurringId: string) {
-  navigateTo({ path: '/contas', query: { editarSaida: recurringId } })
+  activeTab.value = 'recorrentes'
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 async function handleMarkRendaReceived(payload: { recurringId: string; transactionDate: string }) {
@@ -646,6 +649,14 @@ async function handleMarkRendaReceived(payload: { recurringId: string; transacti
     await markRendaAsReceived(payload.recurringId, payload.transactionDate)
   } catch (err) {
     console.error('Erro ao marcar renda como recebida:', err)
+  }
+}
+
+async function handleMarkSaidaPaid(payload: { recurringId: string; transactionDate: string }) {
+  try {
+    await markSaidaAsPaid(payload.recurringId, payload.transactionDate)
+  } catch (err) {
+    console.error('Erro ao marcar saída como paga:', err)
   }
 }
 
@@ -773,6 +784,7 @@ const { pullDistance, isPulling, isRefreshing: ptrRefreshing } = usePullToRefres
         @edit-renda="handleEditRenda"
         @edit-saida="handleEditSaida"
         @mark-renda-received="handleMarkRendaReceived"
+        @mark-saida-paid="handleMarkSaidaPaid"
         @toggle-select="handleToggleSelect"
         @pay-invoice="handlePayInvoice"
         @open-invoice-drawer="handleCardClick"
@@ -793,6 +805,7 @@ const { pullDistance, isPulling, isRefreshing: ptrRefreshing } = usePullToRefres
         @edit-renda="handleEditRenda"
         @edit-saida="handleEditSaida"
         @mark-renda-received="handleMarkRendaReceived"
+        @mark-saida-paid="handleMarkSaidaPaid"
         @toggle-select="handleToggleSelect"
         @pay-invoice="handlePayInvoice"
         @open-invoice-drawer="handleCardClick"

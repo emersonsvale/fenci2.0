@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { LancamentoType } from '../composables/useLancamento'
 import LancamentoDropdown from './LancamentoDropdown.vue'
@@ -6,7 +6,7 @@ import PeriodSelector from './PeriodSelector.vue'
 
 /**
  * DashboardHeader - Header do dashboard
- * Exibe saudação, seletor de período e botão de ação
+ * Exibe saudaÃ§Ã£o, seletor de perÃ­odo e botÃ£o de aÃ§Ã£o
  */
 
 export interface DashboardHeaderProps {
@@ -49,12 +49,9 @@ function handleSelectLancamento(type: LancamentoType) {
   <header id="dashboard-header" class="flex items-center justify-between mb-5">
     <!-- Greeting -->
     <div>
-      <h1 class="text-heading-lg text-content-primary">
-        Olá, {{ userName }}
+      <h1 class="text-heading-lg font-bold text-content-main">
+        {{ greeting }}, <span class="text-primary">{{ userName }}</span>
       </h1>
-      <p class="text-body-sm text-content-tertiary">
-        {{ greeting }}
-      </p>
     </div>
 
     <!-- Actions -->
@@ -69,7 +66,7 @@ function handleSelectLancamento(type: LancamentoType) {
       <div class="relative">
         <button
           type="button"
-          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-error text-white font-medium text-body-sm hover:bg-red-600 transition-colors"
+          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white font-medium text-body-sm hover:bg-primary-600 shadow-primary transition-all duration-200 hover:-translate-y-[1px]"
           @click.stop="toggleDropdown"
         >
           <span class="material-symbols-outlined text-lg">add</span>

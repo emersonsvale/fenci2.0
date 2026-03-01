@@ -49,11 +49,19 @@ const variantClasses = computed(() => {
 </script>
 
 <template>
-  <div id="summary-card" class="card p-3 lg:p-4 flex items-center gap-3 lg:gap-4 hover:shadow-card-hover transition-all duration-200">
+  <div
+    id="summary-card"
+    class="summary-card card p-3 lg:p-4 flex items-center gap-3 lg:gap-4 hover:shadow-card-hover transition-all duration-300 group"
+    :class="{
+      'summary-card-red': icon === 'down',
+      'summary-card-green': icon === 'up',
+      'summary-card-blue': icon === 'neutral',
+    }"
+  >
     <!-- Icon -->
     <div
       v-if="icon"
-      class="w-9 h-9 lg:w-11 lg:h-11 rounded-lg lg:rounded-xl flex items-center justify-center flex-shrink-0"
+      class="w-9 h-9 lg:w-11 lg:h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
       :class="{
         'bg-error/10': icon === 'down',
         'bg-success/10': icon === 'up',
@@ -76,7 +84,7 @@ const variantClasses = computed(() => {
     <div class="flex-1 min-w-0">
       <!-- Label with visibility toggle -->
       <div class="flex items-center gap-1.5 lg:gap-2 mb-0.5">
-        <span class="text-[10px] lg:text-caption font-medium text-content-subtle truncate">
+        <span class="text-[10px] lg:text-caption font-medium text-content-subtle truncate uppercase tracking-wide">
           {{ label }}
         </span>
         <button

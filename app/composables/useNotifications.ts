@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import { useSupabaseClient, useSupabaseUser } from '#imports'
+import { useSupabaseClient } from '#imports'
 import type { Database, Notification } from 'shared/types/database.types'
 
 /**
@@ -8,7 +8,6 @@ import type { Database, Notification } from 'shared/types/database.types'
  */
 export function useNotifications() {
   const supabase = useSupabaseClient<Database>()
-  const user = useSupabaseUser()
 
   const notifications = ref<Notification[]>([])
   const isLoading = ref(false)
@@ -17,16 +16,11 @@ export function useNotifications() {
   const unreadCount = computed(() => notifications.value.filter((n) => !n.read_at).length)
 
   async function fetchNotifications(limit = 50) {
-    if (!user.value?.id) {
-      notifications.value = []
-      return
-    }
     isLoading.value = true
     error.value = null
     const { data, error: e } = await supabase
       .from('notifications')
       .select('*')
-      .eq('user_id', user.value.id)
       .order('created_at', { ascending: false })
       .limit(limit)
     isLoading.value = false
@@ -42,7 +36,6 @@ export function useNotifications() {
       .from('notifications')
       .update({ read_at: new Date().toISOString() })
       .eq('id', id)
-      .eq('user_id', user.value?.id)
     if (!e) {
       const n = notifications.value.find((x) => x.id === id)
       if (n) n.read_at = new Date().toISOString()
@@ -50,11 +43,9 @@ export function useNotifications() {
   }
 
   async function markAllAsRead() {
-    if (!user.value?.id) return
     await supabase
       .from('notifications')
       .update({ read_at: new Date().toISOString() })
-      .eq('user_id', user.value.id)
       .is('read_at', null)
     notifications.value.forEach((n) => {
       if (!n.read_at) n.read_at = new Date().toISOString()

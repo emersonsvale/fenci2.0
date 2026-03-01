@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useSupabaseClient, useSupabaseUser } from '#imports'
@@ -136,7 +136,7 @@ const sidebarStyle = computed(() => {
         <!-- Toggle desktop / Close mobile -->
         <button
           type="button"
-          class="sidebar-toggle shrink-0 p-2 rounded-lg text-content-secondary hover:bg-surface-light-tertiary hover:text-content-primary dark:text-content-secondary-dark dark:hover:bg-surface-dark-tertiary dark:hover:text-content-primary-dark transition-colors"
+          class="sidebar-toggle shrink-0 p-2 rounded-xl text-content-muted hover:bg-surface-overlay hover:text-content-main transition-all duration-200"
           :aria-label="isMobile ? 'Fechar menu' : (isCollapsed ? 'Expandir menu' : 'Minimizar menu')"
           @click="isMobile ? closeMobile() : toggleSidebar()"
         >
@@ -217,12 +217,16 @@ const sidebarStyle = computed(() => {
         v-for="item in navItems"
         :key="item.id"
         :to="item.route"
-        class="flex flex-col items-center justify-center flex-1 h-full px-1 transition-colors"
+        class="flex flex-col items-center justify-center flex-1 h-full px-1 transition-all duration-300 relative"
         :class="currentRoute === item.route || currentRoute.startsWith(item.route + '/')
           ? 'text-primary'
           : 'text-content-subtle'"
       >
-        <span class="material-symbols-outlined text-xl">{{ item.icon }}</span>
+        <div
+          v-if="currentRoute === item.route || currentRoute.startsWith(item.route + '/')"
+          class="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full"
+        />
+        <span class="material-symbols-outlined text-xl" :style="currentRoute === item.route || currentRoute.startsWith(item.route + '/') ? 'font-variation-settings: \'FILL\' 1' : ''">{{ item.icon }}</span>
         <span class="text-[10px] font-medium mt-0.5 leading-none truncate max-w-full">{{ item.label }}</span>
       </NuxtLink>
     </div>
@@ -231,12 +235,18 @@ const sidebarStyle = computed(() => {
 
 <style scoped>
 .nav-item {
-  @apply flex items-center gap-3 px-3 py-2 rounded-lg text-body-sm
+  @apply flex items-center gap-3 px-3 py-2.5 mt-0.5 rounded-xl text-[14px] font-medium
          text-content-secondary dark:text-content-secondary-dark
          border border-transparent
-         transition-all duration-200 ease-smooth
-         hover:bg-surface-light-tertiary dark:hover:bg-surface-dark-tertiary
-         hover:text-content-primary dark:hover:text-content-primary-dark;
+         transition-all duration-300;
+}
+.nav-item:hover {
+  background-color: rgb(34 197 94 / 0.05);
+  color: var(--tw-content-primary, #111827);
+}
+:global(.dark) .nav-item:hover {
+  background-color: rgb(34 197 94 / 0.10);
+  color: var(--tw-content-primary-dark, #FFFFFF);
 }
 
 .nav-item.sidebar-collapsed {
@@ -244,16 +254,27 @@ const sidebarStyle = computed(() => {
 }
 
 .nav-item-active {
-  @apply bg-primary/15 dark:bg-primary/20 text-primary dark:text-primary
-         border border-primary/30 dark:border-primary/40;
+  @apply text-primary;
+  background-color: rgb(34 197 94 / 0.08);
+  border-color: rgb(34 197 94 / 0.15);
+}
+:global(.dark) .nav-item-active {
+  background-color: rgb(34 197 94 / 0.12);
+  color: #34D399;
+  border-color: rgb(34 197 94 / 0.20);
 }
 
 .nav-item-active .nav-icon {
   @apply text-primary;
+  font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
 }
 
 .nav-icon {
-  @apply text-xl;
+  @apply text-[22px] transition-all duration-300;
+}
+
+.nav-item:hover .nav-icon {
+  @apply scale-110;
 }
 
 .nav-label {
@@ -261,29 +282,42 @@ const sidebarStyle = computed(() => {
 }
 
 .sidebar-user-link {
-  @apply flex items-center gap-3 p-2 rounded-lg
-         transition-colors duration-200
-         hover:bg-surface-light-tertiary dark:hover:bg-surface-dark-tertiary;
+  @apply flex items-center gap-3 p-2.5 rounded-xl
+         transition-all duration-300 border border-transparent
+         hover:bg-surface-light-tertiary dark:hover:bg-surface-dark-tertiary hover:border-border-light/50 dark:hover:border-border-dark/25;
 }
 
 .sidebar-avatar {
-  @apply w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0
-         bg-surface-light-tertiary dark:bg-surface-dark-tertiary;
+  @apply w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0
+         overflow-hidden;
+  background-image: linear-gradient(to bottom right, rgb(34 197 94 / 0.15), rgb(34 197 94 / 0.05));
+  box-shadow: inset 0 0 0 1px rgb(34 197 94 / 0.10);
+}
+:global(.dark) .sidebar-avatar {
+  background-image: linear-gradient(to bottom right, rgb(34 197 94 / 0.20), rgb(34 197 94 / 0.10));
 }
 
 .sidebar-avatar-initial {
-  @apply text-body-sm font-medium text-content-primary dark:text-content-primary-dark;
+  @apply text-body-sm font-bold text-primary;
 }
 
 .sidebar-action {
-  @apply flex items-center gap-3 w-full px-3 py-2 rounded-lg
-         text-body-sm text-content-secondary dark:text-content-secondary-dark
-         transition-colors duration-200
+  @apply flex items-center gap-3 w-full px-3 py-2.5 rounded-xl
+         text-[13px] font-medium text-content-secondary dark:text-content-secondary-dark
+         transition-all duration-300
          hover:bg-surface-light-tertiary dark:hover:bg-surface-dark-tertiary
          hover:text-content-primary dark:hover:text-content-primary-dark;
 }
 
 .sidebar-action-logout:hover {
-  @apply text-error;
+  color: #EF4444;
+  background-color: rgb(239 68 68 / 0.08);
+}
+:global(.dark) .sidebar-action-logout:hover {
+  background-color: rgb(239 68 68 / 0.15);
+}
+
+#mobile-bottom-nav {
+  @apply bg-surface-light-secondary/85 dark:bg-surface-dark-secondary/85 backdrop-blur-2xl border-t border-border-light/30 dark:border-border-dark/15;
 }
 </style>

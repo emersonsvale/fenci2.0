@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import { useProfile } from '~/composables/useProfile'
 import AppButton from './AppButton.vue'
@@ -90,10 +90,10 @@ async function handleSave(): Promise<void> {
 <template>
   <div id="profile-notifications" class="space-y-8">
     <div>
-      <h2 class="text-lg font-semibold text-content-primary dark:text-content-primary-dark mb-1">
+      <h2 class="text-lg font-semibold text-content-main mb-1">
         Notificações
       </h2>
-      <p class="text-sm text-content-secondary dark:text-content-secondary-dark">
+      <p class="text-sm text-content-muted">
         Configure como e quando deseja receber alertas
       </p>
     </div>
@@ -101,31 +101,31 @@ async function handleSave(): Promise<void> {
     <form class="space-y-8" @submit.prevent="handleSave">
       <!-- Canais de Notificação -->
       <div class="space-y-4">
-        <h3 class="font-medium text-content-primary dark:text-content-primary-dark">
+        <h3 class="font-medium text-content-main">
           Canais de notificação
         </h3>
         
         <div class="space-y-3">
-          <label class="flex items-center justify-between gap-4 p-4 rounded-xl bg-surface-light-secondary dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark cursor-pointer transition-colors duration-200 hover:border-primary/30">
+          <label class="flex items-center justify-between gap-4 p-4 rounded-xl bg-surface-overlay border border-default-subtle cursor-pointer transition-colors duration-200 hover:border-primary/30">
             <div class="flex-1">
               <span class="font-medium">E-mail</span>
-              <p class="text-sm text-content-tertiary dark:text-content-tertiary-dark">Receber notificações por e-mail</p>
+              <p class="text-sm text-content-subtle">Receber notificações por e-mail</p>
             </div>
             <input v-model="emailEnabled" type="checkbox" class="toggle-input" />
           </label>
 
-          <label class="flex items-center justify-between gap-4 p-4 rounded-xl bg-surface-light-secondary dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark cursor-pointer transition-colors duration-200 hover:border-primary/30">
+          <label class="flex items-center justify-between gap-4 p-4 rounded-xl bg-surface-overlay border border-default-subtle cursor-pointer transition-colors duration-200 hover:border-primary/30">
             <div class="flex-1">
               <span class="font-medium">Push</span>
-              <p class="text-sm text-content-tertiary dark:text-content-tertiary-dark">Notificações no navegador</p>
+              <p class="text-sm text-content-subtle">Notificações no navegador</p>
             </div>
             <input v-model="pushEnabled" type="checkbox" class="toggle-input" />
           </label>
 
-          <label class="flex items-center justify-between gap-4 p-4 rounded-xl bg-surface-light-secondary dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark cursor-pointer transition-colors duration-200 opacity-60">
+          <label class="flex items-center justify-between gap-4 p-4 rounded-xl bg-surface-overlay border border-default-subtle cursor-pointer transition-colors duration-200 opacity-60">
             <div class="flex-1">
               <span class="font-medium">WhatsApp</span>
-              <p class="text-sm text-content-tertiary dark:text-content-tertiary-dark">Em breve</p>
+              <p class="text-sm text-content-subtle">Em breve</p>
             </div>
             <input v-model="whatsappEnabled" type="checkbox" class="toggle-input" disabled />
           </label>
@@ -134,63 +134,63 @@ async function handleSave(): Promise<void> {
 
       <!-- Tipos de Notificação -->
       <div class="space-y-4">
-        <h3 class="font-medium text-content-primary dark:text-content-primary-dark">
+        <h3 class="font-medium text-content-main">
           Tipos de notificação
         </h3>
         
         <div class="space-y-3">
-          <label class="flex items-center justify-between gap-4 p-4 rounded-xl bg-surface-light-secondary dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark cursor-pointer transition-colors duration-200 hover:border-primary/30">
+          <label class="flex items-center justify-between gap-4 p-4 rounded-xl bg-surface-overlay border border-default-subtle cursor-pointer transition-colors duration-200 hover:border-primary/30">
             <div class="flex-1">
               <span class="font-medium">Vencimentos próximos</span>
-              <p class="text-sm text-content-tertiary dark:text-content-tertiary-dark">Aviso de contas a vencer</p>
+              <p class="text-sm text-content-subtle">Aviso de contas a vencer</p>
             </div>
             <input v-model="notifyDueDates" type="checkbox" class="toggle-input" />
           </label>
 
-          <label class="flex items-center justify-between gap-4 p-4 rounded-xl bg-surface-light-secondary dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark cursor-pointer transition-colors duration-200 hover:border-primary/30">
+          <label class="flex items-center justify-between gap-4 p-4 rounded-xl bg-surface-overlay border border-default-subtle cursor-pointer transition-colors duration-200 hover:border-primary/30">
             <div class="flex-1">
               <span class="font-medium">Contas atrasadas</span>
-              <p class="text-sm text-content-tertiary dark:text-content-tertiary-dark">Alerta de contas vencidas</p>
+              <p class="text-sm text-content-subtle">Alerta de contas vencidas</p>
             </div>
             <input v-model="notifyOverdue" type="checkbox" class="toggle-input" />
           </label>
 
-          <label class="flex items-center justify-between gap-4 p-4 rounded-xl bg-surface-light-secondary dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark cursor-pointer transition-colors duration-200 hover:border-primary/30">
+          <label class="flex items-center justify-between gap-4 p-4 rounded-xl bg-surface-overlay border border-default-subtle cursor-pointer transition-colors duration-200 hover:border-primary/30">
             <div class="flex-1">
               <span class="font-medium">Gastos grandes</span>
-              <p class="text-sm text-content-tertiary dark:text-content-tertiary-dark">Aviso de despesas acima do limite</p>
+              <p class="text-sm text-content-subtle">Aviso de despesas acima do limite</p>
             </div>
             <input v-model="notifyLargeExpenses" type="checkbox" class="toggle-input" />
           </label>
 
-          <label class="flex items-center justify-between gap-4 p-4 rounded-xl bg-surface-light-secondary dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark cursor-pointer transition-colors duration-200 hover:border-primary/30">
+          <label class="flex items-center justify-between gap-4 p-4 rounded-xl bg-surface-overlay border border-default-subtle cursor-pointer transition-colors duration-200 hover:border-primary/30">
             <div class="flex-1">
               <span class="font-medium">Alertas de orçamento</span>
-              <p class="text-sm text-content-tertiary dark:text-content-tertiary-dark">Quando atingir limite do orçamento</p>
+              <p class="text-sm text-content-subtle">Quando atingir limite do orçamento</p>
             </div>
             <input v-model="notifyBudgetAlerts" type="checkbox" class="toggle-input" />
           </label>
 
-          <label class="flex items-center justify-between gap-4 p-4 rounded-xl bg-surface-light-secondary dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark cursor-pointer transition-colors duration-200 hover:border-primary/30">
+          <label class="flex items-center justify-between gap-4 p-4 rounded-xl bg-surface-overlay border border-default-subtle cursor-pointer transition-colors duration-200 hover:border-primary/30">
             <div class="flex-1">
               <span class="font-medium">Progresso de metas</span>
-              <p class="text-sm text-content-tertiary dark:text-content-tertiary-dark">Atualizações sobre suas metas</p>
+              <p class="text-sm text-content-subtle">Atualizações sobre suas metas</p>
             </div>
             <input v-model="notifyGoalProgress" type="checkbox" class="toggle-input" />
           </label>
 
-          <label class="flex items-center justify-between gap-4 p-4 rounded-xl bg-surface-light-secondary dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark cursor-pointer transition-colors duration-200 hover:border-primary/30">
+          <label class="flex items-center justify-between gap-4 p-4 rounded-xl bg-surface-overlay border border-default-subtle cursor-pointer transition-colors duration-200 hover:border-primary/30">
             <div class="flex-1">
               <span class="font-medium">Resumo semanal</span>
-              <p class="text-sm text-content-tertiary dark:text-content-tertiary-dark">Relatório semanal de gastos</p>
+              <p class="text-sm text-content-subtle">Relatório semanal de gastos</p>
             </div>
             <input v-model="notifyWeeklySummary" type="checkbox" class="toggle-input" />
           </label>
 
-          <label class="flex items-center justify-between gap-4 p-4 rounded-xl bg-surface-light-secondary dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark cursor-pointer transition-colors duration-200 hover:border-primary/30">
+          <label class="flex items-center justify-between gap-4 p-4 rounded-xl bg-surface-overlay border border-default-subtle cursor-pointer transition-colors duration-200 hover:border-primary/30">
             <div class="flex-1">
               <span class="font-medium">Relatório mensal</span>
-              <p class="text-sm text-content-tertiary dark:text-content-tertiary-dark">Análise mensal completa</p>
+              <p class="text-sm text-content-subtle">Análise mensal completa</p>
             </div>
             <input v-model="notifyMonthlyReport" type="checkbox" class="toggle-input" />
           </label>
@@ -199,14 +199,14 @@ async function handleSave(): Promise<void> {
 
       <!-- Configurações -->
       <div class="space-y-4 max-w-md">
-        <h3 class="font-medium text-content-primary dark:text-content-primary-dark">
+        <h3 class="font-medium text-content-main">
           Configurações
         </h3>
         
         <div>
           <label 
             for="due-days" 
-            class="block text-sm font-medium text-content-primary dark:text-content-primary-dark mb-2"
+            class="block text-sm font-medium text-content-main mb-2"
           >
             Dias de antecedência para vencimentos
           </label>
@@ -222,12 +222,12 @@ async function handleSave(): Promise<void> {
         <div>
           <label 
             for="large-expense" 
-            class="block text-sm font-medium text-content-primary dark:text-content-primary-dark mb-2"
+            class="block text-sm font-medium text-content-main mb-2"
           >
             Valor considerado gasto grande
           </label>
           <div class="relative">
-            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-content-tertiary dark:text-content-tertiary-dark">R$</span>
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-content-subtle">R$</span>
             <input
               id="large-expense"
               v-model.number="largeExpenseThreshold"

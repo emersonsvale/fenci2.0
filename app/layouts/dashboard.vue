@@ -35,11 +35,11 @@ useSwipeGesture({
     <header
       v-if="isMobile"
       id="mobile-top-bar"
-      class="fixed top-0 left-0 right-0 h-14 bg-surface-elevated border-b border-default z-sticky flex items-center justify-between px-4 safe-top"
+      class="fixed top-0 left-0 right-0 h-14 bg-surface-elevated/90 backdrop-blur-xl border-b border-default-subtle z-sticky flex items-center justify-between px-4 safe-top"
     >
       <button
         type="button"
-        class="p-2 -ml-2 rounded-lg hover:bg-surface-overlay transition-colors"
+        class="p-2 -ml-2 rounded-xl hover:bg-surface-overlay transition-all duration-200"
         aria-label="Abrir menu"
         @click="openMobile"
       >

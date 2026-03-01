@@ -41,8 +41,12 @@ const handleResetRequest = async (): Promise<void> => {
   <div id="esqueci-senha-page" class="min-h-screen flex">
     <!-- Left Panel - Brand Section -->
     <div 
-      class="hidden lg:flex lg:w-1/2 bg-brand-teal relative items-start justify-start p-12"
+      class="hidden lg:flex lg:w-[45%] bg-brand-teal relative items-start justify-start p-12 overflow-hidden"
     >
+      <!-- Animated glow orbs -->
+      <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-primary/20 rounded-full blur-3xl animate-float" />
+      <div class="absolute bottom-1/3 right-1/4 w-48 h-48 bg-white/10 rounded-full blur-2xl animate-float" style="animation-delay: -3s;" />
+
       <!-- Logo -->
       <div class="relative z-10">
         <img 
@@ -54,47 +58,29 @@ const handleResetRequest = async (): Promise<void> => {
       
       <!-- Pattern decorativo -->
       <BrandPattern />
+
+      <!-- Bottom tagline -->
+      <div class="absolute bottom-12 left-12 right-12 z-10">
+        <p class="text-white/80 text-body-lg font-medium">
+          Recupere o acesso à sua conta de forma segura
+        </p>
+      </div>
     </div>
 
     <!-- Right Panel - Reset Password Form -->
     <div 
-      class="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 lg:p-16 bg-surface transition-colors duration-300"
+      class="w-full lg:w-[55%] flex flex-col items-center justify-center p-8 lg:p-16 bg-surface transition-colors duration-300 relative"
     >
       <!-- Theme Toggle -->
       <button
         type="button"
-        class="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        class="absolute top-6 right-6 p-2.5 rounded-xl hover:bg-surface-overlay transition-all duration-200"
         @click="toggleTheme"
         aria-label="Alternar tema"
       >
-        <svg
-          v-if="isDark"
-          class="w-6 h-6 text-gray-600 dark:text-gray-300"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-          />
-        </svg>
-        <svg
-          v-else
-          class="w-6 h-6 text-gray-600 dark:text-gray-300"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-          />
-        </svg>
+        <span class="material-symbols-outlined text-xl text-content-subtle">
+          {{ isDark ? 'light_mode' : 'dark_mode' }}
+        </span>
       </button>
 
       <!-- Mobile Logo -->
@@ -102,39 +88,27 @@ const handleResetRequest = async (): Promise<void> => {
         <img 
           src="/logotipo.png" 
           alt="Fenci" 
-          class="h-10 w-auto"
+          class="h-10 w-auto dark:brightness-0 dark:invert"
         />
       </div>
 
-      <div class="w-full max-w-md">
+      <div class="w-full max-w-md animate-fade-in-up">
         <!-- Success State -->
-        <div v-if="emailSent" class="text-center">
+        <div v-if="emailSent" class="text-center animate-fade-in-up">
           <!-- Success Icon -->
-          <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg 
-              class="w-10 h-10 text-primary" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path 
-                stroke-linecap="round" 
-                stroke-linejoin="round" 
-                stroke-width="2" 
-                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-              />
-            </svg>
+          <div class="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <span class="material-symbols-outlined text-4xl text-primary">mark_email_read</span>
           </div>
 
-          <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-3">
+          <h1 class="text-display-sm text-content-main mb-3">
             E-mail enviado!
           </h1>
-          <p class="text-gray-600 dark:text-gray-400 text-sm lg:text-base mb-8">
+          <p class="text-content-muted text-body-sm mb-8">
             Enviamos um link de recuperação para<br />
-            <span class="font-medium text-gray-900 dark:text-white">{{ email }}</span>
+            <span class="font-semibold text-content-main">{{ email }}</span>
           </p>
 
-          <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+          <p class="text-caption text-content-subtle mb-6">
             Não recebeu o e-mail? Verifique sua caixa de spam ou
             <button 
               type="button"
@@ -158,35 +132,37 @@ const handleResetRequest = async (): Promise<void> => {
           <!-- Back Button -->
           <NuxtLink 
             to="/login"
-            class="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-primary transition-colors mb-8"
+            class="inline-flex items-center gap-2 text-content-muted hover:text-primary transition-colors mb-8 group"
           >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-            Voltar para o login
+            <span class="material-symbols-outlined text-lg transition-transform group-hover:-translate-x-0.5">arrow_back</span>
+            <span class="text-body-sm font-medium">Voltar para o login</span>
           </NuxtLink>
 
           <!-- Header -->
-          <div class="text-center mb-8">
-            <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-3">
+          <div class="mb-8">
+            <h1 class="text-display-sm text-content-main mb-3">
               Esqueceu sua senha?
             </h1>
-            <p class="text-gray-600 dark:text-gray-400 text-sm lg:text-base">
-              Sem problemas! Digite seu e-mail e enviaremos<br />
-              um link para redefinir sua senha
+            <p class="text-content-muted text-body-sm">
+              Sem problemas! Digite seu e-mail e enviaremos um link para redefinir sua senha.
             </p>
           </div>
 
-          <!-- Divider -->
-          <div class="w-16 h-1 bg-primary mx-auto mb-8 rounded-full" />
-
           <!-- Error Message -->
-          <div 
-            v-if="errorMessage" 
-            class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+          <Transition
+            enter-active-class="transition-all duration-300 ease-out"
+            enter-from-class="opacity-0 -translate-y-2"
+            leave-active-class="transition-all duration-200 ease-in"
+            leave-to-class="opacity-0 -translate-y-2"
           >
-            <p class="text-sm text-red-600 dark:text-red-400">{{ errorMessage }}</p>
-          </div>
+            <div 
+              v-if="errorMessage" 
+              class="mb-4 p-4 bg-error/8 border border-error/20 rounded-xl flex items-center gap-3"
+            >
+              <span class="material-symbols-outlined text-error text-lg">error</span>
+              <p class="text-body-sm text-error">{{ errorMessage }}</p>
+            </div>
+          </Transition>
 
           <!-- Reset Form -->
           <form class="space-y-5" @submit.prevent="handleResetRequest">
@@ -194,7 +170,7 @@ const handleResetRequest = async (): Promise<void> => {
             <div>
               <label 
                 for="email" 
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                class="block text-body-sm font-medium text-content-muted mb-2"
               >
                 E-mail
               </label>
@@ -214,17 +190,20 @@ const handleResetRequest = async (): Promise<void> => {
               :disabled="isLoading"
               class="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span v-if="isLoading">Enviando...</span>
+              <span v-if="isLoading" class="inline-flex items-center gap-2">
+                <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Enviando...
+              </span>
               <span v-else>Enviar link de recuperação</span>
             </button>
           </form>
 
           <!-- Register Link -->
           <div class="mt-6 text-center">
-            <span class="text-gray-600 dark:text-gray-400">Não tem uma conta? </span>
+            <span class="text-content-subtle text-body-sm">Não tem uma conta? </span>
             <NuxtLink
               to="/cadastro"
-              class="text-primary hover:text-primary-500 font-medium transition-colors"
+              class="text-primary hover:text-primary-600 font-semibold text-body-sm transition-colors"
             >
               Criar conta
             </NuxtLink>
@@ -233,8 +212,8 @@ const handleResetRequest = async (): Promise<void> => {
 
         <!-- Version Badge -->
         <div class="mt-8 text-center">
-          <span class="text-xs text-gray-400 dark:text-gray-500">
-            Versão beta [!]
+          <span class="text-caption text-content-subtle/60">
+            Versão beta
           </span>
         </div>
       </div>

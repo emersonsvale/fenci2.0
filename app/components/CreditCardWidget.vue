@@ -93,33 +93,39 @@ const availableLimit = computed(() => {
       <!-- Credit Card Visual -->
       <div
         class="credit-card-visual"
-        :style="{ background: `linear-gradient(135deg, ${currentCard.color}, ${currentCard.color}dd)` }"
+        :style="{ background: `linear-gradient(135deg, ${currentCard.color}ee, ${currentCard.color}99)` }"
         @click="emit('card-click', currentCard)"
       >
+        <!-- Decorative circles -->
+        <div class="absolute top-0 right-0 w-32 h-32 rounded-full opacity-10 -translate-y-1/2 translate-x-1/4" :style="{ backgroundColor: 'white' }" />
+        <div class="absolute bottom-0 left-0 w-20 h-20 rounded-full opacity-10 translate-y-1/3 -translate-x-1/4" :style="{ backgroundColor: 'white' }" />
+
         <!-- Card Content -->
-        <div class="flex items-start justify-between mb-4">
-          <p class="text-white font-medium text-body-sm">{{ currentCard.name }}</p>
-          <div class="w-8 h-5 bg-yellow-400/90 rounded-sm" />
-        </div>
-
-        <!-- Card Number -->
-        <p class="text-white/90 font-mono text-body-sm tracking-widest mb-4">
-          •••• •••• •••• {{ currentCard.lastDigits }}
-        </p>
-
-        <!-- Card Footer -->
-        <div class="flex items-end justify-between">
-          <div>
-            <p class="text-white/70 text-caption">Disponível</p>
-            <p class="text-white font-bold text-heading-sm">
-              {{ formatCurrency(availableLimit) }}
-            </p>
+        <div class="relative z-10">
+          <div class="flex items-start justify-between mb-4">
+            <p class="text-white font-semibold text-body-sm">{{ currentCard.name }}</p>
+            <div class="w-8 h-5 bg-yellow-300/80 rounded-sm shadow-inner" />
           </div>
-          <div class="text-right">
-            <p class="text-white/70 text-caption">Usado</p>
-            <p class="text-white/90 font-semibold text-body-sm">
-              {{ formatCurrency(currentCard.used) }}
-            </p>
+
+          <!-- Card Number -->
+          <p class="text-white/80 font-mono text-body-sm tracking-[0.2em] mb-5">
+            ••••  ••••  ••••  {{ currentCard.lastDigits }}
+          </p>
+
+          <!-- Card Footer -->
+          <div class="flex items-end justify-between">
+            <div>
+              <p class="text-white/60 text-[10px] uppercase tracking-wider mb-0.5">Disponível</p>
+              <p class="text-white font-bold text-heading-sm">
+                {{ formatCurrency(availableLimit) }}
+              </p>
+            </div>
+            <div class="text-right">
+              <p class="text-white/60 text-[10px] uppercase tracking-wider mb-0.5">Usado</p>
+              <p class="text-white/90 font-semibold text-body-sm">
+                {{ formatCurrency(currentCard.used) }}
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -139,14 +145,17 @@ const availableLimit = computed(() => {
 
     <!-- Empty State -->
     <div v-else class="text-center py-6">
-      <span class="material-symbols-outlined text-4xl text-content-subtle mb-2 block opacity-50">credit_card_off</span>
+      <div class="w-14 h-14 rounded-2xl bg-primary/8 flex items-center justify-center mx-auto mb-3">
+        <span class="material-symbols-outlined text-2xl text-primary/60">credit_card_off</span>
+      </div>
       <p class="text-body-sm text-content-muted mb-3">Nenhum cartão cadastrado</p>
       <button
         type="button"
-        class="text-primary text-body-sm font-medium hover:text-primary-600 transition-colors"
+        class="text-primary text-body-sm font-semibold hover:text-primary-600 transition-colors inline-flex items-center gap-1"
         @click="emit('add-card')"
       >
-        + Adicionar cartão
+        <span class="material-symbols-outlined text-lg">add_circle</span>
+        Adicionar cartão
       </button>
     </div>
   </div>
@@ -154,8 +163,9 @@ const availableLimit = computed(() => {
 
 <style scoped>
 .credit-card-visual {
-  @apply relative p-4 rounded-xl overflow-hidden cursor-pointer
-         min-h-[140px] transition-all duration-300
-         hover:shadow-lg hover:scale-[1.02];
+  @apply relative p-5 rounded-2xl overflow-hidden cursor-pointer
+         min-h-[150px] transition-all duration-300
+         hover:shadow-xl hover:scale-[1.02];
+  backdrop-filter: saturate(1.2) brightness(1.05);
 }
 </style>

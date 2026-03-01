@@ -28,7 +28,7 @@ export default defineNuxtConfig({
       name: 'Fenci - Gestão Financeira Pessoal',
       short_name: 'Fenci',
       description: 'Organize suas finanças com um app que funciona de verdade',
-      theme_color: '#6366f1',
+      theme_color: '#22C55E',
       background_color: '#ffffff',
       display: 'standalone',
       orientation: 'portrait',

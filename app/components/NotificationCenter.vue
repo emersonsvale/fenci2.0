@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useSupabaseClient, useSupabaseUser } from '#imports'
 import { useToast, type ToastVariant } from '../composables/useToast'
@@ -100,30 +100,45 @@ function handleClickOutside(event: MouseEvent) {
   close()
 }
 
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
-  if (user.value) void fetchNotifications()
-})
-watch(user, (u) => {
-  if (u) void fetchNotifications()
-}, { immediate: true })
-
 let realtimeChannel: ReturnType<typeof supabase.channel> | null = null
-onMounted(() => {
-  const uid = user.value?.id
-  if (!uid) return
+function cleanupRealtimeChannel() {
+  if (!realtimeChannel) return
+  supabase.removeChannel(realtimeChannel)
+  realtimeChannel = null
+}
+
+function setupRealtimeChannel(uid: string) {
+  cleanupRealtimeChannel()
   realtimeChannel = supabase
-    .channel('notification-center')
+    .channel(`notification-center-${uid}`)
     .on(
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${uid}` },
       () => void fetchNotifications()
     )
     .subscribe()
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
 })
+
+watch(
+  () => user.value?.id,
+  (uid) => {
+    if (!uid) {
+      cleanupRealtimeChannel()
+      return
+    }
+    void fetchNotifications()
+    setupRealtimeChannel(uid)
+  },
+  { immediate: true }
+)
+
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
-  if (realtimeChannel) supabase.removeChannel(realtimeChannel)
+  cleanupRealtimeChannel()
 })
 </script>
 
@@ -132,7 +147,7 @@ onUnmounted(() => {
     <button
       ref="buttonRef"
       type="button"
-      class="relative p-2.5 rounded-xl text-content-secondary hover:bg-surface-overlay hover:text-content-main transition-colors"
+      class="relative p-2.5 rounded-xl text-content-muted hover:bg-surface-overlay hover:text-content-main transition-colors"
       :aria-label="hasNotifications ? `${countLabel} notificações` : 'Notificações'"
       @click="toggle"
     >
@@ -192,7 +207,7 @@ onUnmounted(() => {
                 <span class="material-symbols-outlined flex-shrink-0 mt-0.5 text-content-subtle">notifications</span>
                 <div class="min-w-0 flex-1">
                   <p class="text-body-sm font-medium text-content-main">{{ n.title }}</p>
-                  <p class="text-body-sm text-content-secondary">{{ n.body }}</p>
+                  <p class="text-body-sm text-content-muted">{{ n.body }}</p>
                   <p class="text-caption text-content-subtle mt-0.5">{{ formatTimeDb(n.created_at) }}</p>
                 </div>
               </li>

@@ -120,10 +120,10 @@ function closeDropdown() {
         <div class="fixed inset-0" @click="closeDropdown" />
 
         <!-- Content -->
-        <div class="relative bg-surface-light dark:bg-surface-dark-secondary rounded-xl shadow-lg border border-border-light dark:border-border-dark p-4 min-w-[280px]">
+        <div class="relative bg-surface-elevated rounded-2xl shadow-xl border border-default-subtle p-4 min-w-[280px]">
           <!-- Year Selector -->
           <div class="mb-4">
-            <label class="text-caption text-content-secondary dark:text-content-secondary-dark mb-2 block">Ano</label>
+            <label class="text-caption text-content-subtle mb-2 block">Ano</label>
             <div class="flex gap-2 flex-wrap">
               <button
                 v-for="year in years"
@@ -140,7 +140,7 @@ function closeDropdown() {
 
           <!-- Month Selector -->
           <div class="mb-4">
-            <label class="text-caption text-content-secondary dark:text-content-secondary-dark mb-2 block">Mês</label>
+            <label class="text-caption text-content-subtle mb-2 block">Mês</label>
             <div class="grid grid-cols-3 gap-2">
               <button
                 v-for="(month, index) in months"
@@ -171,18 +171,18 @@ function closeDropdown() {
 
 <style scoped>
 .period-nav-btn {
-  @apply p-2 rounded-lg
+  @apply p-2 rounded-xl
          text-content-secondary dark:text-content-secondary-dark
          hover:bg-surface-light-tertiary dark:hover:bg-surface-dark-tertiary
-         transition-colors duration-200;
+         transition-all duration-200;
 }
 
 .period-display {
   @apply flex items-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-2 rounded-xl
          text-caption lg:text-body-sm font-medium text-content-primary dark:text-content-primary-dark
-         bg-surface-light dark:bg-surface-dark-secondary
-         border border-border-light dark:border-border-dark
-         hover:border-primary dark:hover:border-primary
+         bg-surface-light-tertiary/60 dark:bg-surface-dark-tertiary/60
+         border border-border-light/80 dark:border-border-dark/50
+         hover:border-primary/40 hover:bg-surface-light-tertiary dark:hover:bg-surface-dark-tertiary
          transition-all duration-200 whitespace-nowrap;
 }
 
@@ -191,10 +191,10 @@ function closeDropdown() {
 }
 
 .year-btn {
-  @apply px-3 py-1.5 rounded-lg text-body-sm
+  @apply px-3 py-1.5 rounded-xl text-body-sm
          text-content-secondary dark:text-content-secondary-dark
          hover:bg-surface-light-tertiary dark:hover:bg-surface-dark-tertiary
-         transition-colors duration-200;
+         transition-all duration-200;
 }
 
 .year-btn-active {
@@ -202,10 +202,10 @@ function closeDropdown() {
 }
 
 .month-btn {
-  @apply px-2 py-2 rounded-lg text-body-sm text-center
+  @apply px-2 py-2 rounded-xl text-body-sm text-center
          text-content-secondary dark:text-content-secondary-dark
          hover:bg-surface-light-tertiary dark:hover:bg-surface-dark-tertiary
-         transition-colors duration-200;
+         transition-all duration-200;
 }
 
 .month-btn-active {

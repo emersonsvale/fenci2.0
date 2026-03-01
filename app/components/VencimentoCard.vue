@@ -73,38 +73,38 @@ function formatDate(date: Date | string): string {
     </div>
 
     <!-- Vencimento Items -->
-    <div v-else class="space-y-3">
+    <div v-else class="space-y-2">
       <div
         v-for="vencimento in displayedVencimentos"
         :key="vencimento.id"
-        class="p-3 rounded-lg bg-surface-overlay"
+        class="p-3 rounded-xl bg-surface-light-tertiary/60 dark:bg-surface-dark-tertiary/60 hover:bg-surface-overlay transition-all duration-200 cursor-pointer group"
       >
         <div class="flex items-start justify-between gap-3">
           <!-- Info -->
           <div class="flex-1 min-w-0">
-            <p class="text-body-sm font-medium text-content-main">{{ vencimento.descricao }}</p>
+            <p class="text-body-sm font-medium text-content-main group-hover:text-primary transition-colors">{{ vencimento.descricao }}</p>
             <p class="text-caption text-content-subtle">{{ vencimento.tipo }}</p>
             <div class="flex items-center gap-2 mt-1">
-              <span class="text-caption text-content-subtle">Vencimento</span>
-              <span class="text-caption font-medium text-content-main">{{ formatDate(vencimento.vencimento) }}</span>
+              <span class="material-symbols-outlined text-xs text-content-subtle">calendar_today</span>
+              <span class="text-caption font-medium text-content-muted">{{ formatDate(vencimento.vencimento) }}</span>
             </div>
           </div>
 
           <!-- Value and Status -->
-          <div class="flex flex-col items-end gap-2">
-            <span class="text-body-sm font-semibold text-content-main">{{ formatCurrency(vencimento.valor) }}</span>
+          <div class="flex flex-col items-end gap-1.5">
+            <span class="text-body-sm font-bold text-content-main tabular-nums">{{ formatCurrency(vencimento.valor) }}</span>
             <span
               v-if="vencimento.pago"
-              class="text-caption text-success flex items-center gap-1"
+              class="text-[10px] font-medium text-success flex items-center gap-0.5 bg-success/8 px-1.5 py-0.5 rounded-md"
             >
-              <span class="material-symbols-outlined text-sm">check_circle</span>
+              <span class="material-symbols-outlined text-xs">check_circle</span>
               Pago
             </span>
             <span
               v-else
-              class="text-caption text-content-subtle flex items-center gap-1"
+              class="text-[10px] font-medium text-warning flex items-center gap-0.5 bg-warning/8 px-1.5 py-0.5 rounded-md"
             >
-              <span class="material-symbols-outlined text-sm">schedule</span>
+              <span class="material-symbols-outlined text-xs">schedule</span>
               Pendente
             </span>
           </div>
@@ -116,8 +116,10 @@ function formatDate(date: Date | string): string {
         v-if="vencimentos.length === 0"
         class="text-center py-8 text-content-subtle"
       >
-        <span class="material-symbols-outlined text-4xl mb-2 block opacity-50">event_available</span>
-        <p class="text-body-sm">Nenhum vencimento próximo</p>
+        <div class="w-14 h-14 rounded-2xl bg-success/8 flex items-center justify-center mx-auto mb-3">
+          <span class="material-symbols-outlined text-2xl text-success/60">event_available</span>
+        </div>
+        <p class="text-body-sm font-medium text-content-muted">Nenhum vencimento próximo</p>
         <p class="text-caption text-content-subtle mt-1">Suas contas a pagar aparecerão aqui</p>
       </div>
     </div>

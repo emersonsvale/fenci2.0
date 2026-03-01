@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import { useProfile } from '~/composables/useProfile'
 import { useTheme } from '~/composables/useTheme'
@@ -55,22 +55,22 @@ async function handleSave(): Promise<void> {
 <template>
   <div id="profile-preferences" class="space-y-8">
     <div>
-      <h2 class="text-lg font-semibold text-content-primary dark:text-content-primary-dark mb-1">
+      <h2 class="text-lg font-semibold text-content-main mb-1">
         Preferências
       </h2>
-      <p class="text-sm text-content-secondary dark:text-content-secondary-dark">
+      <p class="text-sm text-content-muted">
         Personalize sua experiência no Fenci
       </p>
     </div>
 
     <!-- Tema -->
-    <div class="p-4 rounded-xl bg-surface-light-secondary dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark">
+    <div class="p-4 rounded-xl bg-surface-overlay border border-default-subtle">
       <div class="flex items-center justify-between">
         <div>
-          <h3 class="font-medium text-content-primary dark:text-content-primary-dark">
+          <h3 class="font-medium text-content-main">
             Tema
           </h3>
-          <p class="text-sm text-content-secondary dark:text-content-secondary-dark mt-1">
+          <p class="text-sm text-content-muted mt-1">
             {{ isDark ? 'Modo escuro ativado' : 'Modo claro ativado' }}
           </p>
         </div>
@@ -97,7 +97,7 @@ async function handleSave(): Promise<void> {
       <div>
         <label 
           for="profile-currency"
-          class="block text-sm font-medium text-content-primary dark:text-content-primary-dark mb-2"
+          class="block text-sm font-medium text-content-main mb-2"
         >
           Moeda padrão
         </label>
@@ -110,7 +110,7 @@ async function handleSave(): Promise<void> {
             {{ currency.label }}
           </option>
         </select>
-        <p class="mt-1 text-xs text-content-tertiary dark:text-content-tertiary-dark">
+        <p class="mt-1 text-xs text-content-subtle">
           Usada para exibir valores em todo o sistema
         </p>
       </div>

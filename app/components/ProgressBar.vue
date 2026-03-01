@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed } from 'vue'
 
 /**
@@ -70,7 +70,7 @@ const autoVariant = computed(() => {
 
     <!-- Progress Track -->
     <div
-      class="w-full bg-surface-light-tertiary dark:bg-surface-dark-tertiary rounded-full overflow-hidden"
+      class="w-full bg-surface-light-tertiary/60 dark:bg-surface-dark-tertiary/60 rounded-full overflow-hidden"
       :class="sizeClasses"
     >
       <!-- Progress Fill -->

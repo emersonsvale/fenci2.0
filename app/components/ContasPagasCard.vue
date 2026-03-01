@@ -25,7 +25,7 @@ const { isPrivacyMode, PRIVACY_MASK } = usePrivacyMode()
 const chartWrapRef = ref<HTMLElement | null>(null)
 const chartSize = ref(130)
 
-const donutSize = computed(() => Math.min(chartSize.value, 200))
+const donutSize = computed(() => Math.min(chartSize.value, 140))
 
 function measureChartContainer() {
   if (chartWrapRef.value) {
@@ -53,73 +53,89 @@ onUnmounted(() => {
 
 <template>
   <div
-    class="bg-surface-elevated rounded-xl p-4 shadow-xs border border-default-subtle"
+    class="card-glow p-5"
     aria-label="Contas pagas do mês"
   >
-    <h3 class="text-body-sm font-medium text-content-muted mb-4 pb-3 border-b border-default-subtle">
+    <h3 class="text-body-sm font-semibold text-content-main mb-1">
       Contas pagas de {{ monthName }}
     </h3>
 
     <!-- Loading State -->
     <div v-if="loading" class="flex justify-center py-6">
-      <div class="w-32 h-32 rounded-full bg-surface-overlay animate-pulse" />
+      <div class="w-28 h-28 rounded-full skeleton" />
     </div>
 
     <!-- Empty State (sem despesas) -->
     <div v-else-if="contasPagas.totalValor === 0" class="flex flex-col items-center justify-center py-8">
-      <div class="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mb-3">
-        <span class="material-symbols-outlined text-3xl text-success">
+      <div class="w-14 h-14 rounded-2xl bg-success/10 flex items-center justify-center mb-3">
+        <span class="material-symbols-outlined text-2xl text-success">
           check_circle
         </span>
       </div>
-      <p class="text-body-sm text-content-subtle text-center">
+      <p class="text-body-sm font-medium text-content-muted text-center">
         Nenhuma despesa neste mês
       </p>
     </div>
 
     <!-- Donut Chart + Legend -->
     <template v-else>
+      <!-- Progress Bar compacta -->
+      <div class="mt-3 mb-4">
+        <div class="flex items-baseline justify-between mb-2">
+          <span class="text-display-sm font-bold text-content-main tabular-nums">
+            {{ isPrivacyMode ? PRIVACY_MASK : `${Math.round((contasPagas.valorPago / contasPagas.totalValor) * 100)}%` }}
+          </span>
+          <span class="text-caption text-content-subtle">
+            {{ formatCurrency(contasPagas.valorPago) }}
+          </span>
+        </div>
+        <div class="w-full h-2 bg-gray-200/60 dark:bg-white/[0.06] rounded-full overflow-hidden">
+          <div 
+            class="h-full rounded-full bg-gradient-to-r from-primary to-primary-400 transition-all duration-1000 ease-out"
+            :style="{ width: `${Math.min(100, Math.round((contasPagas.valorPago / contasPagas.totalValor) * 100))}%` }"
+          />
+        </div>
+      </div>
+
+      <!-- Donut Chart (menor, decorativo) -->
       <div
         ref="chartWrapRef"
-        class="w-full max-w-[200px] mx-auto aspect-square py-2"
+        class="w-full max-w-[140px] mx-auto py-2"
       >
         <DonutChart
           :value="contasPagas.valorPago"
           :total="contasPagas.totalValor"
           :size="donutSize"
-          :stroke-width="12"
+          :stroke-width="8"
           color="#22C55E"
         >
           <template #center="{ percentage }">
             <div class="text-center">
-              <span class="text-heading-md font-bold text-content-main">
+              <span class="text-body-sm font-bold text-content-main">
                 {{ isPrivacyMode ? PRIVACY_MASK : `${percentage}%` }}
               </span>
-              <p class="text-caption text-content-subtle leading-tight mt-0.5">
-                {{ formatCurrency(contasPagas.valorPago) }}
-              </p>
             </div>
           </template>
         </DonutChart>
       </div>
 
       <!-- Legend -->
-      <div class="flex flex-col gap-2 mt-4 pt-3 border-t border-default-subtle">
+      <div class="flex flex-col gap-2.5 mt-3 pt-3 border-t border-gray-100 dark:border-white/[0.06]">
         <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-success shadow-sm" />
+          <div class="flex items-center gap-2.5">
+            <span class="w-2 h-2 rounded-full bg-primary" />
             <span class="text-caption text-content-muted">Pago</span>
           </div>
-          <span class="text-caption font-medium text-content-main">
+          <span class="text-caption font-semibold text-content-main tabular-nums">
             {{ formatCurrency(contasPagas.valorPago) }}
           </span>
         </div>
         <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-surface-overlay shadow-sm" />
+          <div class="flex items-center gap-2.5">
+            <span class="w-2 h-2 rounded-full bg-gray-300 dark:bg-white/[0.15]" />
             <span class="text-caption text-content-muted">Pendente</span>
           </div>
-          <span class="text-caption font-medium text-content-main">
+          <span class="text-caption font-semibold text-content-main tabular-nums">
             {{ formatCurrency(contasPagas.valorPendente) }}
           </span>
         </div>

@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useProfile } from '~/composables/useProfile'
 
@@ -55,7 +55,7 @@ async function handleRemove(): Promise<void> {
 
 <template>
   <div id="avatar-uploader" class="space-y-4">
-    <label class="block text-sm font-medium text-content-primary dark:text-content-primary-dark">
+    <label class="block text-sm font-medium text-content-main">
       Foto de perfil
     </label>
 
@@ -102,7 +102,7 @@ async function handleRemove(): Promise<void> {
       <div class="space-y-2">
         <button
           type="button"
-          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm bg-surface-light-secondary dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark text-content-primary dark:text-content-primary-dark hover:bg-surface-light-tertiary dark:hover:bg-surface-dark-tertiary transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm bg-surface-overlay border border-default-subtle text-content-main hover:bg-surface-overlay transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           :disabled="isLoading"
           @click="triggerFileInput"
         >

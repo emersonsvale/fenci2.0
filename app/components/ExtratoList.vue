@@ -28,6 +28,7 @@ const emit = defineEmits<{
   'edit-renda': [recurringId: string]
   'edit-saida': [recurringId: string]
   'mark-renda-received': [payload: { recurringId: string; transactionDate: string }]
+  'mark-saida-paid': [payload: { recurringId: string; transactionDate: string }]
   'toggle-select': [id: string]
   'pay-invoice': [payload: { creditCardId: string; invoiceId?: string; referenceMonth?: string; amount: number; dueDate?: string }]
   'open-invoice-drawer': [creditCardId: string]
@@ -68,7 +69,7 @@ function isSelected(id: string): boolean {
         </div>
         
         <!-- Status skeleton -->
-        <div class="h-8 w-24 bg-surface-overlay/60 rounded-lg" />
+        <div class="h-8 w-24 bg-surface-light-tertiary/60 dark:bg-surface-dark-tertiary/60 rounded-lg" />
         
         <!-- Amount skeleton -->
         <div class="w-28">
@@ -99,6 +100,7 @@ function isSelected(id: string): boolean {
           @edit-renda="emit('edit-renda', $event)"
           @edit-saida="emit('edit-saida', $event)"
           @mark-renda-received="emit('mark-renda-received', $event)"
+          @mark-saida-paid="emit('mark-saida-paid', $event)"
           @toggle-select="emit('toggle-select', $event)"
           @pay-invoice="emit('pay-invoice', $event)"
           @open-invoice-drawer="emit('open-invoice-drawer', $event)"

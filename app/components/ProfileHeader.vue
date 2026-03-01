@@ -36,10 +36,10 @@ const statusColor = computed(() => {
 </script>
 
 <template>
-  <div id="profile-header" class="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 pb-6 border-b border-border-light dark:border-border-dark">
+  <div id="profile-header" class="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 pb-6 border-b border-default">
     <!-- Avatar -->
     <div class="relative">
-      <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-surface-light-secondary dark:bg-surface-dark-secondary border-2 border-border-light dark:border-border-dark">
+      <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-surface-overlay border-2 border-default-subtle shadow-card-elevated">
         <img 
           v-if="avatarUrl" 
           :src="avatarUrl" 
@@ -48,7 +48,7 @@ const statusColor = computed(() => {
         />
         <div 
           v-else 
-          class="w-full h-full flex items-center justify-center bg-primary/10 text-primary text-2xl font-semibold"
+          class="w-full h-full flex items-center justify-center bg-primary/10 text-primary text-2xl font-bold"
         >
           {{ initials }}
         </div>
@@ -57,24 +57,24 @@ const statusColor = computed(() => {
 
     <!-- Info -->
     <div class="flex-1 text-center sm:text-left">
-      <h1 class="text-xl sm:text-2xl font-bold text-content-primary dark:text-content-primary-dark">
+      <h1 class="text-heading-lg font-bold text-content-main">
         {{ displayName }}
       </h1>
-      <p class="text-content-secondary dark:text-content-secondary-dark mt-1">
+      <p class="text-content-muted text-body-sm mt-1">
         {{ userEmail }}
       </p>
       
       <!-- Status Badge -->
       <div class="mt-3 flex items-center justify-center sm:justify-start gap-2 flex-wrap">
         <span 
-          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+          class="inline-flex items-center px-3 py-1 rounded-xl text-caption font-semibold"
           :class="statusColor"
         >
           {{ subscriptionStatusLabel }}
         </span>
         <span 
           v-if="profile?.subscription_status === 'trial' && trialDaysRemaining > 0"
-          class="text-sm text-content-tertiary dark:text-content-tertiary-dark"
+          class="text-caption text-content-subtle"
         >
           {{ trialDaysRemaining }} dias restantes
         </span>

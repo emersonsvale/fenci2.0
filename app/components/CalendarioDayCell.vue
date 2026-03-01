@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import type { DayData } from '../composables/useCalendario'
 import { useCurrency } from '~/composables/useCurrency'
 import { usePrivacyMode } from '~/composables/usePrivacyMode'
@@ -80,18 +80,18 @@ function formatCompact(value: number): string {
   @apply relative flex flex-col items-start p-1 lg:p-2 rounded-md lg:rounded-lg
          min-h-[56px] lg:min-h-[100px] w-full text-left
          transition-all duration-200 ease-smooth
-         bg-surface-light-tertiary dark:bg-surface-dark-tertiary
-         hover:bg-surface-light-secondary dark:hover:bg-surface-dark-secondary
+         bg-surface-light-tertiary/60 dark:bg-surface-dark-tertiary/60
+         hover:bg-surface-light-tertiary dark:hover:bg-surface-dark-tertiary
          border border-transparent
-         hover:border-border-light/80 dark:hover:border-border-dark/50;
+         hover:border-border-light/50 dark:hover:border-border-dark/30;
 }
 
 .calendar-cell-current {
-  @apply bg-surface-light-secondary dark:bg-surface-dark-secondary;
+  @apply bg-surface-light-tertiary dark:bg-surface-dark-tertiary;
 }
 
 .calendar-cell-other {
-  @apply opacity-50 bg-surface-light-tertiary dark:bg-surface-dark-tertiary;
+  @apply opacity-50 bg-surface-light-tertiary/60 dark:bg-surface-dark-tertiary/60;
 }
 
 .calendar-cell-today {
@@ -99,7 +99,8 @@ function formatCompact(value: number): string {
 }
 
 .calendar-cell-selected {
-  @apply ring-2 ring-primary border-primary/30 bg-surface-light-tertiary dark:bg-surface-dark-tertiary;
+  @apply ring-2 ring-primary bg-surface-light-tertiary/60 dark:bg-surface-dark-tertiary/60;
+  border-color: rgb(34 197 94 / 0.30);
 }
 
 .day-number {
@@ -123,10 +124,12 @@ function formatCompact(value: number): string {
 }
 
 .badge-income {
-  @apply bg-primary/20 text-primary;
+  background-color: rgb(34 197 94 / 0.20);
+  color: #22C55E;
 }
 
 .badge-expense {
-  @apply bg-warning/20 text-warning;
+  background-color: rgb(245 158 11 / 0.20);
+  color: #F59E0B;
 }
 </style>

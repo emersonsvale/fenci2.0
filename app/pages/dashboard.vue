@@ -224,9 +224,9 @@ const { pullDistance, isPulling, isRefreshing } = usePullToRefresh({
 
     <!-- Conteúdo -->
     <div class="flex flex-col lg:flex-row gap-6 flex-1 min-w-0 w-full">
-      <div class="flex-1 min-w-0 space-y-6 animate-fade-in">
-        <!-- Resumo do mês (igual ao extrato) -->
-        <section aria-label="Resumo do mês">
+      <div class="flex-1 min-w-0 space-y-6">
+        <!-- Resumo do mês -->
+        <section aria-label="Resumo do mês" class="animate-fade-in-up" style="animation-delay: 0.05s">
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-5">
             <SummaryCard
               label="A pagar"
@@ -260,19 +260,19 @@ const { pullDistance, isPulling, isRefreshing } = usePullToRefresh({
         </section>
 
         <!-- Gráfico Entrada e Saída -->
-        <section class="card p-6" aria-label="Entrada e saída">
-          <h3 class="text-heading-sm font-semibold text-content-main mb-4">
+        <section class="card p-5 lg:p-6 animate-fade-in-up" style="animation-delay: 0.1s" aria-label="Entrada e saída">
+          <h3 class="text-heading-sm font-semibold text-content-main mb-5">
             Entrada e Saída
           </h3>
           <AreaChart
             :series="chartSeries"
-            :height="180"
+            :height="200"
             :loading="isLoading"
           />
         </section>
 
         <!-- Categorias + Contas pagas -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up" style="animation-delay: 0.15s">
           <CategoryList
             :categories="categorySummary"
             :loading="isLoading"
@@ -286,7 +286,7 @@ const { pullDistance, isPulling, isRefreshing } = usePullToRefresh({
         </div>
 
         <!-- Vencimentos -->
-        <div class="grid grid-cols-1 gap-6">
+        <div class="grid grid-cols-1 gap-6 animate-fade-in-up" style="animation-delay: 0.2s">
           <VencimentoCard
             class="w-full"
             :vencimentos="vencimentos"
@@ -297,30 +297,36 @@ const { pullDistance, isPulling, isRefreshing } = usePullToRefresh({
       </div>
 
       <!-- Sidebar direita -->
-      <aside class="w-full lg:w-[320px] lg:flex-shrink-0 space-y-4 animate-fade-in">
+      <aside class="w-full lg:w-[320px] lg:flex-shrink-0 space-y-4">
       <!-- Limite Card -->
+      <div class="animate-fade-in-up" style="animation-delay: 0.1s">
       <LimitCard
         :limite="limiteData.limite"
         :gasto="limiteData.gasto"
         :loading="isLoading"
         @edit="handleEditLimit"
       />
+      </div>
 
       <!-- Balance Card -->
+      <div class="animate-fade-in-up" style="animation-delay: 0.15s">
       <BalanceCard
         :saldo="balanceData.saldo"
         :entradas="balanceData.entradas"
         :saidas="balanceData.saidas"
         :loading="isLoading"
       />
+      </div>
 
       <!-- Credit Cards -->
+      <div class="animate-fade-in-up" style="animation-delay: 0.2s">
       <CreditCardWidget
         :cards="creditCardsList"
         :loading="isLoading"
         @card-click="handleCreditCardClick"
         @add-card="handleCreateCard"
       />
+      </div>
     </aside>
     </div>
     </template>

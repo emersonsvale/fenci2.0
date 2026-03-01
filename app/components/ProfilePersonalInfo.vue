@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import { useProfile } from '~/composables/useProfile'
 import AppInput from './AppInput.vue'
@@ -48,10 +48,10 @@ async function handleSave(): Promise<void> {
 <template>
   <div id="profile-personal-info" class="space-y-8">
     <div>
-      <h2 class="text-lg font-semibold text-content-primary dark:text-content-primary-dark mb-1">
+      <h2 class="text-lg font-semibold text-content-main mb-1">
         Dados pessoais
       </h2>
-      <p class="text-sm text-content-secondary dark:text-content-secondary-dark">
+      <p class="text-sm text-content-muted">
         Gerencie suas informações pessoais
       </p>
     </div>
@@ -69,13 +69,13 @@ async function handleSave(): Promise<void> {
       />
 
       <div>
-        <label class="block text-sm font-medium text-content-primary dark:text-content-primary-dark mb-2">
+        <label class="block text-sm font-medium text-content-main mb-2">
           E-mail
         </label>
-        <div class="input-field bg-surface-light-tertiary dark:bg-surface-dark-tertiary cursor-not-allowed opacity-75">
+        <div class="input-field bg-surface-light-tertiary/60 dark:bg-surface-dark-tertiary/60 cursor-not-allowed opacity-75">
           {{ userEmail }}
         </div>
-        <p class="mt-1 text-xs text-content-tertiary dark:text-content-tertiary-dark">
+        <p class="mt-1 text-xs text-content-subtle">
           O e-mail não pode ser alterado
         </p>
       </div>

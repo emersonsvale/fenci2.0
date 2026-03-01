@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useSupabaseClient, useSupabaseUser } from '#imports'
 import { useNotifications } from '~/composables/useNotifications'
@@ -51,29 +51,41 @@ async function onSelectNotification(n: Notification) {
   closePanel()
 }
 
-onMounted(() => {
-  if (user.value) void fetchNotifications()
-})
-watch(user, (u) => {
-  if (u) void fetchNotifications()
-}, { immediate: true })
-
-// Realtime: novas notificações (quando o backend insere)
 let realtimeChannel: ReturnType<typeof supabase.channel> | null = null
-onMounted(() => {
-  const uid = user.value?.id
-  if (!uid) return
+
+function cleanupRealtimeChannel() {
+  if (!realtimeChannel) return
+  supabase.removeChannel(realtimeChannel)
+  realtimeChannel = null
+}
+
+function setupRealtimeChannel(uid: string) {
+  cleanupRealtimeChannel()
   realtimeChannel = supabase
-    .channel('notifications')
+    .channel(`notifications-${uid}`)
     .on(
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${uid}` },
       () => void fetchNotifications()
     )
     .subscribe()
-})
+}
+
+watch(
+  () => user.value?.id,
+  (uid) => {
+    if (!uid) {
+      cleanupRealtimeChannel()
+      return
+    }
+    void fetchNotifications()
+    setupRealtimeChannel(uid)
+  },
+  { immediate: true }
+)
+
 onUnmounted(() => {
-  if (realtimeChannel) supabase.removeChannel(realtimeChannel)
+  cleanupRealtimeChannel()
 })
 </script>
 

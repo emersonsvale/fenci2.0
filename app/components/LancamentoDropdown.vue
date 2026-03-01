@@ -57,37 +57,43 @@ function selectOption(type: LancamentoType) {
       v-if="isOpen"
       id="lancamento-dropdown"
       ref="dropdownRef"
-      class="absolute right-0 top-full mt-2 w-48 sm:w-52 rounded-xl bg-surface-elevated shadow-xl border border-default z-dropdown"
+      class="absolute right-0 top-full mt-2 w-52 sm:w-56 rounded-2xl bg-surface-elevated shadow-xl border border-default-subtle z-dropdown backdrop-blur-xl"
     >
-      <div class="p-2 flex flex-col gap-1">
+      <div class="p-2 flex flex-col gap-0.5">
         <!-- Nova Saída -->
         <button
           type="button"
-          class="flex items-center justify-between w-full px-4 py-3 rounded-lg text-content-primary dark:text-content-primary-dark hover:bg-surface-overlay transition-colors text-left"
+          class="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-content-main hover:bg-error/5 transition-all duration-200 text-left group"
           @click="selectOption('saida')"
         >
-          <span class="text-sm font-medium">Nova Saída</span>
-          <span class="material-symbols-outlined text-error">south_west</span>
+          <span class="w-8 h-8 rounded-lg bg-error/10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-error text-lg">south_west</span>
+          </span>
+          <span class="text-body-sm font-medium group-hover:text-error transition-colors">Nova Saída</span>
         </button>
 
         <!-- Nova Entrada -->
         <button
           type="button"
-          class="flex items-center justify-between w-full px-4 py-3 rounded-lg text-content-primary dark:text-content-primary-dark hover:bg-surface-overlay transition-colors text-left"
+          class="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-content-main hover:bg-success/5 transition-all duration-200 text-left group"
           @click="selectOption('entrada')"
         >
-          <span class="text-sm font-medium">Nova Entrada</span>
-          <span class="material-symbols-outlined text-success">north_east</span>
+          <span class="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-success text-lg">north_east</span>
+          </span>
+          <span class="text-body-sm font-medium group-hover:text-success transition-colors">Nova Entrada</span>
         </button>
 
         <!-- Cartão de Crédito -->
         <button
           type="button"
-          class="flex items-center justify-between w-full px-4 py-3 rounded-lg text-content-primary dark:text-content-primary-dark hover:bg-surface-overlay transition-colors text-left"
+          class="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-content-main hover:bg-primary/5 transition-all duration-200 text-left group"
           @click="selectOption('cartao')"
         >
-          <span class="text-sm font-medium">Cartão de crédito</span>
-          <span class="material-symbols-outlined text-content-subtle">credit_card</span>
+          <span class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-primary text-lg">credit_card</span>
+          </span>
+          <span class="text-body-sm font-medium group-hover:text-primary transition-colors">Cartão de crédito</span>
         </button>
       </div>
     </div>

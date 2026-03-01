@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import type { ExtratoCreditCard } from '../composables/useExtrato'
 import { useCurrency } from '~/composables/useCurrency'
@@ -297,7 +297,7 @@ function onCarouselMouseLeave() {
               :aria-selected="currentIndex === i"
               :aria-label="`Ir para cartão ${Number(i) + 1}`"
               class="extrato-carousel-dot h-3 w-3 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface-elevated flex-shrink-0"
-              :class="currentIndex === i ? 'extrato-carousel-dot--active w-7' : 'bg-content-tertiary dark:bg-content-tertiary-dark hover:bg-content-secondary dark:hover:bg-content-secondary-dark'"
+              :class="currentIndex === i ? 'extrato-carousel-dot--active w-7' : 'bg-content-subtle hover:bg-content-muted'"
               @click="goTo(Number(i))"
             />
           </div>

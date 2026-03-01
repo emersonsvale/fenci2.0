@@ -53,10 +53,10 @@ onMounted(async () => {
   <div id="perfil-page" class="max-w-4xl mx-auto">
     <!-- Page Header -->
     <div class="mb-6">
-      <h1 class="text-2xl font-bold text-content-primary dark:text-content-primary-dark">
+      <h1 class="text-heading-lg font-bold text-content-main">
         Meu Perfil
       </h1>
-      <p class="text-content-secondary dark:text-content-secondary-dark mt-1">
+      <p class="text-content-muted text-body-sm mt-1">
         Gerencie suas informações e preferências
       </p>
     </div>
@@ -78,7 +78,7 @@ onMounted(async () => {
       <ProfileTabs v-model="activeTab" :tabs="tabs" />
 
       <!-- Tab Content -->
-      <div class="py-6">
+      <div class="py-4">
         <Transition name="fade" mode="out-in">
           <!-- Dados Pessoais -->
           <ProfilePersonalInfo v-if="activeTab === 'personal'" key="personal" />

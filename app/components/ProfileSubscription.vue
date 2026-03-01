@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed } from 'vue'
 import { useProfile } from '~/composables/useProfile'
 import AppButton from './AppButton.vue'
@@ -91,16 +91,16 @@ async function handleManageSubscription(): Promise<void> {
 <template>
   <div id="profile-subscription" class="space-y-8">
     <div>
-      <h2 class="text-lg font-semibold text-content-primary dark:text-content-primary-dark mb-1">
+      <h2 class="text-lg font-semibold text-content-main mb-1">
         Assinatura
       </h2>
-      <p class="text-sm text-content-secondary dark:text-content-secondary-dark">
+      <p class="text-sm text-content-muted">
         Gerencie seu plano e faturamento
       </p>
     </div>
 
     <!-- Status Atual -->
-    <div class="p-6 rounded-xl bg-surface-light-secondary dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark">
+    <div class="p-6 rounded-xl bg-surface-overlay border border-default-subtle">
       <div class="flex items-start gap-4">
         <span 
           class="material-symbols-outlined text-3xl"
@@ -109,10 +109,10 @@ async function handleManageSubscription(): Promise<void> {
           {{ statusInfo.icon }}
         </span>
         <div class="flex-1">
-          <h3 class="font-semibold text-content-primary dark:text-content-primary-dark text-lg">
+          <h3 class="font-semibold text-content-main text-lg">
             {{ subscriptionStatusLabel }}
           </h3>
-          <p class="text-content-secondary dark:text-content-secondary-dark mt-1">
+          <p class="text-content-muted mt-1">
             {{ statusInfo.description }}
           </p>
           
@@ -132,7 +132,7 @@ async function handleManageSubscription(): Promise<void> {
 
     <!-- Planos -->
     <div>
-      <h3 class="font-medium text-content-primary dark:text-content-primary-dark mb-4">
+      <h3 class="font-medium text-content-main mb-4">
         Planos disponíveis
       </h3>
       
@@ -148,7 +148,7 @@ async function handleManageSubscription(): Promise<void> {
           ]"
         >
           <div class="flex items-center justify-between mb-4">
-            <h4 class="text-lg font-semibold text-content-primary dark:text-content-primary-dark">
+            <h4 class="text-lg font-semibold text-content-main">
               {{ plan.name }}
             </h4>
             <span 
@@ -160,17 +160,17 @@ async function handleManageSubscription(): Promise<void> {
           </div>
           
           <div class="mb-4">
-            <span class="text-3xl font-bold text-content-primary dark:text-content-primary-dark">
+            <span class="text-3xl font-bold text-content-main">
               {{ plan.price }}
             </span>
-            <span class="text-content-tertiary dark:text-content-tertiary-dark">{{ plan.period }}</span>
+            <span class="text-content-subtle">{{ plan.period }}</span>
           </div>
 
           <ul class="space-y-2">
             <li 
               v-for="feature in plan.features" 
               :key="feature"
-              class="flex items-center gap-2 text-sm text-content-secondary dark:text-content-secondary-dark"
+              class="flex items-center gap-2 text-sm text-content-muted"
             >
               <span class="material-symbols-outlined text-lg text-emerald-500">check</span>
               {{ feature }}

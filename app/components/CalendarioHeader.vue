@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref } from 'vue'
 import type { LancamentoType } from '../composables/useLancamento'
 import LancamentoDropdown from './LancamentoDropdown.vue'
@@ -80,10 +80,10 @@ function handleSelectLancamento(type: LancamentoType) {
     <div class="flex items-center gap-3">
       <button
         type="button"
-        class="w-8 h-8 rounded-full border border-border-light flex items-center justify-center hover:bg-surface-light-tertiary transition-colors"
+        class="w-8 h-8 rounded-full border border-default-subtle flex items-center justify-center hover:bg-surface-overlay transition-colors"
         @click="emit('previous-month')"
       >
-        <span class="material-symbols-outlined text-lg text-content-secondary">chevron_left</span>
+        <span class="material-symbols-outlined text-lg text-content-muted">chevron_left</span>
       </button>
       
       <span class="text-body-md font-medium text-content-primary capitalize">
@@ -92,10 +92,10 @@ function handleSelectLancamento(type: LancamentoType) {
       
       <button
         type="button"
-        class="w-8 h-8 rounded-full border border-border-light flex items-center justify-center hover:bg-surface-light-tertiary transition-colors"
+        class="w-8 h-8 rounded-full border border-default-subtle flex items-center justify-center hover:bg-surface-overlay transition-colors"
         @click="emit('next-month')"
       >
-        <span class="material-symbols-outlined text-lg text-content-secondary">chevron_right</span>
+        <span class="material-symbols-outlined text-lg text-content-muted">chevron_right</span>
       </button>
     </div>
   </header>

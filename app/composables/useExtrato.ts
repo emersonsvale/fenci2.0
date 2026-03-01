@@ -1150,6 +1150,42 @@ export function useExtrato() {
     await fetchExtratoData()
   }
 
+  /**
+   * Marcar saída projetada como paga: cria o lançamento (transação) no banco a partir da saída recorrente projetada.
+   */
+  async function markSaidaAsPaid(recurringId: string, transactionDate: string): Promise<void> {
+    const userId = await getUserId()
+    if (!userId) throw new Error('Usuário não autenticado')
+
+    const saida = recurringTransactions.value.find((r) => r.id === recurringId)
+    if (!saida || saida.type !== 'expense') {
+      throw new Error('Saída não encontrada')
+    }
+
+    const transactionDateIso = `${transactionDate}T12:00:00.000Z`
+
+    const { error: insertError } = await supabase.from('transactions').insert({
+      user_id: userId,
+      account_id: saida.account_id,
+      category_id: saida.category_id || null,
+      description: saida.description,
+      amount: -Math.abs(saida.amount),
+      transaction_date: transactionDateIso,
+      type: 'expense',
+      is_paid: true,
+      status: 'confirmed',
+      is_recurring: true,
+      recurring_transaction_id: saida.id,
+    })
+
+    if (insertError) {
+      console.error('Erro ao criar lançamento da saída:', insertError)
+      throw insertError
+    }
+
+    await fetchExtratoData()
+  }
+
   // Atualizar transação no estado local (otimista após edição, evita item sumir da lista)
   function updateTransactionLocal(transactionId: string, updates: Partial<Transaction>) {
     const index = transactions.value.findIndex((t) => t.id === transactionId)
@@ -1290,6 +1326,7 @@ export function useExtrato() {
     markAsUnpaid,
     deleteTransaction,
     markRendaAsReceived,
+    markSaidaAsPaid,
     updateTransactionLocal,
     getTransactionById,
     getRawTransactionById,

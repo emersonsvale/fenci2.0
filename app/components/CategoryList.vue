@@ -105,8 +105,10 @@ function isMaterialIcon(icon: string): boolean {
         class="flex items-center justify-center py-8 text-content-subtle"
       >
         <div class="text-center">
-          <span class="material-symbols-outlined text-4xl mb-2 block opacity-50">category</span>
-          <p class="text-body-sm">Nenhum gasto registrado</p>
+          <div class="w-14 h-14 rounded-2xl bg-primary/8 flex items-center justify-center mx-auto mb-3">
+            <span class="material-symbols-outlined text-2xl text-primary/60">category</span>
+          </div>
+          <p class="text-body-sm font-medium text-content-muted">Nenhum gasto registrado</p>
           <p class="text-caption text-content-subtle mt-1">Os gastos aparecerão aqui</p>
         </div>
       </div>
@@ -116,18 +118,27 @@ function isMaterialIcon(icon: string): boolean {
 
 <style scoped>
 .category-item {
-  @apply flex items-center gap-3 p-2 -mx-2 rounded-lg cursor-pointer
-         transition-colors duration-200;
+  @apply flex items-center gap-3 p-2.5 -mx-2 rounded-xl cursor-pointer
+         transition-all duration-200;
 }
 
 /* Hover: suave no claro, bem sutil no escuro para não quebrar o tema */
 .category-item:hover {
-  @apply bg-gray-100 dark:bg-white/[0.06];
+  @apply scale-[1.01];
+  background-color: rgb(243 244 246 / 0.8);
+}
+:global(.dark) .category-item:hover {
+  background-color: rgb(255 255 255 / 0.06);
 }
 
 /* Círculo do ícone: fundo neutro em ambos os temas */
 .category-item-icon {
-  @apply bg-gray-100 border border-gray-200/80
-         dark:bg-white/[0.08] dark:border-white/[0.12];
+  @apply rounded-xl;
+  background-color: #F3F4F6;
+  border: 1px solid rgb(229 231 235 / 0.6);
+}
+:global(.dark) .category-item-icon {
+  background-color: rgb(255 255 255 / 0.08);
+  border-color: rgb(255 255 255 / 0.10);
 }
 </style>

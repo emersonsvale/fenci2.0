@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import type { DayData } from '../composables/useCalendario'
 import CalendarioDayCell from './CalendarioDayCell.vue'
 
@@ -24,7 +24,7 @@ const weekDaysMobile = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D']
 <template>
   <div
     id="calendario-grid"
-    class="calendario-container rounded-xl overflow-hidden border border-border-light/80 dark:border-border-dark/50 shadow-xs"
+    class="calendario-container rounded-xl overflow-hidden border border-default-subtle/60 shadow-xs"
   >
     <!-- Week Days Header -->
     <div class="week-header">
@@ -43,7 +43,7 @@ const weekDaysMobile = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D']
       <div
         v-for="i in 42"
         :key="i"
-        class="min-h-[60px] lg:min-h-[100px] rounded-lg animate-pulse bg-surface-light-tertiary dark:bg-surface-dark-tertiary"
+        class="min-h-[60px] lg:min-h-[100px] rounded-lg animate-pulse bg-surface-light-tertiary/60 dark:bg-surface-dark-tertiary/60"
       />
     </div>
 
@@ -61,13 +61,13 @@ const weekDaysMobile = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D']
 
 <style scoped>
 .calendario-container {
-  @apply bg-surface-light-secondary dark:bg-surface-dark-secondary;
+  @apply bg-surface-light-tertiary dark:bg-surface-dark-tertiary;
 }
 
 .week-header {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  @apply border-b border-border-light/80 dark:border-border-dark/50 bg-surface-light-tertiary dark:bg-surface-dark-tertiary;
+  @apply border-b border-border-light/50 dark:border-border-dark/30 bg-surface-light-tertiary/60 dark:bg-surface-dark-tertiary/60;
 }
 
 .days-grid {

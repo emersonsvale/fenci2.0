@@ -33,6 +33,7 @@ const emit = defineEmits<{
   'edit-renda': [recurringId: string]
   'edit-saida': [recurringId: string]
   'mark-renda-received': [payload: { recurringId: string; transactionDate: string }]
+  'mark-saida-paid': [payload: { recurringId: string; transactionDate: string }]
   'toggle-select': [id: string]
   'pay-invoice': [payload: { creditCardId: string; invoiceId?: string; referenceMonth?: string; amount: number; dueDate?: string }]
   'open-invoice-drawer': [creditCardId: string]
@@ -190,6 +191,14 @@ function handleMarkRendaReceived() {
   emit('mark-renda-received', { recurringId: props.transaction.recurringId, transactionDate })
 }
 
+function handleMarkSaidaPaid() {
+  closeMenu()
+  if (!props.transaction.recurringId) return
+  const d = props.transaction.date
+  const transactionDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  emit('mark-saida-paid', { recurringId: props.transaction.recurringId, transactionDate })
+}
+
 function handleMarkUnpaid() {
   closeMenu()
   emit('mark-unpaid', props.transaction.id)
@@ -234,8 +243,8 @@ function handleRowClick() {
     :role="isFaturaSummary || isParcelado ? 'button' : undefined"
     :tabindex="isFaturaSummary || isParcelado ? 0 : undefined"
     :aria-label="isFaturaSummary ? `Ver lançamentos da fatura ${transaction.description}` : isParcelado ? `Ver parcelas: ${transaction.description}` : undefined"
-    class="bg-surface-elevated rounded-xl p-3 lg:p-4 flex items-center justify-between gap-2 lg:gap-4 hover:bg-surface-elevated/80 hover:shadow-md transition-all group shadow-xs border border-transparent hover:border-default-subtle"
-    :class="{ 'cursor-pointer': isFaturaSummary || isParcelado }"
+    class="bg-surface-elevated rounded-xl p-3 lg:p-4 flex items-center justify-between gap-2 lg:gap-4 hover:bg-surface-overlay/50 hover:shadow-md transition-all duration-200 group shadow-xs border border-transparent hover:border-default-subtle"
+    :class="{ 'cursor-pointer ring-1 ring-transparent hover:ring-primary/10': isFaturaSummary || isParcelado, 'ring-2 ring-primary/30 bg-primary/[0.02]': selected }"
     @click="handleRowClick"
     @keydown.enter="handleRowClick"
     @keydown.space.prevent="handleRowClick"
@@ -433,6 +442,15 @@ function handleRowClick() {
             Marcar como recebida
           </button>
           <button
+            v-if="isSaidaRecorrenteVirtual && !isFaturaSummary"
+            type="button"
+            class="w-full px-3 py-2 text-left text-body-sm text-content-main hover:bg-surface-overlay flex items-center gap-2"
+            @click="handleMarkSaidaPaid"
+          >
+            <span class="material-symbols-outlined text-lg text-success">check_circle</span>
+            Marcar como pago
+          </button>
+          <button
             v-if="!isFaturaSummary && !isRendaRecorrente && !isSaidaRecorrenteVirtual && !transaction.isPaid"
             type="button"
             class="w-full px-3 py-2 text-left text-body-sm text-content-main hover:bg-surface-overlay flex items-center gap-2"
@@ -456,8 +474,8 @@ function handleRowClick() {
             class="w-full px-3 py-2 text-left text-body-sm text-content-main hover:bg-surface-overlay flex items-center gap-2"
             @click="handleEdit"
           >
-            <span class="material-symbols-outlined text-lg">{{ isRendaRecorrente || isSaidaRecorrenteVirtual ? 'account_balance' : 'edit' }}</span>
-            {{ isRendaRecorrente || isSaidaRecorrenteVirtual ? 'Ver em Contas' : 'Editar' }}
+            <span class="material-symbols-outlined text-lg">{{ isRendaRecorrente || isSaidaRecorrenteVirtual ? 'event_repeat' : 'edit' }}</span>
+            {{ isRendaRecorrente || isSaidaRecorrenteVirtual ? 'Ver em Recorrentes' : 'Editar' }}
           </button>
           <button
             v-if="!isFaturaSummary && !isRendaRecorrente && !isSaidaRecorrenteVirtual"

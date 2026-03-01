@@ -67,7 +67,10 @@ const buttonClasses = computed(() => {
     :disabled="isDisabled"
     class="disabled:opacity-50 disabled:cursor-not-allowed"
   >
-    <span v-if="loading">{{ loadingLabel }}</span>
+    <span v-if="loading" class="inline-flex items-center gap-2">
+      <span class="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+      {{ loadingLabel }}
+    </span>
     <template v-else>
       <slot name="icon" />
       <span><slot /></span>
