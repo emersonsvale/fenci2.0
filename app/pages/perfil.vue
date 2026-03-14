@@ -50,7 +50,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div id="perfil-page" class="max-w-4xl mx-auto">
+  <div id="perfil-page">
     <!-- Page Header -->
     <div class="mb-6">
       <h1 class="text-heading-lg font-bold text-content-main">

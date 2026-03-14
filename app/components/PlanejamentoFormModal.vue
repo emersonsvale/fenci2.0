@@ -27,6 +27,7 @@ const emit = defineEmits<{
 }>()
 
 const PLANNING_TYPES = [
+  { value: 'lista_compras', label: 'Lista de Compras' },
   { value: 'viagem', label: 'Viagem' },
   { value: 'carro', label: 'Carro' },
   { value: 'casamento', label: 'Casamento' },

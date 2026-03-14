@@ -1,12 +1,12 @@
-﻿<script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import { useSupabaseClient, useSupabaseUser } from '#imports'
+<script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useToast, type ToastVariant } from '../composables/useToast'
 import { useNotifications } from '../composables/useNotifications'
 import type { Notification } from 'shared/types/database.types'
 
 /**
- * NotificationCenter - Ícone de sino + dropdown com notificações do banco e histórico de toasts
+ * NotificationCenter - Ícone de sino + dropdown com notificações do banco e histórico de toasts.
+ * Contador (badge) usa estado global do useNotifications, carregado no layout assim que o user está disponível.
  */
 
 const { notificationHistory, clearNotificationHistory } = useToast()
@@ -17,8 +17,6 @@ const {
   markAsRead,
   markAllAsRead,
 } = useNotifications()
-const user = useSupabaseUser()
-const supabase = useSupabaseClient()
 
 const isOpen = ref(false)
 const panelRef = ref<HTMLElement | null>(null)
@@ -100,45 +98,12 @@ function handleClickOutside(event: MouseEvent) {
   close()
 }
 
-let realtimeChannel: ReturnType<typeof supabase.channel> | null = null
-function cleanupRealtimeChannel() {
-  if (!realtimeChannel) return
-  supabase.removeChannel(realtimeChannel)
-  realtimeChannel = null
-}
-
-function setupRealtimeChannel(uid: string) {
-  cleanupRealtimeChannel()
-  realtimeChannel = supabase
-    .channel(`notification-center-${uid}`)
-    .on(
-      'postgres_changes',
-      { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${uid}` },
-      () => void fetchNotifications()
-    )
-    .subscribe()
-}
-
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
 })
 
-watch(
-  () => user.value?.id,
-  (uid) => {
-    if (!uid) {
-      cleanupRealtimeChannel()
-      return
-    }
-    void fetchNotifications()
-    setupRealtimeChannel(uid)
-  },
-  { immediate: true }
-)
-
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
-  cleanupRealtimeChannel()
 })
 </script>
 

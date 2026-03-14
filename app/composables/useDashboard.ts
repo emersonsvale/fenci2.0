@@ -137,6 +137,42 @@ export function useDashboard() {
     })
   })
 
+  // Saídas recorrentes de CONTA ainda não lançadas no período (igual ao extrato: entram em "A pagar" e "Total recorrentes")
+  const saidasVirtuaisNoPeriodoAmount = computed(() => {
+    const periodo = periodTransactions.value
+    const toNum = (v: unknown) => (typeof v === 'number' ? v : Number(v) || 0)
+    const { month, year } = selectedPeriod.value
+    const recurringIdsWithReal = new Set(
+      periodo.filter((t) => t.recurring_transaction_id).map((t) => t.recurring_transaction_id as string)
+    )
+    const lastDayOfMonth = new Date(year, month + 1, 0).getDate()
+    const monthStart = `${year}-${String(month + 1).padStart(2, '0')}-01`
+    const monthEnd = `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDayOfMonth).padStart(2, '0')}`
+    let total = 0
+    for (const r of recurringExpenses.value) {
+      if (!r.is_active || r.credit_card_id) continue
+      let occurrenceDate: Date | null = null
+      if (r.frequency === 'monthly' && r.day_of_month != null) {
+        const day = Math.min(r.day_of_month, lastDayOfMonth)
+        occurrenceDate = new Date(year, month, day, 12, 0, 0)
+      } else if (r.next_occurrence) {
+        const next = new Date(r.next_occurrence)
+        if (next.getMonth() === month && next.getFullYear() === year) {
+          occurrenceDate = next
+        }
+      }
+      if (!occurrenceDate) continue
+      const occurrenceStr = occurrenceDate.toISOString().slice(0, 10)
+      const startStr = r.start_date ? r.start_date.slice(0, 10) : null
+      const endStr = r.end_date ? r.end_date.slice(0, 10) : null
+      if (startStr && occurrenceStr < startStr) continue
+      if (endStr && occurrenceStr > endStr) continue
+      if (recurringIdsWithReal.has(r.id)) continue
+      total += Math.abs(toNum(r.amount))
+    }
+    return total
+  })
+
   // Summary Cards Data (igual ao extrato: A pagar, Receita mensal, A receber, Total recorrentes)
   const summaryData = computed(() => {
     const periodo = periodTransactions.value
@@ -146,6 +182,7 @@ export function useDashboard() {
 
     // Total faturas de cartão não pagas (referência do mês selecionado)
     const totalFaturasCartao = unpaidInvoicesAmountForMonth.value
+    const saidasVirtuais = saidasVirtuaisNoPeriodoAmount.value
 
     if (isSelectedMonthFuture.value) {
       const aPagar = projectedSaidasRecorrentesSelectedMonth.value + totalFaturasCartao
@@ -158,7 +195,7 @@ export function useDashboard() {
       }
     }
 
-    // A pagar: despesas de conta pendentes + faturas não pagas
+    // A pagar: despesas de conta pendentes + faturas não pagas + saídas recorrentes virtuais (conta, ainda não lançadas)
     const aPagarConta = periodTxConta
       .filter(
         (t) =>
@@ -167,7 +204,7 @@ export function useDashboard() {
           !(t.invoice_id && !t.credit_card_id)
       )
       .reduce((sum, t) => sum + Math.abs(toNum(t.amount)), 0)
-    const aPagar = aPagarConta + totalFaturasCartao
+    const aPagar = aPagarConta + totalFaturasCartao + saidasVirtuais
 
     // Rendas recorrentes ativas ainda não realizadas no período
     const realizedRecurringIds = new Set(
@@ -189,10 +226,11 @@ export function useDashboard() {
       .reduce((sum, t) => sum + toNum(t.amount), 0)
     const aReceber = receitasPendentes + rendasAindaNaoRealizadas
 
-    // Total recorrentes: transações de conta recorrentes no período
-    const totalRecorrentes = periodTxConta
+    // Total recorrentes: transações de conta recorrentes no período + saídas virtuais (igual extrato)
+    const totalRecorrentesReal = periodTxConta
       .filter((t) => t.is_recurring)
       .reduce((sum, t) => sum + Math.abs(toNum(t.amount)), 0)
+    const totalRecorrentes = totalRecorrentesReal + saidasVirtuais
 
     return {
       aPagar,
@@ -392,10 +430,16 @@ export function useDashboard() {
       .reduce((sum, r) => sum + Math.abs(toNum(r.amount)), 0)
   })
 
-  // Entradas e saídas totais do período (balanço do mês)
+  // Total das faturas do mês (pagas + não pagas) — para alinhar balanço com extrato
+  const totalInvoicesAmountForMonth = computed(
+    () => paidInvoicesAmountForMonth.value + unpaidInvoicesAmountForMonth.value
+  )
+
+  // Entradas e saídas totais do período (balanço do mês) — mesma lógica do extrato (lista do mês)
   const balanceData = computed(() => {
     const periodo = periodTransactions.value
     const toNum = (v: unknown) => (typeof v === 'number' ? v : Number(v) || 0)
+    const periodTxConta = periodo.filter((t) => !t.credit_card_id)
 
     if (isSelectedMonthFuture.value) {
       const entradas = projectedReceitaSelectedMonth.value
@@ -407,22 +451,30 @@ export function useDashboard() {
       }
     }
 
-    // Entradas = apenas o que já foi recebido (pago); aguardando e atrasado não entram
-    const entradas = periodo
-      .filter((t) => t.type === 'income' && t.is_paid)
+    // Entradas: todas as entradas de conta no período + rendas recorrentes ainda não realizadas (igual extrato)
+    const realizedRecurringIds = new Set(
+      periodo.filter((t) => t.type === 'income' && t.recurring_transaction_id).map((t) => t.recurring_transaction_id!)
+    )
+    const rendasAindaNaoRealizadas = recurringIncomes.value
+      .filter((r) => r.is_active !== false && !realizedRecurringIds.has(r.id))
+      .reduce((sum, r) => sum + toNum(r.amount), 0)
+    const entradasTransacoes = periodTxConta
+      .filter((t) => t.type === 'income')
       .reduce((sum, t) => sum + toNum(t.amount), 0)
+    const entradas = entradasTransacoes + rendasAindaNaoRealizadas
 
-    // Saídas: despesas de conta pagas (exclui credit_card_id e "Pagamento fatura cartão") + faturas do mês pagas
-    const saidasTransacoes = periodo
+    // Saídas: todas as despesas de conta no período (exc. pagamento fatura) + saídas virtuais + total faturas do mês (igual extrato)
+    const saidasTransacoes = periodTxConta
       .filter(
         (t) =>
           t.type === 'expense' &&
-          t.is_paid &&
-          !t.credit_card_id &&
-          !(t.invoice_id && t.type === 'expense')
+          !(t.invoice_id && !t.credit_card_id)
       )
       .reduce((sum, t) => sum + Math.abs(toNum(t.amount)), 0)
-    const saidas = saidasTransacoes + paidInvoicesAmountForMonth.value
+    const saidas =
+      saidasTransacoes +
+      saidasVirtuaisNoPeriodoAmount.value +
+      totalInvoicesAmountForMonth.value
 
     return {
       saldo: entradas - saidas,

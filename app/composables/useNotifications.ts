@@ -1,19 +1,40 @@
-import { ref, computed } from 'vue'
-import { useSupabaseClient } from '#imports'
+import { ref, computed, watch } from 'vue'
+import { useSupabaseClient, useSupabaseUser } from '#imports'
 import type { Database, Notification } from 'shared/types/database.types'
+
+const POLL_INTERVAL_MS = 60_000
+
+let realtimeChannel: { unsubscribe: () => void } | null = null
+let pollTimer: ReturnType<typeof setInterval> | null = null
+let watchRegistered = false
 
 /**
  * useNotifications - Carrega e gerencia notificações do usuário (lembretes, vencimentos, novos lançamentos).
- * Notificações são geradas automaticamente pelo cron diário e por trigger em novos lançamentos.
+ * Estado compartilhado via useState para o badge sempre refletir não lidas, mesmo antes de abrir o painel.
  */
 export function useNotifications() {
   const supabase = useSupabaseClient<Database>()
+  const user = useSupabaseUser()
 
-  const notifications = ref<Notification[]>([])
+  const notifications = useState<Notification[]>('notifications', () => [])
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
   const unreadCount = computed(() => notifications.value.filter((n) => !n.read_at).length)
+
+  function cleanupRealtime() {
+    if (realtimeChannel && typeof realtimeChannel.unsubscribe === 'function') {
+      realtimeChannel.unsubscribe()
+    }
+    realtimeChannel = null
+  }
+
+  function stopPolling() {
+    if (pollTimer) {
+      clearInterval(pollTimer)
+      pollTimer = null
+    }
+  }
 
   async function fetchNotifications(limit = 50) {
     isLoading.value = true
@@ -29,6 +50,58 @@ export function useNotifications() {
       return
     }
     notifications.value = (data ?? []) as Notification[]
+  }
+
+  /** Carrega notificações usando getSession() quando useSupabaseUser ainda não resolveu (ex.: ao carregar a página). */
+  async function loadWhenSessionReady() {
+    if (user.value?.id) {
+      void fetchNotifications()
+      setupRealtimeAndPolling(user.value.id)
+      return
+    }
+    const { data: { session } } = await supabase.auth.getSession()
+    const uid = session?.user?.id
+    if (uid) {
+      void fetchNotifications()
+      setupRealtimeAndPolling(uid)
+    }
+  }
+
+  function setupRealtimeAndPolling(uid: string) {
+    cleanupRealtime()
+    realtimeChannel = supabase
+      .channel(`notification-center-${uid}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${uid}` },
+        () => void fetchNotifications()
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${uid}` },
+        () => void fetchNotifications()
+      )
+      .subscribe()
+    stopPolling()
+    pollTimer = setInterval(() => void fetchNotifications(), POLL_INTERVAL_MS)
+  }
+
+  if (!watchRegistered) {
+    watchRegistered = true
+    watch(
+      () => user.value?.id,
+      (uid) => {
+        if (!uid) {
+          notifications.value = []
+          cleanupRealtime()
+          stopPolling()
+          return
+        }
+        void fetchNotifications()
+        setupRealtimeAndPolling(uid)
+      },
+      { immediate: true }
+    )
   }
 
   async function markAsRead(id: string) {
@@ -58,6 +131,7 @@ export function useNotifications() {
     error,
     unreadCount,
     fetchNotifications,
+    loadWhenSessionReady,
     markAsRead,
     markAllAsRead,
   }

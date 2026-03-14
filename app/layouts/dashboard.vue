@@ -1,9 +1,17 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch, onMounted, onUnmounted } from 'vue'
+import { useSupabaseUser } from '#imports'
 import { useSidebar } from '~/composables/useSidebar'
 import { useSwipeGesture } from '~/composables/useSwipeGesture'
+import { useNotifications } from '~/composables/useNotifications'
 import AppSidebar from '~/components/AppSidebar.vue'
 import PwaInstallBanner from '~/components/PwaInstallBanner.vue'
+
+const BASE_TITLE = 'Fenci - Gestão Financeira Pessoal'
+
+function buildTitle(unread: number): string {
+  return unread > 0 ? `Fenci (${unread}) - Gestão Financeira Pessoal` : BASE_TITLE
+}
 
 /**
  * DashboardLayout - Layout principal para área logada
@@ -11,6 +19,38 @@ import PwaInstallBanner from '~/components/PwaInstallBanner.vue'
  * Mobile: sem sidebar fixa, header com hamburger, bottom nav bar
  * Swipe: Gesto de swipe da borda esquerda para abrir a sidebar
  */
+const user = useSupabaseUser()
+const { unreadCount, loadWhenSessionReady } = useNotifications()
+useHead(() => ({
+  title: buildTitle(unreadCount.value),
+}))
+
+// Carrega notificações assim que o usuário estiver disponível (reativo)
+watch(
+  () => user.value?.id,
+  (uid) => {
+    if (uid) void loadWhenSessionReady()
+  },
+  { immediate: true }
+)
+
+let sessionLoadTimeout: ReturnType<typeof setTimeout> | null = null
+onMounted(() => {
+  // Carrega notificações no cliente usando getSession() (useSupabaseUser pode ainda não ter resolvido)
+  sessionLoadTimeout = setTimeout(() => {
+    void loadWhenSessionReady()
+    sessionLoadTimeout = null
+  }, 150)
+  const updateTitle = () => {
+    document.title = buildTitle(unreadCount.value)
+  }
+  updateTitle()
+  watch(unreadCount, updateTitle)
+})
+onUnmounted(() => {
+  if (sessionLoadTimeout) clearTimeout(sessionLoadTimeout)
+})
+
 const { width: sidebarWidth, isMobile, isMobileOpen, openMobile, closeMobile } = useSidebar()
 
 // Gesture: swipe da borda esquerda para abrir sidebar, swipe para esquerda para fechar

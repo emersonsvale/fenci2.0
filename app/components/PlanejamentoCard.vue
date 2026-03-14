@@ -43,6 +43,7 @@ const statusLabel: Record<string, string> = {
 }
 
 const typeLabel: Record<string, string> = {
+  lista_compras: 'Lista de Compras',
   viagem: 'Viagem',
   carro: 'Carro',
   casamento: 'Casamento',

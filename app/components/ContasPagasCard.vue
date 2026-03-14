@@ -79,28 +79,10 @@ onUnmounted(() => {
 
     <!-- Donut Chart + Legend -->
     <template v-else>
-      <!-- Progress Bar compacta -->
-      <div class="mt-3 mb-4">
-        <div class="flex items-baseline justify-between mb-2">
-          <span class="text-display-sm font-bold text-content-main tabular-nums">
-            {{ isPrivacyMode ? PRIVACY_MASK : `${Math.round((contasPagas.valorPago / contasPagas.totalValor) * 100)}%` }}
-          </span>
-          <span class="text-caption text-content-subtle">
-            {{ formatCurrency(contasPagas.valorPago) }}
-          </span>
-        </div>
-        <div class="w-full h-2 bg-gray-200/60 dark:bg-white/[0.06] rounded-full overflow-hidden">
-          <div 
-            class="h-full rounded-full bg-gradient-to-r from-primary to-primary-400 transition-all duration-1000 ease-out"
-            :style="{ width: `${Math.min(100, Math.round((contasPagas.valorPago / contasPagas.totalValor) * 100))}%` }"
-          />
-        </div>
-      </div>
-
       <!-- Donut Chart (menor, decorativo) -->
       <div
         ref="chartWrapRef"
-        class="w-full max-w-[140px] mx-auto py-2"
+        class="w-full max-w-[140px] mx-auto py-2 mt-3"
       >
         <DonutChart
           :value="contasPagas.valorPago"

@@ -86,7 +86,7 @@ async function handleDeletePlanning(planning: Planning) {
 </script>
 
 <template>
-  <div id="planejamentos-page" class="flex flex-col gap-6 w-full max-w-[1200px] mx-auto">
+  <div id="planejamentos-page" class="flex flex-col gap-6 w-full max-w-[1500px] mx-auto">
     <PageHeader
       :user-name="userName"
       :quote="{ text: 'Planeje seus gastos antes, durante e depois dos seus objetivos.', author: 'Fenci' }"

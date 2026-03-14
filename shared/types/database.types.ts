@@ -978,6 +978,105 @@ export type Database = {
         }
         Relationships: []
       }
+      shopping_list_categories: {
+        Row: {
+          id: string
+          name: string
+          sort_order: number
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          sort_order?: number
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          sort_order?: number
+          created_at?: string | null
+        }
+        Relationships: []
+      }
+      shopping_list_items: {
+        Row: {
+          id: string
+          planning_id: string
+          user_id: string
+          product_name: string
+          status: string
+          quantity: number | null
+          unit: string | null
+          category_id: string | null
+          priority: string
+          purchase_location: string | null
+          price_estimated: number | null
+          price_actual: number | null
+          notes: string | null
+          stock_current: number | null
+          stock_minimum: number | null
+          recipe_reference: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          planning_id: string
+          user_id: string
+          product_name: string
+          status?: string
+          quantity?: number | null
+          unit?: string | null
+          category_id?: string | null
+          priority?: string
+          purchase_location?: string | null
+          price_estimated?: number | null
+          price_actual?: number | null
+          notes?: string | null
+          stock_current?: number | null
+          stock_minimum?: number | null
+          recipe_reference?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          planning_id?: string
+          user_id?: string
+          product_name?: string
+          status?: string
+          quantity?: number | null
+          unit?: string | null
+          category_id?: string | null
+          priority?: string
+          purchase_location?: string | null
+          price_estimated?: number | null
+          price_actual?: number | null
+          notes?: string | null
+          stock_current?: number | null
+          stock_minimum?: number | null
+          recipe_reference?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shopping_list_items_planning_id_fkey"
+            columns: ["planning_id"]
+            isOneToOne: false
+            referencedRelation: "plannings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shopping_list_items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "shopping_list_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1412,6 +1511,8 @@ export type PlanningCategory = Tables<'planning_categories'>
 export type PlanningEntry = Tables<'planning_entries'>
 export type PlanningInstallment = Tables<'planning_installments'>
 export type PlanningSaving = Tables<'planning_savings'>
+export type ShoppingListCategory = Tables<'shopping_list_categories'>
+export type ShoppingListItem = Tables<'shopping_list_items'>
 
 // Tipos para Insert
 export type ProfileInsert = TablesInsert<'profiles'>
@@ -1432,6 +1533,8 @@ export type PlanningCategoryInsert = TablesInsert<'planning_categories'>
 export type PlanningEntryInsert = TablesInsert<'planning_entries'>
 export type PlanningInstallmentInsert = TablesInsert<'planning_installments'>
 export type PlanningSavingInsert = TablesInsert<'planning_savings'>
+export type ShoppingListCategoryInsert = TablesInsert<'shopping_list_categories'>
+export type ShoppingListItemInsert = TablesInsert<'shopping_list_items'>
 
 // Tipos para Update
 export type ProfileUpdate = TablesUpdate<'profiles'>
@@ -1452,6 +1555,8 @@ export type PlanningCategoryUpdate = TablesUpdate<'planning_categories'>
 export type PlanningEntryUpdate = TablesUpdate<'planning_entries'>
 export type PlanningInstallmentUpdate = TablesUpdate<'planning_installments'>
 export type PlanningSavingUpdate = TablesUpdate<'planning_savings'>
+export type ShoppingListCategoryUpdate = TablesUpdate<'shopping_list_categories'>
+export type ShoppingListItemUpdate = TablesUpdate<'shopping_list_items'>
 
 // Tipos para NotificationPreferences
 export type NotificationPreferences = Tables<'notification_preferences'>

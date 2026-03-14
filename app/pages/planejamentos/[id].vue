@@ -2,14 +2,18 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { usePlanejamento, type PlanningPhase, type PlanningCategoryFormData } from '../../composables/usePlanejamento'
+import { useListaCompras } from '../../composables/useListaCompras'
 import PlanejamentoDashboard from '../../components/PlanejamentoDashboard.vue'
 import PlanejamentoCategoryList from '../../components/PlanejamentoCategoryList.vue'
 import PlanejamentoEntryList from '../../components/PlanejamentoEntryList.vue'
 import PlanejamentoInstallmentList from '../../components/PlanejamentoInstallmentList.vue'
 import PlanejamentoInstallmentModal from '../../components/PlanejamentoInstallmentModal.vue'
 import PlanejamentoSavingModal from '../../components/PlanejamentoSavingModal.vue'
+import ListaComprasView from '../../components/ListaComprasView.vue'
 import type { PlanningSaving } from 'shared/types/database.types'
 import type { SavingFormData } from '../../composables/usePlanejamento'
+import type { ShoppingListItemFormData } from '../../composables/useListaCompras'
+import type { ShoppingListItemStatus } from 'shared/constants/shoppingList'
 import { useCurrency } from '../../composables/useCurrency'
 
 /**
@@ -55,6 +59,20 @@ const {
   installmentsPaidTotal,
 } = usePlanejamento(planningId)
 
+const {
+  categories: listCategories,
+  items: listItems,
+  isLoading: listLoading,
+  error: listError,
+  fetchAll: fetchListaCompras,
+  createItem: createListItem,
+  updateItem: updateListItem,
+  deleteItem: deleteListItem,
+  totalNoCarrinho,
+} = useListaCompras(planningId)
+
+const isListaCompras = computed(() => planning.value?.type === 'lista_compras')
+
 const activeTab = ref<'dashboard' | 'categorias' | 'lancamentos' | 'parcelas'>('dashboard')
 const entryPhaseFilter = ref<PlanningPhase | null>(null)
 const isInstallmentModalOpen = ref(false)
@@ -70,6 +88,16 @@ onMounted(() => {
 watch(planningId, () => {
   fetchAll()
 })
+
+watch(
+  () => [planning.value?.id, planning.value?.type],
+  () => {
+    if (planning.value?.type === 'lista_compras') {
+      fetchListaCompras()
+    }
+  },
+  { immediate: true }
+)
 
 const notFound = computed(() => !isLoading.value && !planning.value && planningId.value)
 
@@ -161,10 +189,26 @@ async function handleDeleteSaving(id: string) {
   await deleteSaving(id)
   if (editingSaving.value?.id === id) closeSavingModal()
 }
+
+async function handleCreateListItem(data: ShoppingListItemFormData) {
+  await createListItem(data)
+}
+
+async function handleUpdateListItem(id: string, data: Partial<ShoppingListItemFormData>) {
+  await updateListItem(id, data)
+}
+
+async function handleUpdateListStatus(id: string, status: ShoppingListItemStatus) {
+  await updateListItem(id, { status })
+}
+
+async function handleDeleteListItem(id: string) {
+  await deleteListItem(id)
+}
 </script>
 
 <template>
-  <div id="planejamento-detail-page" class="flex flex-col gap-6 w-full max-w-[1200px] mx-auto">
+  <div id="planejamento-detail-page" class="flex flex-col gap-6 w-full max-w-[1500px] mx-auto">
     <div v-if="notFound" class="rounded-xl border border-default bg-surface-elevated p-12 text-center">
       <p class="text-body-md text-content-subtle mb-4">
         Planejamento não encontrado.
@@ -201,6 +245,22 @@ async function handleDeleteSaving(id: string) {
         {{ error }}
       </div>
 
+      <!-- Lista de Compras: UI específica quando tipo = lista_compras -->
+      <ListaComprasView
+        v-if="isListaCompras"
+        :items="listItems"
+        :categories="listCategories"
+        :total-no-carrinho="totalNoCarrinho"
+        :is-loading="listLoading"
+        :error="listError"
+        @create="handleCreateListItem"
+        @update="handleUpdateListItem"
+        @update-status="handleUpdateListStatus"
+        @delete="handleDeleteListItem"
+        @retry="fetchListaCompras"
+      />
+
+      <template v-else>
       <nav class="flex flex-wrap gap-2 border-b border-default pb-2">
         <button
           type="button"
@@ -401,6 +461,7 @@ async function handleDeleteSaving(id: string) {
             @delete="handleDeleteInstallment"
           />
         </section>
+      </template>
       </template>
     </template>
 
