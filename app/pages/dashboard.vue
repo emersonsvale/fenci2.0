@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useSupabaseUser } from '#imports'
 import { useDashboard } from '../composables/useDashboard'
+import { useAppPeriod } from '../composables/useAppPeriod'
 import { useLancamento, type LancamentoType, type LancamentoFormData } from '../composables/useLancamento'
 import { useProfile } from '../composables/useProfile'
 import { useLimitAlerts } from '../composables/useLimitAlerts'
@@ -34,6 +35,7 @@ definePageMeta({
 
 const user = useSupabaseUser()
 const { notificationPreferences, loadNotificationPreferences } = useProfile()
+const { setPeriod } = useAppPeriod()
 
 // Composable com todos os dados do dashboard
 const {
@@ -72,6 +74,9 @@ useLimitAlerts({
 const limitModalOpen = ref(false)
 const isSavingLimit = ref(false)
 const limitError = ref<string | null>(null)
+
+// Sincroniza o período selecionado com o estado global (para a Fê considerar no chat)
+watch(selectedPeriod, (p) => setPeriod(p), { immediate: true })
 
 // Garantir carregamento dos dados do usuário logado ao montar a página (sessão já disponível no client)
 onMounted(async () => {
@@ -214,7 +219,7 @@ const { pullDistance, isPulling, isRefreshing } = usePullToRefresh({
 
     <!-- Real Content (hidden during first load skeleton) -->
     <template v-else>
-    <!-- Header -->
+    <!-- Header (fora do container, mesmo padrão das demais telas) -->
     <PageHeader
       :user-name="userName"
       :period="selectedPeriod"
@@ -222,8 +227,8 @@ const { pullDistance, isPulling, isRefreshing } = usePullToRefresh({
       @open-lancamento="handleOpenLancamento"
     />
 
-    <!-- Conteúdo -->
-    <div class="flex flex-col lg:flex-row gap-6 flex-1 min-w-0 w-full">
+    <!-- Conteúdo (max 1500px, centralizado, igual extratos/calendário) -->
+    <div class="flex flex-col lg:flex-row gap-6 flex-1 min-w-0 w-full max-w-[1500px] mx-auto">
       <div class="flex-1 min-w-0 space-y-6">
         <!-- Resumo do mês -->
         <section aria-label="Resumo do mês" class="animate-fade-in-up" style="animation-delay: 0.05s">

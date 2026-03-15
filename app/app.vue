@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import ToastContainer from './components/ToastContainer.vue'
+import FloatingChatWidget from './components/FloatingChatWidget.vue'
 
 /**
  * App Root Component
@@ -14,5 +15,6 @@ import ToastContainer from './components/ToastContainer.vue'
       <NuxtPage />
     </NuxtLayout>
     <ToastContainer />
+    <FloatingChatWidget />
   </div>
 </template>

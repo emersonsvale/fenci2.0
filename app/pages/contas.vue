@@ -766,8 +766,7 @@ const { pullDistance, isPulling, isRefreshing: ptrRefreshing } = usePullToRefres
       :is-refreshing="ptrRefreshing"
     />
 
-    <!-- Header + conteúdo (max 1500px, centralizado) -->
-    <div class="w-full max-w-[1500px] mx-auto flex flex-col flex-1 min-w-0 gap-5">
+    <!-- Header (fora do container, mesmo padrão das demais telas) -->
     <PageHeader
       :user-name="userName"
       :period="selectedPeriod"
@@ -775,6 +774,8 @@ const { pullDistance, isPulling, isRefreshing: ptrRefreshing } = usePullToRefres
       @open-lancamento="handleOpenLancamento"
     />
 
+    <!-- Conteúdo (max 1500px, centralizado, igual extratos/calendário) -->
+    <div class="w-full max-w-[1500px] mx-auto flex flex-col flex-1 min-w-0 gap-5">
     <!-- Main Content: 3 colunas — Rendas (altura total) | Categorias + Cartões | Categorias + Contas -->
     <div class="flex flex-col flex-1 min-w-0 overflow-y-auto">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 flex-1 min-h-0 lg:grid-rows-[1fr]">
@@ -878,6 +879,7 @@ const { pullDistance, isPulling, isRefreshing: ptrRefreshing } = usePullToRefres
           </div>
         </div>
       </div>
+    </div>
     </div>
 
     <!-- Modal de Renda -->
@@ -1223,7 +1225,6 @@ const { pullDistance, isPulling, isRefreshing: ptrRefreshing } = usePullToRefres
         </div>
       </template>
     </BaseModal>
-    </div>
 
     <!-- Modais de Lançamento -->
     <LancamentoEntradaModal

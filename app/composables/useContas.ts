@@ -128,6 +128,8 @@ export function useContas() {
   const categoryTotals = useState<Record<string, number>>('contas-categoryTotals', () => ({}))
   /** Total da fatura do mês por credit_card_id (preenchido por fetchCreditCardInvoicesForMonth) */
   const invoiceTotalsByCard = useState<Record<string, number>>('contas-invoiceTotalsByCard', () => ({}))
+  /** Soma dos amount por account_id (entradas e saídas) para cálculo correto do saldo da conta */
+  const accountTransactionSums = useState<Record<string, number>>('contas-accountTransactionSums', () => ({}))
 
   // Nome do usuário
   const userName = computed(() => {
@@ -204,20 +206,25 @@ export function useContas() {
       }))
   })
 
-  // Computed: Contas bancárias formatadas
+  // Computed: Contas bancárias formatadas (saldo = initial_balance + soma de todas as transações da conta)
   const accountsList = computed<AccountDisplay[]>(() => {
     return accounts.value
       .filter((a) => a.is_active)
-      .map((a) => ({
-        id: a.id,
-        name: a.name,
-        bankName: a.bank_name,
-        accountNumber: a.bank_name, // Usar o nome do banco como identificador
-        type: a.type,
-        color: a.color || '#6B7280',
-        icon: a.icon,
-        balance: Number(a.current_balance ?? 0),
-      }))
+      .map((a) => {
+        const initial = Number(a.initial_balance ?? 0)
+        const sumMovements = accountTransactionSums.value[a.id] ?? 0
+        const balance = initial + sumMovements
+        return {
+          id: a.id,
+          name: a.name,
+          bankName: a.bank_name,
+          accountNumber: a.bank_name, // Usar o nome do banco como identificador
+          type: a.type,
+          color: a.color || '#6B7280',
+          icon: a.icon,
+          balance,
+        }
+      })
   })
 
   /**
@@ -233,12 +240,13 @@ export function useContas() {
 
     try {
 
-      // Buscar dados em paralelo
+      // Buscar dados em paralelo (inclui transações para cálculo de saldo das contas)
       const [
         rendasResult,
         categoriesResult,
         creditCardsResult,
         accountsResult,
+        transactionsForBalanceResult,
       ] = await Promise.all([
         // Rendas recorrentes (tipo income)
         supabase
@@ -272,6 +280,13 @@ export function useContas() {
           .eq('user_id', userId)
           .eq('is_active', true)
           .order('name', { ascending: true }),
+
+        // Transações por conta (amount já vem positivo para entrada e negativo para saída)
+        supabase
+          .from('transactions')
+          .select('account_id, amount')
+          .eq('user_id', userId)
+          .not('account_id', 'is', null),
       ])
 
       // Verificar erros
@@ -279,6 +294,16 @@ export function useContas() {
       if (categoriesResult.error) throw categoriesResult.error
       if (creditCardsResult.error) throw creditCardsResult.error
       if (accountsResult.error) throw accountsResult.error
+      if (transactionsForBalanceResult.error) throw transactionsForBalanceResult.error
+
+      // Soma dos valores por conta (entradas aumentam, saídas diminuem o saldo)
+      const sums: Record<string, number> = {}
+      for (const row of transactionsForBalanceResult.data || []) {
+        const id = row.account_id
+        if (!id) continue
+        sums[id] = (sums[id] ?? 0) + Number(row.amount)
+      }
+      accountTransactionSums.value = sums
 
       // Atualizar estado
       rendas.value = rendasResult.data || []

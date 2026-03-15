@@ -95,6 +95,10 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  runtimeConfig: {
+    openaiApiKey: process.env.OPENAI_API_KEY ?? '',
+  },
+
   supabase: {
     redirect: false, // Redirecionamento feito pelo middleware auth.global.ts
     redirectOptions: {
@@ -111,6 +115,8 @@ export default defineNuxtConfig({
     '/cadastro': { ssr: false },
     '/esqueci-senha': { ssr: false },
     '/confirm': { ssr: false },
+    '/dashboard': { ssr: false },
+    '/dashboard/**': { ssr: false },
   },
 
   app: {
