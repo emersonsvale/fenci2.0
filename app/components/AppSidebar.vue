@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useSupabaseClient, useSupabaseUser } from '#imports'
@@ -242,11 +242,15 @@ const sidebarStyle = computed(() => {
 }
 .nav-item:hover {
   background-color: rgb(34 197 94 / 0.05);
-  color: var(--tw-content-primary, #111827);
+  /* Não altera a cor do texto no hover — mantém a cor padrão do item */
 }
 :global(.dark) .nav-item:hover {
   background-color: rgb(34 197 94 / 0.10);
-  color: var(--tw-content-primary-dark, #FFFFFF);
+  /* Texto claro no hover (mesmo tom dos itens inativos — evita escurecer) */
+  color: #d1d5db;
+}
+:global(.dark) .nav-item:hover .nav-icon {
+  color: #d1d5db;
 }
 
 .nav-item.sidebar-collapsed {

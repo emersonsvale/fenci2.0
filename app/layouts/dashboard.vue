@@ -71,20 +71,12 @@ useSwipeGesture({
     <!-- Sidebar (fixed no desktop, drawer no mobile) -->
     <AppSidebar />
 
-    <!-- Mobile Top Bar -->
+    <!-- Mobile Top Bar (sem botão menu — navegação pela bottom bar; sidebar abre por swipe) -->
     <header
       v-if="isMobile"
       id="mobile-top-bar"
-      class="fixed top-0 left-0 right-0 h-14 bg-surface-elevated/90 backdrop-blur-xl border-b border-default-subtle z-sticky flex items-center justify-between px-4 safe-top"
+      class="fixed top-0 left-0 right-0 h-14 bg-surface-elevated/90 backdrop-blur-xl border-b border-default-subtle z-sticky flex items-center justify-center px-4 safe-top"
     >
-      <button
-        type="button"
-        class="p-2 -ml-2 rounded-xl hover:bg-surface-overlay transition-all duration-200"
-        aria-label="Abrir menu"
-        @click="openMobile"
-      >
-        <span class="material-symbols-outlined text-xl text-content-main">menu</span>
-      </button>
       <NuxtLink to="/dashboard">
         <img
           src="/logotipo.png"
@@ -92,7 +84,6 @@ useSwipeGesture({
           class="h-7 w-auto dark:brightness-0 dark:invert"
         />
       </NuxtLink>
-      <div class="w-9" />
     </header>
 
     <!-- Main Content Area -->
